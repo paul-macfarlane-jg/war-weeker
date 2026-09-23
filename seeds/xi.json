@@ -22,14 +22,366 @@
   "organizerEmails": ["pmacfarlane@jahnelgroup.com"],
   "highlights": [],
   "days": [
-    { "date": "2026-02-22", "dayTheme": "The Matrix Has You" },
-    { "date": "2026-02-23", "dayTheme": "Tournament Day" },
-    { "date": "2026-02-24", "dayTheme": "Red vs. Blue" },
+    {
+      "date": "2026-02-22",
+      "dayTheme": "The Matrix Has You",
+      "scheduleItems": [
+        {
+          "startTime": "12:00",
+          "title": "Settlers of Catan",
+          "host": "Tony Mercadante",
+          "location": "JGHQ",
+          "category": "competition",
+          "competition": "Settlers of Catan"
+        }
+      ]
+    },
+    {
+      "date": "2026-02-23",
+      "dayTheme": "Tournament Day",
+      "scheduleItems": [
+        {
+          "startTime": "08:30",
+          "endTime": "09:00",
+          "title": "Breakfast",
+          "location": "JGHQ Kitchen",
+          "category": "meal"
+        },
+        {
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "title": "Client work",
+          "category": "work"
+        },
+        {
+          "startTime": "18:00",
+          "endTime": "22:00",
+          "title": "Tournament Night",
+          "location": "JGHQ",
+          "virtualLink": "https://meet.google.com/war-week-xi",
+          "category": "competition",
+          "competition": "Tournament Night",
+          "description": {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Major team points on the line with Pool, Speed Chess, Bouncy Ping Pong, Smash Bros. and Bey Blades."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-02-24",
+      "dayTheme": "Red vs. Blue",
+      "scheduleItems": [
+        {
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "title": "Lunch and Learn",
+          "host": "Jahnel Group",
+          "location": "JGHQ",
+          "category": "education"
+        },
+        {
+          "startTime": "17:00",
+          "title": "Red vs. Blue Ryder Cup",
+          "location": "Mohawk Country Club",
+          "category": "social"
+        }
+      ]
+    },
     {
       "date": "2026-02-25",
-      "dayTheme": "Wellness Wednesday with Dani Milliken"
+      "dayTheme": "Wellness Wednesday with Dani Milliken",
+      "scheduleItems": []
     },
-    { "date": "2026-02-26", "dayTheme": "Rise of the Machines AI Day" },
-    { "date": "2026-02-27", "dayTheme": "Closing Ceremonies (Guests Welcome)" }
+    {
+      "date": "2026-02-26",
+      "dayTheme": "Rise of the Machines AI Day",
+      "scheduleItems": []
+    },
+    {
+      "date": "2026-02-27",
+      "dayTheme": "Closing Ceremonies (Guests Welcome)",
+      "scheduleItems": []
+    }
+  ],
+  "teams": [
+    {
+      "name": "Red",
+      "color": "#ff3b3b"
+    },
+    {
+      "name": "Blue",
+      "color": "#3b82f6"
+    }
+  ],
+  "participants": [
+    {
+      "displayName": "Thomas Anderson",
+      "team": "Red",
+      "isLeader": true
+    },
+    {
+      "displayName": "Trinity",
+      "team": "Red",
+      "companyTag": "LTI"
+    },
+    {
+      "displayName": "Morpheus",
+      "team": "Blue",
+      "isLeader": true
+    },
+    {
+      "displayName": "Niobe",
+      "team": "Blue",
+      "companyTag": "IL"
+    }
+  ],
+  "competitions": [
+    {
+      "name": "Tournament Night",
+      "description": "Pool, Speed Chess, Bouncy Ping Pong, Smash Bros. and Bey Blades.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Team Night Events"
+    },
+    {
+      "name": "Settlers of Catan",
+      "description": "The 9th annual Catan tournament.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Speed Chess",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Red Pill / Blue Pill",
+      "description": "Individual immunity; does not count toward team totals.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": false
+    },
+    {
+      "name": "Subjective Points",
+      "maxPoints": 6,
+      "scoring": "team"
+    }
+  ],
+  "pointsEntries": [
+    {
+      "key": "tournament-night-red",
+      "competition": "Tournament Night",
+      "team": "Red",
+      "points": 6,
+      "enteredByEmail": "pmacfarlane@jahnelgroup.com",
+      "enteredAt": "2026-02-23T22:15:00-05:00"
+    },
+    {
+      "key": "tournament-night-blue",
+      "competition": "Tournament Night",
+      "team": "Blue",
+      "points": 4,
+      "enteredByEmail": "pmacfarlane@jahnelgroup.com",
+      "enteredAt": "2026-02-23T22:16:00-05:00"
+    },
+    {
+      "key": "catan-morpheus",
+      "competition": "Settlers of Catan",
+      "participant": "Morpheus",
+      "points": 3,
+      "note": "Catan champion",
+      "enteredByEmail": "pmacfarlane@jahnelgroup.com",
+      "enteredAt": "2026-02-22T18:00:00-05:00"
+    },
+    {
+      "key": "chess-trinity",
+      "competition": "Speed Chess",
+      "participant": "Trinity",
+      "points": 1.5,
+      "note": "Tied for second",
+      "enteredByEmail": "pmacfarlane@jahnelgroup.com",
+      "enteredAt": "2026-02-23T21:30:00-05:00"
+    },
+    {
+      "key": "pill-neo",
+      "competition": "Red Pill / Blue Pill",
+      "participant": "Thomas Anderson",
+      "points": 2,
+      "enteredByEmail": "pmacfarlane@jahnelgroup.com",
+      "enteredAt": "2026-02-24T12:30:00-05:00"
+    }
+  ],
+  "awards": [
+    {
+      "key": "mvp",
+      "name": "War Week MVP",
+      "description": "Most valuable participant of the week.",
+      "participants": ["Trinity"]
+    },
+    {
+      "key": "spirit",
+      "name": "Team Spirit Award",
+      "team": "Blue",
+      "participants": []
+    }
+  ],
+  "announcements": [
+    {
+      "key": "welcome",
+      "title": "Welcome to War Week XI",
+      "pinned": true,
+      "authorEmail": "pmacfarlane@jahnelgroup.com",
+      "publishedAt": "2026-02-22T09:00:00-05:00",
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "The Matrix has you"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Choose your pill. Standings are "
+              },
+              {
+                "type": "text",
+                "text": "hidden",
+                "marks": [
+                  {
+                    "type": "bold"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " until closing ceremonies."
+              }
+            ]
+          }
+        ]
+      },
+      "videoUrls": ["https://www.youtube.com/watch?v=vKQi3bBA1y8"]
+    },
+    {
+      "key": "tournament-night-recap",
+      "title": "Tournament Night recap",
+      "authorEmail": "pmacfarlane@jahnelgroup.com",
+      "publishedAt": "2026-02-24T08:00:00-05:00",
+      "body": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "bulletList",
+            "content": [
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Pool finals went to the last ball."
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "listItem",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Speed Chess ended in a tie for second."
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "faqItems": [
+    {
+      "question": "How do I enter my time during War Week?",
+      "answer": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Log War Week activities to the War Week project code."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "question": "Can I bring guests?",
+      "answer": {
+        "type": "doc",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Guests are welcome at closing ceremonies. Ask in "
+              },
+              {
+                "type": "text",
+                "text": "#war-week-xi",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "https://jahnelgroup.slack.com/archives/war-week-xi",
+                      "rel": "noopener noreferrer"
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": " first."
+              }
+            ]
+          }
+        ]
+      }
+    }
   ]
 }

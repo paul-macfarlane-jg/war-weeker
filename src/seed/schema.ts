@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+import { contentInputSchema } from "@/lib/rich-text/content";
+import { isAllowedVideoUrl } from "@/lib/video";
+
 const hexColor = z
   .string()
   .max(32)
@@ -13,12 +16,159 @@ const themeUrl = z
     "must be a root-relative path or an https URL",
   );
 
+const email = z.email().max(254).toLowerCase();
+
+const httpsUrl = z.url({ protocol: /^https$/ }).max(500);
+
+const clockTime = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be a 24-hour HH:MM time");
+
+// Matches the database's numeric(8, 2).
+const points = z
+  .number()
+  .min(-999999.99)
+  .max(999999.99)
+  .refine((value) => Math.round(value * 100) / 100 === value, {
+    message: "must have at most two decimal places",
+  });
+
+/**
+ * A stable id for a seeded organizer-owned record (Points Entry, Award,
+ * Announcement), unique within its list. The loader inserts a keyed record
+ * only if it is absent and never updates or deletes it; see CONTEXT.md.
+ */
+const seedKey = z
+  .string()
+  .min(1)
+  .max(80)
+  .regex(/^[a-z0-9-]+$/, "must be lowercase letters, digits and dashes");
+
+export const scheduleItemSeedSchema = z
+  .object({
+    startTime: clockTime,
+    endTime: clockTime.nullish(),
+    title: z.string().min(1).max(200),
+    host: z.string().max(200).nullish(),
+    location: z.string().max(200).nullish(),
+    virtualLink: httpsUrl.nullish(),
+    description: contentInputSchema.nullish(),
+    category: z.enum(["competition", "education", "social", "meal", "work"]),
+    /** A Competition name from this seed. */
+    competition: z.string().min(1).max(120).nullish(),
+  })
+  .refine((item) => !item.endTime || item.endTime > item.startTime, {
+    message: "endTime must be after startTime",
+    path: ["endTime"],
+  });
+
+export type ScheduleItemSeed = z.infer<typeof scheduleItemSeedSchema>;
+
 export const daySeedSchema = z.object({
   date: z.iso.date(),
   dayTheme: z.string().min(1).max(120),
+  scheduleItems: z.array(scheduleItemSeedSchema).default([]),
 });
 
 export type DaySeed = z.infer<typeof daySeedSchema>;
+
+export const teamSeedSchema = z.object({
+  name: z.string().min(1).max(80),
+  color: hexColor,
+  logoUrl: themeUrl.nullish(),
+});
+
+export type TeamSeed = z.infer<typeof teamSeedSchema>;
+
+export const participantSeedSchema = z.object({
+  displayName: z.string().min(1).max(120),
+  companyTag: z.string().min(1).max(40).nullish(),
+  email: email.nullish(),
+  /** A Team name from this seed. */
+  team: z.string().min(1).max(80).nullish(),
+  isLeader: z.boolean().default(false),
+});
+
+export type ParticipantSeed = z.infer<typeof participantSeedSchema>;
+
+export const competitionSeedSchema = z
+  .object({
+    name: z.string().min(1).max(120),
+    description: z.string().max(2000).nullish(),
+    maxPoints: points.positive().nullish(),
+    scoring: z.enum(["team", "individual"]),
+    countsTowardTeam: z.boolean().default(false),
+    group: z.string().min(1).max(120).nullish(),
+  })
+  .refine((c) => !c.countsTowardTeam || c.scoring === "individual", {
+    message: "countsTowardTeam can only be set on an individual Competition",
+    path: ["countsTowardTeam"],
+  });
+
+export type CompetitionSeed = z.infer<typeof competitionSeedSchema>;
+
+export const pointsEntrySeedSchema = z
+  .object({
+    key: seedKey,
+    /** A Competition name from this seed. */
+    competition: z.string().min(1).max(120),
+    /** A Team name from this seed; exactly one of team or participant. */
+    team: z.string().min(1).max(80).nullish(),
+    /** A Participant display name from this seed. */
+    participant: z.string().min(1).max(120).nullish(),
+    points,
+    note: z.string().max(500).nullish(),
+    enteredByEmail: email,
+    enteredAt: z.iso.datetime({ offset: true }),
+  })
+  .refine((entry) => (entry.team == null) !== (entry.participant == null), {
+    message: "a Points Entry must target exactly one of team or participant",
+    path: ["team"],
+  });
+
+export type PointsEntrySeed = z.infer<typeof pointsEntrySeedSchema>;
+
+export const awardSeedSchema = z
+  .object({
+    key: seedKey,
+    name: z.string().min(1).max(120),
+    description: z.string().max(1000).nullish(),
+    /** A Team name from this seed. */
+    team: z.string().min(1).max(80).nullish(),
+    /** Participant display names from this seed. */
+    participants: z.array(z.string().min(1).max(120)).default([]),
+  })
+  .refine((a) => a.team != null || a.participants.length > 0, {
+    message: "an Award needs at least one recipient (a team or participants)",
+    path: ["participants"],
+  });
+
+export type AwardSeed = z.infer<typeof awardSeedSchema>;
+
+export const announcementSeedSchema = z.object({
+  key: seedKey,
+  title: z.string().min(1).max(200),
+  body: contentInputSchema,
+  videoUrls: z
+    .array(
+      httpsUrl.refine(isAllowedVideoUrl, {
+        message: "must be a YouTube, Loom, Vimeo or Google Drive URL",
+      }),
+    )
+    .default([]),
+  pinned: z.boolean().default(false),
+  authorEmail: email,
+  publishedAt: z.iso.datetime({ offset: true }),
+});
+
+export type AnnouncementSeed = z.infer<typeof announcementSeedSchema>;
+
+export const faqItemSeedSchema = z.object({
+  question: z.string().min(1).max(300),
+  answer: contentInputSchema,
+});
+
+export type FaqItemSeed = z.infer<typeof faqItemSeedSchema>;
 
 export const warWeekSeedSchema = z
   .object({
@@ -51,6 +201,13 @@ export const warWeekSeedSchema = z
     winner: z.string().max(200).nullish(),
     highlights: z.array(z.string().max(500)).default([]),
     days: z.array(daySeedSchema),
+    teams: z.array(teamSeedSchema).default([]),
+    participants: z.array(participantSeedSchema).default([]),
+    competitions: z.array(competitionSeedSchema).default([]),
+    pointsEntries: z.array(pointsEntrySeedSchema).default([]),
+    awards: z.array(awardSeedSchema).default([]),
+    announcements: z.array(announcementSeedSchema).default([]),
+    faqItems: z.array(faqItemSeedSchema).default([]),
   })
   .refine((seed) => seed.startDate <= seed.endDate, {
     message: "startDate must not be after endDate",
@@ -72,6 +229,160 @@ export const warWeekSeedSchema = z
       message: "day dates must be unique",
       path: ["days"],
     },
-  );
+  )
+  .superRefine((seed, ctx) => {
+    const issue = (path: (string | number)[], message: string) =>
+      ctx.addIssue({ code: "custom", path, message });
+
+    const unique = <T>(
+      list: string | (string | number)[],
+      items: T[],
+      keyOf: (item: T) => string | null | undefined,
+      field: string,
+      label: string,
+    ) => {
+      const seen = new Set<string>();
+      items.forEach((item, index) => {
+        const key = keyOf(item);
+        if (key == null) return;
+        if (seen.has(key)) {
+          issue(
+            [...(Array.isArray(list) ? list : [list]), index, field],
+            `duplicate ${label} "${key}"`,
+          );
+        }
+        seen.add(key);
+      });
+    };
+
+    unique("teams", seed.teams, (t) => t.name, "name", "Team name");
+    unique(
+      "participants",
+      seed.participants,
+      (p) => p.displayName,
+      "displayName",
+      "Participant display name",
+    );
+    unique(
+      "participants",
+      seed.participants,
+      (p) => p.email,
+      "email",
+      "Participant email",
+    );
+    unique(
+      "competitions",
+      seed.competitions,
+      (c) => c.name,
+      "name",
+      "Competition name",
+    );
+    unique(
+      "pointsEntries",
+      seed.pointsEntries,
+      (e) => e.key,
+      "key",
+      "Points Entry key",
+    );
+    unique("awards", seed.awards, (a) => a.key, "key", "Award key");
+    unique(
+      "announcements",
+      seed.announcements,
+      (a) => a.key,
+      "key",
+      "Announcement key",
+    );
+    unique(
+      "faqItems",
+      seed.faqItems,
+      (f) => f.question,
+      "question",
+      "FAQ question",
+    );
+    seed.days.forEach((d, dayIndex) =>
+      unique(
+        ["days", dayIndex, "scheduleItems"],
+        d.scheduleItems,
+        (item) => `${item.startTime} ${item.title}`,
+        "title",
+        "Schedule Item (start time and title)",
+      ),
+    );
+
+    if (seed.mode === "free-for-all" && seed.teams.length > 0) {
+      issue(["teams"], "a free-for-all War Week has no Teams");
+    }
+
+    const teams = new Set(seed.teams.map((t) => t.name));
+    const participants = new Set(seed.participants.map((p) => p.displayName));
+    const competitions = new Map(seed.competitions.map((c) => [c.name, c]));
+
+    seed.participants.forEach((p, index) => {
+      if (p.team != null && !teams.has(p.team)) {
+        issue(["participants", index, "team"], `unknown Team "${p.team}"`);
+      }
+    });
+
+    seed.days.forEach((d, dayIndex) =>
+      d.scheduleItems.forEach((item, itemIndex) => {
+        if (item.competition != null && !competitions.has(item.competition)) {
+          issue(
+            ["days", dayIndex, "scheduleItems", itemIndex, "competition"],
+            `unknown Competition "${item.competition}"`,
+          );
+        }
+      }),
+    );
+
+    seed.pointsEntries.forEach((entry, index) => {
+      const path = ["pointsEntries", index];
+      const comp = competitions.get(entry.competition);
+      if (!comp) {
+        issue(
+          [...path, "competition"],
+          `unknown Competition "${entry.competition}"`,
+        );
+      }
+      if (entry.team != null) {
+        if (!teams.has(entry.team)) {
+          issue([...path, "team"], `unknown Team "${entry.team}"`);
+        }
+        if (comp && comp.scoring !== "team") {
+          issue(
+            [...path, "team"],
+            `"${comp.name}" is an individual Competition, so its Points Entries must target a participant`,
+          );
+        }
+      }
+      if (entry.participant != null) {
+        if (!participants.has(entry.participant)) {
+          issue(
+            [...path, "participant"],
+            `unknown Participant "${entry.participant}"`,
+          );
+        }
+        if (comp && comp.scoring !== "individual") {
+          issue(
+            [...path, "participant"],
+            `"${comp.name}" is a team Competition, so its Points Entries must target a team`,
+          );
+        }
+      }
+    });
+
+    seed.awards.forEach((a, index) => {
+      if (a.team != null && !teams.has(a.team)) {
+        issue(["awards", index, "team"], `unknown Team "${a.team}"`);
+      }
+      a.participants.forEach((name, recipientIndex) => {
+        if (!participants.has(name)) {
+          issue(
+            ["awards", index, "participants", recipientIndex],
+            `unknown Participant "${name}"`,
+          );
+        }
+      });
+    });
+  });
 
 export type WarWeekSeed = z.infer<typeof warWeekSeedSchema>;
