@@ -4,9 +4,12 @@ export const WAR_WEEK_TIME_ZONE = "America/New_York";
 
 /**
  * How long a Schedule Item with no end time counts as "on now". Items are
- * stored without a duration, so this is a display rule only.
+ * stored without a duration, so this is a display rule only (see
+ * CONTEXT.md, Schedule display rules).
  */
-const DEFAULT_DURATION_MINUTES = 60;
+const DEFAULT_DURATION_SECONDS = 60 * 60;
+
+const SECONDS_PER_DAY = 24 * 60 * 60;
 
 export type ScheduleEntry = Pick<
   ScheduleItem,
@@ -31,6 +34,8 @@ export type EasternClock = { date: string; time: string };
 export type NowNext = {
   /** The Day whose date is today in ET, if today is in the War Week. */
   today: ScheduleDay | null;
+  /** True until the first Day's date arrives in ET. */
+  beforeStart: boolean;
   /** Items on right now, in time order. */
   now: ScheduleEntry[];
   /** Every item sharing the earliest start after now, on whichever Day. */
@@ -65,59 +70,54 @@ function compareItems(a: ScheduleEntry, b: ScheduleEntry): number {
   );
 }
 
-function toEntry(item: ScheduleEntry & { dayId: string }): ScheduleEntry {
-  return {
-    id: item.id,
-    startTime: item.startTime,
-    endTime: item.endTime,
-    title: item.title,
-    host: item.host,
-    location: item.location,
-    virtualLink: item.virtualLink,
-    description: item.description,
-    category: item.category,
-    competition: item.competition,
-  };
-}
-
 /**
  * Groups Schedule Items under their Days: Days by date, each Day's items by
  * start time then title.
  */
 export function groupSchedule(
   days: Pick<Day, "id" | "date" | "dayTheme">[],
-  items: (ScheduleEntry & { dayId: string })[],
+  items: { dayId: string; entry: ScheduleEntry }[],
 ): ScheduleDay[] {
   return [...days]
     .sort((a, b) => a.date.localeCompare(b.date))
-    .map((d) => ({
-      id: d.id,
-      date: d.date,
-      dayTheme: d.dayTheme,
+    .map((day) => ({
+      id: day.id,
+      date: day.date,
+      dayTheme: day.dayTheme,
       items: items
-        .filter((item) => item.dayId === d.id)
-        .map(toEntry)
+        .filter((item) => item.dayId === day.id)
+        .map((item) => item.entry)
         .sort(compareItems),
     }));
 }
 
-/** `HH:MM[:SS]` to minutes since midnight. */
-function toMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
+/** `HH:MM[:SS]` to seconds since midnight. */
 function toSeconds(time: string): number {
   const [hours, minutes, seconds = 0] = time.split(":").map(Number);
   return hours * 3600 + minutes * 60 + seconds;
 }
 
-function isOnNow(item: ScheduleEntry, nowSeconds: number): boolean {
+/**
+ * An item's span in seconds from its Day's midnight. An end time at or
+ * before the start time runs past midnight into the next calendar day.
+ */
+function span(item: ScheduleEntry): { start: number; end: number } {
   const start = toSeconds(item.startTime);
-  const end = item.endTime
-    ? toSeconds(item.endTime)
-    : start + DEFAULT_DURATION_MINUTES * 60;
-  return start <= nowSeconds && nowSeconds < end;
+  if (!item.endTime) return { start, end: start + DEFAULT_DURATION_SECONDS };
+  const end = toSeconds(item.endTime);
+  return { start, end: end <= start ? end + SECONDS_PER_DAY : end };
+}
+
+/** The `YYYY-MM-DD` date before `date`. */
+function previousDate(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function isOnAt(item: ScheduleEntry, seconds: number): boolean {
+  const { start, end } = span(item);
+  return start <= seconds && seconds < end;
 }
 
 /**
@@ -127,38 +127,55 @@ function isOnNow(item: ScheduleEntry, nowSeconds: number): boolean {
 export function computeNowNext(days: ScheduleDay[], at: Date): NowNext {
   const clock = toEasternClock(at);
   const nowSeconds = toSeconds(clock.time);
-  const today = days.find((d) => d.date === clock.date) ?? null;
+  const today = days.find((day) => day.date === clock.date) ?? null;
+  const yesterday = days.find((day) => day.date === previousDate(clock.date));
 
-  const now = today
-    ? today.items.filter((item) => isOnNow(item, nowSeconds))
-    : [];
+  // Yesterday's items that run past midnight are still on; measure them
+  // from yesterday's midnight.
+  const now = [
+    ...(yesterday?.items ?? []).filter((item) =>
+      isOnAt(item, nowSeconds + SECONDS_PER_DAY),
+    ),
+    ...(today?.items ?? []).filter((item) => isOnAt(item, nowSeconds)),
+  ];
 
   let next: NowNext["next"] = null;
-  for (const d of days) {
-    if (d.date < clock.date) continue;
-    const upcoming = d.items.filter(
-      (item) => d.date > clock.date || toSeconds(item.startTime) > nowSeconds,
+  for (const day of days) {
+    if (day.date < clock.date) continue;
+    const upcoming = day.items.filter(
+      (item) => day.date > clock.date || toSeconds(item.startTime) > nowSeconds,
     );
     if (upcoming.length > 0) {
       const start = upcoming[0].startTime;
       next = {
-        date: d.date,
+        date: day.date,
         items: upcoming.filter((item) => item.startTime === start),
       };
       break;
     }
   }
 
-  return { today, now, next };
+  const beforeStart = days.length > 0 && clock.date < days[0].date;
+  return { today, beforeStart, now, next };
 }
 
 /** `HH:MM[:SS]` (an ET wall-clock time) as `7:05 AM`. */
 export function formatEtTime(time: string): string {
-  const total = toMinutes(time);
-  const hours = Math.floor(total / 60);
-  const minutes = String(total % 60).padStart(2, "0");
+  const totalMinutes = Math.floor(toSeconds(time) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
   const period = hours < 12 ? "AM" : "PM";
   return `${hours % 12 || 12}:${minutes} ${period}`;
+}
+
+/** An item's times as `7:00 AM ET` or `6:00 PM – 10:00 PM ET`. */
+export function formatTimeRange(
+  item: Pick<ScheduleEntry, "startTime" | "endTime">,
+): string {
+  const start = formatEtTime(item.startTime);
+  return item.endTime
+    ? `${start} – ${formatEtTime(item.endTime)} ET`
+    : `${start} ET`;
 }
 
 const dayHeadingFormatter = new Intl.DateTimeFormat("en-US", {

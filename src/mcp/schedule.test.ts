@@ -7,13 +7,13 @@ const days: ScheduleDay[] = [
   {
     id: "d1",
     date: "2026-02-23",
-    dayTheme: "Tournament Day",
+    dayTheme: "Competition Day",
     items: [
       {
         id: "i1",
         startTime: "18:00:00",
         endTime: "22:00:00",
-        title: "Tournament Night",
+        title: "Game Night",
         host: "Jesse",
         location: "JGHQ",
         virtualLink: "https://meet.example.com/t",
@@ -46,7 +46,7 @@ const days: ScheduleDay[] = [
           ],
         },
         category: "competition",
-        competition: { id: "c1", name: "Tournament" },
+        competition: { id: "c1", name: "Game Night Cup" },
       },
     ],
   },
@@ -80,17 +80,17 @@ describe("toScheduleResult", () => {
       days: [
         {
           date: "2026-02-23",
-          dayTheme: "Tournament Day",
+          dayTheme: "Competition Day",
           items: [
             {
               startTime: "18:00",
               endTime: "22:00",
-              title: "Tournament Night",
+              title: "Game Night",
               host: "Jesse",
               location: "JGHQ",
               virtualLink: "https://meet.example.com/t",
               category: "competition",
-              competition: "Tournament",
+              competition: "Game Night Cup",
               description: "Major team points.\n- Pool",
             },
           ],
@@ -116,14 +116,9 @@ describe("toScheduleResult", () => {
     });
   });
 
-  it("returns only the given day", () => {
-    const result = toScheduleResult("xi", days, "2026-02-24");
-
-    expect(result.date).toBe("2026-02-24");
-    expect(result.days.map((d) => d.date)).toEqual(["2026-02-24"]);
-  });
-
-  it("returns no days for a date outside the War Week", () => {
-    expect(toScheduleResult("xi", days, "2026-03-01").days).toEqual([]);
+  it("echoes the requested date", () => {
+    expect(toScheduleResult("xi", days.slice(1), "2026-02-24").date).toBe(
+      "2026-02-24",
+    );
   });
 });

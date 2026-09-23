@@ -79,7 +79,7 @@ const handler = createMcpHandler(
         const result = warWeek
           ? toScheduleResult(
               warWeek.edition,
-              await getSchedule(warWeek.id),
+              await getSchedule(warWeek.id, { date }),
               date,
             )
           : { warWeek: null };

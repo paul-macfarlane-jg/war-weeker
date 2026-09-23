@@ -13,7 +13,7 @@ import Link from "next/link";
 
 import { RichText } from "@/components/rich-text";
 import type { ScheduleItem } from "@/db/schema";
-import { type ScheduleEntry, formatEtTime } from "@/lib/schedule";
+import { type ScheduleEntry, formatTimeRange } from "@/lib/schedule";
 
 type Category = ScheduleItem["category"];
 
@@ -22,62 +22,50 @@ type Category = ScheduleItem["category"];
 // foreground so it is legible on light and dark backgrounds alike.
 const CATEGORY_STYLE: Record<
   Category,
-  { label: string; icon: LucideIcon; className: string }
+  { label: string; icon: LucideIcon; badge: string; cardEdge: string }
 > = {
   competition: {
     label: "Competition",
     icon: Trophy,
-    className: "border-amber-500 bg-amber-500/15",
+    badge: "border-amber-500 bg-amber-500/15",
+    cardEdge: "border-l-amber-500",
   },
   education: {
     label: "Education",
     icon: GraduationCap,
-    className: "border-sky-500 bg-sky-500/15",
+    badge: "border-sky-500 bg-sky-500/15",
+    cardEdge: "border-l-sky-500",
   },
   social: {
     label: "Social",
     icon: PartyPopper,
-    className: "border-pink-500 bg-pink-500/15",
+    badge: "border-pink-500 bg-pink-500/15",
+    cardEdge: "border-l-pink-500",
   },
   meal: {
     label: "Meal",
     icon: Utensils,
-    className: "border-emerald-500 bg-emerald-500/15",
+    badge: "border-emerald-500 bg-emerald-500/15",
+    cardEdge: "border-l-emerald-500",
   },
   work: {
     label: "Work",
     icon: Briefcase,
-    className: "border-slate-500 bg-slate-500/15",
+    badge: "border-slate-500 bg-slate-500/15",
+    cardEdge: "border-l-slate-500",
   },
 };
 
-const CATEGORY_BORDER: Record<Category, string> = {
-  competition: "border-l-amber-500",
-  education: "border-l-sky-500",
-  social: "border-l-pink-500",
-  meal: "border-l-emerald-500",
-  work: "border-l-slate-500",
-};
-
 export function CategoryBadge({ category }: { category: Category }) {
-  const { label, icon: Icon, className } = CATEGORY_STYLE[category];
+  const { label, icon: Icon, badge } = CATEGORY_STYLE[category];
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${className}`}
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium ${badge}`}
     >
       <Icon aria-hidden className="size-3" />
       {label}
     </span>
   );
-}
-
-export function formatTimeRange(
-  item: Pick<ScheduleEntry, "startTime" | "endTime">,
-) {
-  const start = formatEtTime(item.startTime);
-  return item.endTime
-    ? `${start} – ${formatEtTime(item.endTime)} ET`
-    : `${start} ET`;
 }
 
 export function ScheduleItemCard({
@@ -89,7 +77,7 @@ export function ScheduleItemCard({
 }) {
   return (
     <li
-      className={`border-border flex flex-col gap-2 rounded-lg border border-l-4 px-4 py-3 ${CATEGORY_BORDER[item.category]}`}
+      className={`border-border flex flex-col gap-2 rounded-lg border border-l-4 px-4 py-3 ${CATEGORY_STYLE[item.category].cardEdge}`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-semibold tabular-nums">

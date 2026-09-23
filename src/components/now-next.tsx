@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-import { CategoryBadge, formatTimeRange } from "@/components/schedule-item";
+import { CategoryBadge } from "@/components/schedule-item";
 import {
   type NowNext,
   type ScheduleEntry,
   formatDayHeading,
+  formatTimeRange,
 } from "@/lib/schedule";
 
 function CompactItem({ item }: { item: ScheduleEntry }) {
@@ -33,8 +34,8 @@ export function NowNextSection({
   nowNext: NowNext;
   edition: string;
 }) {
-  const { today, now, next } = nowNext;
-  if (!today && !next) return null;
+  const { today, beforeStart, now, next } = nowNext;
+  if (!today && !next && now.length === 0) return null;
 
   return (
     <section className="border-border flex flex-col gap-4 rounded-lg border px-4 py-4">
@@ -50,7 +51,9 @@ export function NowNextSection({
           </div>
         ) : (
           <span className="text-foreground/70 text-sm">
-            War Week hasn&apos;t started yet.
+            {beforeStart
+              ? "War Week hasn't started yet."
+              : "Nothing scheduled today."}
           </span>
         )}
         <Link
@@ -61,7 +64,7 @@ export function NowNextSection({
         </Link>
       </div>
 
-      {today ? (
+      {today || now.length > 0 ? (
         <div className="flex flex-col gap-2">
           <h2 className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
             On now

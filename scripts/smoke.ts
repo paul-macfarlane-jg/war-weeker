@@ -235,7 +235,7 @@ async function assertSchedule() {
     const res = await fetch(`${BASE_URL}/xi/schedule`);
     const body = await res.text();
     const checks = {
-      dayTheme: body.includes("Tournament Day"),
+      dayTheme: body.includes("Red vs. Blue"),
       anchor: body.includes('id="day-2026-02-23"'),
       etTime: body.includes("7:00 AM ET"),
       competitionLink: body.includes('href="/xi/competitions/'),
@@ -252,14 +252,16 @@ async function assertSchedule() {
 
 async function assertHomeNowNext() {
   const check =
-    "GET /xi?at=<Tournament Day 12:30 ET> shows today's Day Theme and now/next";
+    "GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next";
   try {
-    const at = encodeURIComponent("2026-02-23T12:30:00-05:00");
+    const at = encodeURIComponent("2026-02-24T12:30:00-05:00");
     const res = await fetch(`${BASE_URL}/xi?at=${at}`);
     const body = await res.text();
     const checks = {
-      dayTheme: body.includes("Tournament Day"),
-      onNow: body.includes("On now") && body.includes("Electric City Matrix"),
+      dayTheme: body.includes("Red vs. Blue"),
+      onNow:
+        body.includes("On now") &&
+        body.includes("Electric City Matrix - Day 2"),
       upNext: body.includes("Up next"),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
@@ -402,9 +404,9 @@ async function assertMcp() {
     for (const [id, args, check, expectDays] of [
       [
         6,
-        { date: "2026-02-23" },
-        "MCP get_schedule(2026-02-23) returns only Tournament Day",
-        ["2026-02-23"],
+        { date: "2026-02-24" },
+        "MCP get_schedule(2026-02-24) returns only that Day",
+        ["2026-02-24"],
       ],
       [7, {}, "MCP get_schedule() returns all six XI Days", 6],
     ] as const) {
@@ -431,7 +433,7 @@ async function assertMcp() {
           ? days.length === expectDays
           : days.length === 1 &&
             days[0].date === expectDays[0] &&
-            days[0].dayTheme === "Tournament Day" &&
+            days[0].dayTheme === "Red vs. Blue" &&
             days[0].items.length > 0);
       if (passed) {
         ok(check);

@@ -68,9 +68,9 @@ function toPlainText(content: unknown): string | null {
 }
 
 /**
- * Serializes a War Week's schedule into the `get_schedule` MCP tool
- * payload: one Day when `date` is given, otherwise every Day. Times are ET
- * wall-clock `HH:MM`.
+ * Serializes a War Week's schedule (already narrowed to `date` by the query
+ * when one was asked for) into the `get_schedule` MCP tool payload. Times
+ * are ET wall-clock `HH:MM`.
  */
 export function toScheduleResult(
   edition: string,
@@ -81,22 +81,20 @@ export function toScheduleResult(
     edition,
     timeZone: WAR_WEEK_TIME_ZONE,
     date: date ?? null,
-    days: days
-      .filter((d) => date === undefined || d.date === date)
-      .map((d) => ({
-        date: d.date,
-        dayTheme: d.dayTheme,
-        items: d.items.map((item) => ({
-          startTime: toHourMinute(item.startTime),
-          endTime: item.endTime ? toHourMinute(item.endTime) : null,
-          title: item.title,
-          host: item.host,
-          location: item.location,
-          virtualLink: item.virtualLink,
-          category: item.category,
-          competition: item.competition?.name ?? null,
-          description: toPlainText(item.description),
-        })),
+    days: days.map((day) => ({
+      date: day.date,
+      dayTheme: day.dayTheme,
+      items: day.items.map((item) => ({
+        startTime: toHourMinute(item.startTime),
+        endTime: item.endTime ? toHourMinute(item.endTime) : null,
+        title: item.title,
+        host: item.host,
+        location: item.location,
+        virtualLink: item.virtualLink,
+        category: item.category,
+        competition: item.competition?.name ?? null,
+        description: toPlainText(item.description),
       })),
+    })),
   };
 }

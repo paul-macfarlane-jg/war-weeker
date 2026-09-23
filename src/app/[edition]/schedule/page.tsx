@@ -22,7 +22,7 @@ export default async function SchedulePage({
 
   const days = await getSchedule(warWeek.id);
   const today = toEasternClock(resolveClock(at)).date;
-  const todayInWeek = days.some((d) => d.date === today);
+  const todayInWeek = days.some((day) => day.date === today);
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
@@ -33,28 +33,28 @@ export default async function SchedulePage({
       {days.length === 0 ? (
         <p className="text-foreground/70 text-sm">No schedule yet.</p>
       ) : (
-        days.map((d) => (
+        days.map((day) => (
           <section
-            key={d.id}
-            id={dayAnchor(d.date)}
+            key={day.id}
+            id={dayAnchor(day.date)}
             className="flex scroll-mt-4 flex-col gap-3"
           >
             <div className="flex flex-col">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
-                {formatDayHeading(d.date)}
-                {d.date === today ? (
+                {formatDayHeading(day.date)}
+                {day.date === today ? (
                   <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
                     Today
                   </span>
                 ) : null}
               </h2>
-              <p className="text-primary font-medium">{d.dayTheme}</p>
+              <p className="text-primary font-medium">{day.dayTheme}</p>
             </div>
-            {d.items.length === 0 ? (
+            {day.items.length === 0 ? (
               <p className="text-foreground/70 text-sm">Nothing scheduled.</p>
             ) : (
               <ol className="flex flex-col gap-3">
-                {d.items.map((item) => (
+                {day.items.map((item) => (
                   <ScheduleItemCard
                     key={item.id}
                     item={item}

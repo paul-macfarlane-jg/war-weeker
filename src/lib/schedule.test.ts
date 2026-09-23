@@ -6,6 +6,7 @@ import {
   computeNowNext,
   formatDayHeading,
   formatEtTime,
+  formatTimeRange,
   groupSchedule,
   resolveClock,
   toEasternClock,
@@ -34,13 +35,13 @@ const week: ScheduleDay[] = [
   {
     id: "d1",
     date: "2026-02-23",
-    dayTheme: "Tournament Day",
+    dayTheme: "Competition Day",
     items: [
       entry("07:00:00", "Workout", "08:00:00"),
       entry("08:30:00", "Breakfast"),
       entry("12:00:00", "Chess", "14:00:00"),
       entry("12:00:00", "Lunch", "13:00:00"),
-      entry("18:00:00", "Tournament Night", "22:00:00"),
+      entry("18:00:00", "Game Night", "22:00:00"),
     ],
   },
   {
@@ -86,11 +87,11 @@ describe("groupSchedule", () => {
         { id: "d1", date: "2026-02-23", dayTheme: "One" },
       ],
       [
-        { ...entry("18:00:00", "Dinner"), dayId: "d1" },
-        { ...entry("08:30:00", "Breakfast"), dayId: "d1" },
-        { ...entry("12:00:00", "Lunch"), dayId: "d1" },
-        { ...entry("12:00:00", "Chess"), dayId: "d1" },
-        { ...entry("09:00:00", "Kickoff"), dayId: "d2" },
+        { dayId: "d1", entry: entry("18:00:00", "Dinner") },
+        { dayId: "d1", entry: entry("08:30:00", "Breakfast") },
+        { dayId: "d1", entry: entry("12:00:00", "Lunch") },
+        { dayId: "d1", entry: entry("12:00:00", "Chess") },
+        { dayId: "d2", entry: entry("09:00:00", "Kickoff") },
       ],
     );
 
@@ -131,7 +132,7 @@ describe("computeNowNext", () => {
     {
       name: "early morning of a Day: today's theme, nothing on yet",
       at: est("2026-02-23", "06:00:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: [],
       next: ["Workout"],
       nextDate: "2026-02-23",
@@ -139,7 +140,7 @@ describe("computeNowNext", () => {
     {
       name: "during an item with an end time",
       at: est("2026-02-23", "07:30:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: ["Workout"],
       next: ["Breakfast"],
       nextDate: "2026-02-23",
@@ -147,7 +148,7 @@ describe("computeNowNext", () => {
     {
       name: "the end time is exclusive",
       at: est("2026-02-23", "08:00:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: [],
       next: ["Breakfast"],
       nextDate: "2026-02-23",
@@ -155,7 +156,7 @@ describe("computeNowNext", () => {
     {
       name: "an item with no end time lasts an hour",
       at: est("2026-02-23", "09:15:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: ["Breakfast"],
       next: ["Chess", "Lunch"],
       nextDate: "2026-02-23",
@@ -163,7 +164,7 @@ describe("computeNowNext", () => {
     {
       name: "an item with no end time is over after an hour",
       at: est("2026-02-23", "09:30:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: [],
       next: ["Chess", "Lunch"],
       nextDate: "2026-02-23",
@@ -171,23 +172,23 @@ describe("computeNowNext", () => {
     {
       name: "overlapping items are all on now; next is everything at the next start time",
       at: est("2026-02-23", "12:30:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: ["Chess", "Lunch"],
-      next: ["Tournament Night"],
+      next: ["Game Night"],
       nextDate: "2026-02-23",
     },
     {
       name: "the start time is inclusive",
       at: est("2026-02-23", "18:00:00"),
-      today: "Tournament Day",
-      now: ["Tournament Night"],
+      today: "Competition Day",
+      now: ["Game Night"],
       next: ["Kickoff"],
       nextDate: "2026-02-24",
     },
     {
       name: "late evening: next rolls over to tomorrow",
       at: est("2026-02-23", "23:00:00"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: [],
       next: ["Kickoff"],
       nextDate: "2026-02-24",
@@ -195,7 +196,7 @@ describe("computeNowNext", () => {
     {
       name: "a UTC clock already on the next day still reads today in ET",
       at: new Date("2026-02-24T03:30:00Z"),
-      today: "Tournament Day",
+      today: "Competition Day",
       now: [],
       next: ["Kickoff"],
       nextDate: "2026-02-24",
@@ -217,6 +218,63 @@ describe("computeNowNext", () => {
     expect(result.now.map((i) => i.title)).toEqual(now);
     expect(result.next?.items.map((i) => i.title) ?? []).toEqual(next);
     expect(result.next?.date ?? null).toBe(nextDate);
+  });
+});
+
+describe("computeNowNext edge cases", () => {
+  const gapWeek: ScheduleDay[] = [
+    {
+      id: "fri",
+      date: "2026-02-20",
+      dayTheme: "Friday",
+      items: [entry("22:00:00", "Late Show", "01:00:00")],
+    },
+    {
+      id: "mon",
+      date: "2026-02-23",
+      dayTheme: "Monday",
+      items: [entry("09:00:00", "Kickoff")],
+    },
+  ];
+
+  it("keeps an item that runs past midnight on now the next morning", () => {
+    const result = computeNowNext(gapWeek, est("2026-02-21", "00:30:00"));
+
+    expect(result.today).toBeNull();
+    expect(result.now.map((i) => i.title)).toEqual(["Late Show"]);
+  });
+
+  it("shows an item that runs past midnight on its own evening", () => {
+    const result = computeNowNext(gapWeek, est("2026-02-20", "23:00:00"));
+
+    expect(result.now.map((i) => i.title)).toEqual(["Late Show"]);
+  });
+
+  it("ends an item that runs past midnight at its end time", () => {
+    expect(computeNowNext(gapWeek, est("2026-02-21", "01:00:00")).now).toEqual(
+      [],
+    );
+  });
+
+  it("marks only dates before the first Day as before the start", () => {
+    expect(
+      computeNowNext(gapWeek, est("2026-02-19", "12:00:00")).beforeStart,
+    ).toBe(true);
+    const gap = computeNowNext(gapWeek, est("2026-02-22", "12:00:00"));
+    expect(gap.beforeStart).toBe(false);
+    expect(gap.today).toBeNull();
+    expect(gap.next?.date).toBe("2026-02-23");
+  });
+});
+
+describe("formatTimeRange", () => {
+  it("shows the start alone, or start to end, in ET", () => {
+    expect(formatTimeRange({ startTime: "07:00:00", endTime: null })).toBe(
+      "7:00 AM ET",
+    );
+    expect(
+      formatTimeRange({ startTime: "18:00:00", endTime: "22:00:00" }),
+    ).toBe("6:00 PM – 10:00 PM ET");
   });
 });
 
