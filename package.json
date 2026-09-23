@@ -14,10 +14,13 @@
     "format:check": "prettier --check .",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "seed:load": "tsx scripts/seed-load.ts"
+    "seed:load": "tsx scripts/seed-load.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "gate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
+    "@modelcontextprotocol/server": "^2.1.0",
     "@neondatabase/serverless": "^1.1.0",
     "@next/env": "^16.3.6",
     "class-variance-authority": "^0.7.1",
@@ -25,6 +28,7 @@
     "cn": "^0.4.0",
     "drizzle-orm": "^0.45.3",
     "lucide-react": "^0.562.0",
+    "mcp-handler": "^2.2.0",
     "next": "16.3.6",
     "pg": "^8.23.0",
     "react": "19.2.8",

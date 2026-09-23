@@ -27,6 +27,39 @@ pnpm test
 pnpm build
 ```
 
+## Smoke test and slice gate
+
+`pnpm smoke` runs an end-to-end check against a production build: it applies
+migrations, loads `seeds/xi.json`, starts the app with `pnpm start -p 3100`,
+and asserts `/` redirects to `/xi`, `/xi` and `/xi/leaderboard` respond, and
+`/api/mcp` answers `initialize`, `tools/list`, and a `tools/call` of
+`get_current_war_week` with War Week XI's data. It prints one `ok - <check>`
+or `FAIL - <check>: <detail>` line per assertion and exits 0 only if every
+check passed.
+
+Prerequisites: Docker Postgres running (`docker compose up -d`) and a fresh
+production build (`pnpm build`) before running `pnpm smoke`.
+
+`pnpm gate` runs the full slice gate used before every commit: type-check,
+lint, vitest, production build, then the smoke test —
+`pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke`.
+
+### Connecting an MCP client
+
+The app exposes a read-only Model Context Protocol server over Streamable
+HTTP at `http://localhost:3000/api/mcp` (no authentication). It currently
+exposes one tool, `get_current_war_week`, which returns the current War
+Week (live, else the most recent upcoming, else the most recent complete).
+Point any Streamable HTTP MCP client at that URL, e.g.:
+
+```json
+{
+  "war-weeker": {
+    "url": "http://localhost:3000/api/mcp"
+  }
+}
+```
+
 <!-- atlas-v3:readme:start -->
 
 ## Atlas
