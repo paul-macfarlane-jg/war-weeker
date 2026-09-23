@@ -19,7 +19,7 @@ Single-context: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/ag
 
 Atlas workspace: **war-weeker**. Confirmed repositories:
 
-- `war-weeker` at `.`; base `main`; source host `github`.
+- `war-weeker` at `.`; base `staging` (promoted to `main` by PR); source host `github`.
 
 When isolation or parallel delivery benefits from worktrees, they live beneath
 `.claude/worktrees/<work-package>/<repository-id>/`. The frontier
@@ -43,6 +43,7 @@ repository keeps its own base SHA, branch, verification result, and pull request
 - Competiscore data is gone; historical War Week content comes only from old-wikis/ or manual entry
 - Never read .env.local or other .env files; use .env.example for variable names
 - Keep scope to what fits the Fri 2026-09-25 10:00 AM deadline
+- All work goes on a feature branch (`feat/NN-<slug>`, `fix/…`, `chore/…`, `docs/…`) with a PR into `staging`. Never commit directly to `staging` or `main`; `staging` → `main` is its own PR. This overrides any skill that says to commit to the current branch.
 
 ## Atlas repository workflow
 

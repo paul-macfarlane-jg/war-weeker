@@ -49,7 +49,7 @@ and planning-artifact publication.
 | `in-progress` | Implementation underway on a feature branch |
 | `ai-review` | Implementation complete; aggregate AI review and verification |
 | `human-review` | PR open for the human to review and merge |
-| `done` | PR merged to main |
+| `done` | PR merged to staging |
 
 Human-only states: `done`.
 
@@ -106,7 +106,7 @@ Available to claim: Status is `ready-for-agent`, no claim/owner recorded, and ev
 
 | Repository | Path | Source host | Base branch | PR creation command |
 |---|---|---|---|---|
-| `war-weeker` | `.` | github | `main` | `gh pr create --base main --head <feature-branch>` |
+| `war-weeker` | `.` | github | `staging` | `gh pr create --base staging --head <feature-branch>` |
 
 Open one PR per affected repository.
 
