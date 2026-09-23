@@ -51,7 +51,7 @@ Output of the grill-me session (2026-09-23). It records every decision, the fina
 | D25 | **Appearance theme** (on the War Week): primary and accent colors, logo, banner, a font preset (2–3 options), team label (House / Tribe / Team) and leader title (Head of House / Captain). No renaming of days or other vocabulary. Seed XI with a Matrix theme. Each archived year renders in its own theme. |
 | D26 | **Admin UI covers only what changes during the week:** points entry (create / edit / delete), announcements, awards, and the reveal toggle. **Setup is seed-only:** a validated JSON file per War Week, loaded by a script. |
 | D27 | **MCP server:** remote Streamable HTTP at `/api/mcp` on the same deploy, read-only, no auth. Tools: `get_current_war_week`, `get_leaderboard(kind: team\|individual)`, `get_schedule(date?)`, `get_announcements(limit?)`, `get_awards`, `get_faq`, `list_history`, `get_history(year)`. **While standings are hidden, `get_leaderboard` returns "hidden until closing ceremonies".** |
-| D28 | **Extraction pipeline:** `scripts/extract` sends each `old-wikis/*.txt` file to the Claude API (`claude-sonnet-5`, structured output against the seed's zod schemas) and writes `seed/<year>.json`. The output is fixed by hand and committed. It runs once at dev time, never at runtime. |
+| D28 | **Extraction pipeline:** `scripts/extract` sends each `old-wikis/*.txt` file to Claude through the Vercel AI Gateway (`anthropic/claude-sonnet-5`, structured output against the seed's zod schemas) and writes `seed/<year>.json`. The output is fixed by hand and committed. It runs once at dev time, never at runtime. |
 | D29 | **Live updates:** poll with `router.refresh()` every ~10 seconds on the home and leaderboard pages. No websockets. |
 | D30 | **FAQ** is in the MVP: an ordered list of question and answer pairs per War Week, seeded from XI and edited only through the seed. |
 | D31 | **Stairs:** no code. Write `docs/stairs-integration.md` describing the future integration: per-participant HQ days over a date window, turned into points by a rule, keyed by email. It should include the findings in §9a. |
@@ -176,7 +176,7 @@ Credentials go in **`.env.local`**, which is gitignored. `.env.example` lists th
 | `BETTER_AUTH_SECRET` | `openssl rand -base64 32` |
 | `BETTER_AUTH_URL` | `http://localhost:3000` locally; the Vercel URL in prod |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud Console → OAuth client (Web application) |
-| `ANTHROPIC_API_KEY` | Anthropic Console. Only needed to run the extraction script. |
+| `AI_GATEWAY_API_KEY` | Vercel dashboard → AI Gateway → API Keys. Only needed to run the extraction script. |
 
 Google OAuth setup:
 - Set the consent screen's user type to **Internal**, which limits sign-in to the JG Workspace. The app also checks the domain itself.

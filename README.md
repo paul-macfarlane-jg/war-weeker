@@ -60,6 +60,18 @@ Point any Streamable HTTP MCP client at that URL, e.g.:
 }
 ```
 
+## Deployed migrations
+
+`.github/workflows/migrate.yml` runs `pnpm db:migrate` on every push to
+`staging` (against the `STAGING_DATABASE_URL` repo secret) and `main`
+(against `PROD_DATABASE_URL`). A branch whose secret is unset logs a notice
+and skips. Generate migrations locally with `pnpm db:generate` and commit the
+`drizzle/` output; never run `db:migrate` by hand against a deployed database.
+
+Seeds are never loaded on deploy. To load them, run the **Seed** workflow from
+the Actions tab: pick `staging` or `production` and optionally one file under
+`seeds/` (blank loads all). Production can only be seeded from `main`.
+
 <!-- atlas-v3:readme:start -->
 
 ## Atlas
