@@ -15,6 +15,17 @@ export type Roster =
   | { kind: "teams"; teams: RosterTeam[]; unassigned: RosterParticipant[] }
   | { kind: "free-for-all"; participants: RosterParticipant[] };
 
+/**
+ * The heading for a War Week's roster: "Participants" in a free-for-all,
+ * otherwise the plural Team Label (House → Houses, Tribe → Tribes).
+ */
+export function rosterHeading(
+  mode: WarWeek["mode"],
+  teamLabel: string,
+): string {
+  return mode === "free-for-all" ? "Participants" : `${teamLabel}s`;
+}
+
 /** Leaders first, then by display name. */
 function byRosterOrder(a: RosterParticipant, b: RosterParticipant): number {
   if (a.isLeader !== b.isLeader) return a.isLeader ? -1 : 1;

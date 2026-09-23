@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { RosterList, TeamRoster } from "@/components/roster";
+import { rosterHeading } from "@/lib/roster";
 import { getRoster } from "@/queries/roster";
 
 import { getWarWeekForEdition } from "../war-week";
@@ -14,11 +15,12 @@ export default async function TeamsPage({
 
   const roster = await getRoster(warWeek);
   const { teamLabel, leaderTitle } = warWeek;
+  const heading = rosterHeading(warWeek.mode, teamLabel);
 
   if (roster.kind === "free-for-all") {
     return (
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
-        <h1 className="text-2xl font-bold">Participants</h1>
+        <h1 className="text-2xl font-bold">{heading}</h1>
         <p className="text-foreground/70 text-sm">
           Free-for-all: everyone competes on their own.
         </p>
@@ -32,9 +34,9 @@ export default async function TeamsPage({
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
-      <h1 className="text-2xl font-bold">{teamLabel}s</h1>
+      <h1 className="text-2xl font-bold">{heading}</h1>
       {roster.teams.length === 0 ? (
-        <p className="text-foreground/70 text-sm">No {teamLabel}s yet.</p>
+        <p className="text-foreground/70 text-sm">No {heading} yet.</p>
       ) : null}
       {roster.teams.map((team) => (
         <TeamRoster

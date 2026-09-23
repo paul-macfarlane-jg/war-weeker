@@ -11,6 +11,7 @@ import {
 } from "@/db/schema";
 import {
   type CompetitionLedger,
+  type CompetitionListItem,
   buildCompetitionLedger,
   groupCompetitions,
   isCompetitionId,
@@ -24,22 +25,26 @@ const competitionColumns = {
   scoring: competition.scoring,
   countsTowardTeam: competition.countsTowardTeam,
   competitionGroup: competition.competitionGroup,
-};
+} satisfies Record<keyof CompetitionListItem, unknown>;
 
 /** Loads a War Week's Competitions, grouped by `groupCompetitions`. */
-export async function getCompetitions(warWeekId: string, dbOrTx: DBOrTx = db) {
+export async function getCompetitions(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+) {
   const rows = await dbOrTx
     .select(competitionColumns)
     .from(competition)
-    .where(eq(competition.warWeekId, warWeekId));
+    .where(eq(competition.warWeekId, warWeek.id));
   return groupCompetitions(rows);
 }
 
-export type CompetitionListItem = Awaited<
-  ReturnType<typeof getCompetitions>
->["ungrouped"][number];
-
 const participantTeam = alias(team, "participant_team");
+
+/** A left-joined Team's columns, or null when the join found no Team. */
+function toLedgerTeam(name: string | null, color: string | null) {
+  return name !== null && color !== null ? { name, color } : null;
+}
 
 /**
  * Loads one Competition of a War Week and its ledger. Returns `undefined`
@@ -96,22 +101,15 @@ export async function getCompetitionWithLedger(
         points: row.points,
         note: row.note,
         enteredAt: row.enteredAt,
-        team:
-          row.teamName !== null && row.teamColor !== null
-            ? { name: row.teamName, color: row.teamColor }
-            : null,
+        team: toLedgerTeam(row.teamName, row.teamColor),
         participant:
           row.participantName !== null
             ? {
                 displayName: row.participantName,
-                team:
-                  row.participantTeamName !== null &&
-                  row.participantTeamColor !== null
-                    ? {
-                        name: row.participantTeamName,
-                        color: row.participantTeamColor,
-                      }
-                    : null,
+                team: toLedgerTeam(
+                  row.participantTeamName,
+                  row.participantTeamColor,
+                ),
               }
             : null,
       })),

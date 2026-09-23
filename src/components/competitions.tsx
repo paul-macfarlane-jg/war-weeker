@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 import {
+  type CompetitionListItem,
   type LedgerEntry,
   describeScoring,
   formatMaxPoints,
 } from "@/lib/competitions";
 import { formatPoints } from "@/lib/points";
-import type { CompetitionListItem } from "@/queries/competitions";
 
 export function CompetitionFacts({
   competition,

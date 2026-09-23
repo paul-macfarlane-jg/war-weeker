@@ -12,7 +12,7 @@ export default async function CompetitionsPage({
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
 
-  const { groups, ungrouped } = await getCompetitions(warWeek.id);
+  const { groups, ungrouped } = await getCompetitions(warWeek);
   const listProps = { edition: warWeek.edition, teamLabel: warWeek.teamLabel };
 
   return (

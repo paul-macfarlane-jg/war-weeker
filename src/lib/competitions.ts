@@ -3,6 +3,17 @@ import { z } from "zod";
 import type { Competition, PointsEntry, Team } from "@/db/schema";
 import { formatPoints } from "@/lib/points";
 
+export type CompetitionListItem = Pick<
+  Competition,
+  | "id"
+  | "name"
+  | "description"
+  | "maxPoints"
+  | "scoring"
+  | "countsTowardTeam"
+  | "competitionGroup"
+>;
+
 export type CompetitionGroups<T> = {
   groups: { name: string; competitions: T[] }[];
   ungrouped: T[];
@@ -32,7 +43,7 @@ export function groupCompetitions<
 
   return {
     groups: [...groups]
-      .map(([name, members]) => ({ name, competitions: members.sort(byName) }))
+      .map(([name, inGroup]) => ({ name, competitions: inGroup.sort(byName) }))
       .sort(byName),
     ungrouped: ungrouped.sort(byName),
   };
@@ -107,7 +118,11 @@ export function buildCompetitionLedger({
             color: participant.team?.color ?? null,
             team: participant.team?.name ?? null,
           }
-        : { name: team!.name, color: team!.color, team: null },
+        : {
+            name: team?.name ?? "Unknown",
+            color: team?.color ?? null,
+            team: null,
+          },
       points,
       note,
     }));

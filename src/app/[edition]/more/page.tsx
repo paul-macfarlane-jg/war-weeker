@@ -2,6 +2,8 @@ import { ChevronRight, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { rosterHeading } from "@/lib/roster";
+
 import { getWarWeekForEdition } from "../war-week";
 
 export default async function MorePage({
@@ -18,10 +20,7 @@ export default async function MorePage({
       icon: Trophy,
     },
     {
-      label:
-        warWeek.mode === "free-for-all"
-          ? "Participants"
-          : `${warWeek.teamLabel}s`,
+      label: rosterHeading(warWeek.mode, warWeek.teamLabel),
       href: `/${warWeek.edition}/teams`,
       icon: Users,
     },

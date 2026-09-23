@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { type RosterParticipantInput, buildRoster } from "@/lib/roster";
+import {
+  type RosterParticipantInput,
+  buildRoster,
+  rosterHeading,
+} from "@/lib/roster";
 
 const red = { id: "t-red", name: "Red", color: "#ff3b3b", logoUrl: null };
 const blue = {
@@ -141,5 +145,15 @@ describe("buildRoster", () => {
     expect(
       buildRoster({ mode: "free-for-all", teams: [], participants: [] }),
     ).toEqual({ kind: "free-for-all", participants: [] });
+  });
+});
+
+describe("rosterHeading", () => {
+  it.each([
+    ["teams", "House", "Houses"],
+    ["teams", "Tribe", "Tribes"],
+    ["free-for-all", "Team", "Participants"],
+  ] as const)("%s mode with label %s is %s", (mode, label, expected) => {
+    expect(rosterHeading(mode, label)).toBe(expected);
   });
 });

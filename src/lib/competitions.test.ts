@@ -23,27 +23,27 @@ describe("groupCompetitions", () => {
 
   it("groups by Competition Group, ordering groups and Competitions by name", () => {
     const result = groupCompetitions([
-      competition("Cypher", "Team Night Events"),
-      competition("HQ Attendance", "Pre-War Week and General"),
+      competition("Cypher", "Night Games"),
+      competition("HQ Attendance", "Before the Week"),
       competition("Black Midnight"),
-      competition("Deja Vu", "Team Night Events"),
-      competition("AI Survey Completion", "Pre-War Week and General"),
+      competition("Deja Vu", "Night Games"),
+      competition("AI Survey Completion", "Before the Week"),
       competition("Beyblades"),
     ]);
 
     expect(result.groups).toEqual([
       {
-        name: "Pre-War Week and General",
+        name: "Before the Week",
         competitions: [
-          competition("AI Survey Completion", "Pre-War Week and General"),
-          competition("HQ Attendance", "Pre-War Week and General"),
+          competition("AI Survey Completion", "Before the Week"),
+          competition("HQ Attendance", "Before the Week"),
         ],
       },
       {
-        name: "Team Night Events",
+        name: "Night Games",
         competitions: [
-          competition("Cypher", "Team Night Events"),
-          competition("Deja Vu", "Team Night Events"),
+          competition("Cypher", "Night Games"),
+          competition("Deja Vu", "Night Games"),
         ],
       },
     ]);
