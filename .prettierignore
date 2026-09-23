@@ -1,0 +1,11 @@
+pnpm-lock.yaml
+drizzle/
+.next/
+node_modules/
+test-results/
+.scratch/
+old-wikis/
+docs/
+*.md
+.atlas/
+.claude/

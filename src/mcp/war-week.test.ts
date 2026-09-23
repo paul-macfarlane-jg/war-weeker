@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import { WarWeek } from "@/db/schema";
-
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
 
 function warWeekFixture(overrides: Partial<WarWeek>): WarWeek {

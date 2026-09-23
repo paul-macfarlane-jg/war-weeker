@@ -31,7 +31,7 @@ export default async function EditionLayout({
   return (
     <div
       style={warWeekThemeStyle(warWeek)}
-      className="min-h-dvh bg-background text-foreground font-sans pb-20"
+      className="bg-background text-foreground min-h-dvh pb-20 font-sans"
     >
       {children}
       <BottomTabBar edition={warWeek.edition} />

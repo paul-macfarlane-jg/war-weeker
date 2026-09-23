@@ -94,12 +94,12 @@ export async function loadWarWeekSeed(
     const existingByDate = new Map(existingDays.map((d) => [d.date, d]));
 
     for (const daySeed of seed.days) {
-      const match = existingByDate.get(daySeed.date);
-      if (match) {
+      const existingDay = existingByDate.get(daySeed.date);
+      if (existingDay) {
         await tx
           .update(day)
           .set({ dayTheme: daySeed.dayTheme, updatedAt: new Date() })
-          .where(eq(day.id, match.id));
+          .where(eq(day.id, existingDay.id));
       } else {
         await tx.insert(day).values({
           warWeekId: warWeekRow.id,

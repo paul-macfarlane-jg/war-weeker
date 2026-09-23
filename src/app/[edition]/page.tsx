@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import type { WarWeek } from "@/db/schema";
 
 import { getWarWeekForEdition } from "./war-week";
 
-const STATUS_LABEL: Record<string, string> = {
+const STATUS_LABEL: Record<WarWeek["status"], string> = {
   live: "Live now",
   upcoming: "Upcoming",
   complete: "Complete",
@@ -34,7 +35,7 @@ export default async function EditionHomePage({
   if (!warWeek) notFound();
 
   const editionLabel = warWeek.edition.toUpperCase();
-  const statusLabel = STATUS_LABEL[warWeek.status] ?? warWeek.status;
+  const statusLabel = STATUS_LABEL[warWeek.status];
 
   return (
     <main className="mx-auto flex max-w-md flex-col">
@@ -45,24 +46,36 @@ export default async function EditionHomePage({
           className="h-48 w-full object-cover"
         />
       ) : (
-        <div className="flex h-48 w-full items-center justify-center bg-accent text-2xl font-bold text-accent-foreground">
+        <div className="bg-accent text-accent-foreground flex h-48 w-full items-center justify-center text-2xl font-bold">
           War Week {editionLabel}
         </div>
       )}
 
       <div className="flex flex-col gap-4 px-4 py-6">
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-medium tracking-wide text-foreground/60 uppercase">
-            War Week
-          </span>
-          <h1 className="text-3xl font-bold">
-            War Week {editionLabel} <span className="text-foreground/60">{warWeek.year}</span>
-          </h1>
-          <p className="text-xl font-semibold text-primary">{warWeek.storyTheme}</p>
+        <div className="flex items-start gap-3">
+          {warWeek.logoUrl ? (
+            <img
+              src={warWeek.logoUrl}
+              alt={`War Week ${editionLabel} logo`}
+              className="size-14 shrink-0 rounded-md"
+            />
+          ) : null}
+          <div className="flex flex-col gap-1">
+            <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
+              War Week
+            </span>
+            <h1 className="text-3xl font-bold">
+              War Week {editionLabel}{" "}
+              <span className="text-foreground/60">{warWeek.year}</span>
+            </h1>
+            <p className="text-primary text-xl font-semibold">
+              {warWeek.storyTheme}
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="rounded-full border border-border px-3 py-1 font-medium">
+          <span className="border-border rounded-full border px-3 py-1 font-medium">
             {statusLabel}
           </span>
           <span className="text-foreground/70">
@@ -73,6 +86,7 @@ export default async function EditionHomePage({
         <Button
           size="lg"
           className="w-full"
+          nativeButton={false}
           render={
             <a
               href={warWeek.slackChannelUrl}

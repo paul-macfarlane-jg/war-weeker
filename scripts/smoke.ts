@@ -1,7 +1,8 @@
 import { loadEnvConfig } from "@next/env";
-import { ChildProcess, spawn, spawnSync } from "node:child_process";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { Client } from "pg";
 
 loadEnvConfig(process.cwd());
 
@@ -53,6 +54,49 @@ async function waitForReady(): Promise<boolean> {
   return false;
 }
 
+async function portInUse(): Promise<boolean> {
+  try {
+    await fetch(`${BASE_URL}/`, { redirect: "manual" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function assertSingleWarWeek() {
+  const check = "loading the seed twice leaves one War Week XI row";
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  try {
+    await client.connect();
+    const { rows } = await client.query<{ count: string }>(
+      "select count(*)::text as count from war_week where edition = 'xi'",
+    );
+    if (rows[0]?.count === "1") {
+      ok(check);
+    } else {
+      fail(check, `count=${rows[0]?.count}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+async function assertUnknownEdition404() {
+  const check = "GET /zz returns 404";
+  try {
+    const res = await fetch(`${BASE_URL}/zz`);
+    if (res.status === 404) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
 async function assertRootRedirect() {
   const check = "GET / redirects to /xi";
   try {
@@ -76,7 +120,10 @@ async function assertXiHome() {
     if (res.status === 200 && body.includes("War Week XI")) {
       ok(check);
     } else {
-      fail(check, `status=${res.status} bodyIncludes=${body.includes("War Week XI")}`);
+      fail(
+        check,
+        `status=${res.status} bodyIncludes=${body.includes("War Week XI")}`,
+      );
     }
   } catch (error) {
     fail(check, String(error));
@@ -176,8 +223,7 @@ async function assertMcp() {
       sessionId,
     );
     const result = call.json?.result as
-      | { content?: { type: string; text: string }[] }
-      | undefined;
+      { content?: { type: string; text: string }[] } | undefined;
     const text = result?.content?.[0]?.text;
     const parsed = text ? JSON.parse(text) : undefined;
 
@@ -228,12 +274,29 @@ async function main() {
     process.exit(1);
   }
 
+  if (await portInUse()) {
+    console.error(
+      `FAIL - something is already listening on ${BASE_URL}; stop it before running the smoke`,
+    );
+    process.exit(1);
+  }
+
   if (!runStep("pnpm", ["db:migrate"], "pnpm db:migrate")) {
     process.exit(1);
   }
-  if (!runStep("pnpm", ["seed:load", "seeds/xi.json"], "pnpm seed:load seeds/xi.json")) {
-    process.exit(1);
+  // Load the seed twice: the second load proves upsert-by-edition is idempotent.
+  for (const attempt of [1, 2]) {
+    if (
+      !runStep(
+        "pnpm",
+        ["seed:load", "seeds/xi.json"],
+        `pnpm seed:load seeds/xi.json (load ${attempt})`,
+      )
+    ) {
+      process.exit(1);
+    }
   }
+  await assertSingleWarWeek();
 
   const server = spawn("pnpm", ["start", "-p", String(PORT)], {
     env: childEnv,
@@ -246,11 +309,15 @@ async function main() {
   try {
     const ready = await waitForReady();
     if (!ready) {
-      fail("server ready", `did not respond on ${BASE_URL}/xi within ${READY_TIMEOUT_MS}ms`);
+      fail(
+        "server ready",
+        `did not respond on ${BASE_URL}/xi within ${READY_TIMEOUT_MS}ms`,
+      );
     } else {
       ok("server ready");
       await assertRootRedirect();
       await assertXiHome();
+      await assertUnknownEdition404();
       await assertLeaderboard();
       await assertMcp();
     }

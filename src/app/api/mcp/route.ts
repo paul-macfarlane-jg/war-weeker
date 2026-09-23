@@ -6,22 +6,6 @@ import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export const dynamic = "force-dynamic";
 
-const currentWarWeekOutputSchema = z.looseObject({
-  edition: z.string().optional(),
-  editionNumber: z.number().optional(),
-  year: z.number().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
-  storyTheme: z.string().optional(),
-  status: z.string().optional(),
-  mode: z.string().optional(),
-  teamLabel: z.string().optional(),
-  leaderTitle: z.string().optional(),
-  slackChannelUrl: z.string().optional(),
-  standingsHidden: z.boolean().optional(),
-  warWeek: z.null().optional(),
-});
-
 const handler = createMcpHandler(
   (server) => {
     server.registerTool(
@@ -31,15 +15,16 @@ const handler = createMcpHandler(
         description:
           "Returns the current War Week: the live one, else the most recent upcoming one, else the most recent complete one.",
         inputSchema: z.object({}),
-        outputSchema: currentWarWeekOutputSchema,
       },
       async () => {
+        // No outputSchema: the SDK rejects a declared schema without
+        // structuredContent, and the no-current-War-Week result is a
+        // different shape ({ warWeek: null }) from the populated one.
         const warWeek = await getCurrentWarWeek();
         const result = toCurrentWarWeekResult(warWeek);
 
         return {
           content: [{ type: "text", text: JSON.stringify(result) }],
-          ...("warWeek" in result ? {} : { structuredContent: result }),
         };
       },
     );

@@ -21,7 +21,7 @@ export function BottomTabBar({ edition }: { edition: string }) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
+      className="border-border bg-background fixed inset-x-0 bottom-0 z-50 border-t pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="flex items-stretch justify-around">
         {tabs.map(({ label, href, icon: Icon }) => {
