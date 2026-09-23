@@ -16,7 +16,7 @@ export default async function CompetitionsPage({
   const listProps = { edition: warWeek.edition, teamLabel: warWeek.teamLabel };
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
       <h1 className="text-2xl font-bold">Competitions</h1>
       {groups.length === 0 && ungrouped.length === 0 ? (
         <p className="text-foreground/70 text-sm">No Competitions yet.</p>
