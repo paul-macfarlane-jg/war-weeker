@@ -1,0 +1,79 @@
+# Manually loads seed files into a deployed database (Actions → Seed → Run
+# workflow). Never runs on push: organizer edits made through the admin UI
+# must not be overwritten by a deploy.
+#
+# Uses the same repo secrets as migrate.yml:
+#   STAGING_DATABASE_URL — staging database connection string
+#   PROD_DATABASE_URL    — production database connection string
+#
+# Production can only be seeded from main, so a feature branch's seeds never
+# reach the production database.
+name: Seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target database
+        type: choice
+        options: [staging, production]
+        required: true
+      seed:
+        description: Seed file under seeds/ (e.g. xi.json); leave blank for all
+        type: string
+        required: false
+
+concurrency:
+  group: seed-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    env:
+      STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+      PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+      TARGET: ${{ inputs.environment }}
+      SEED: ${{ inputs.seed }}
+    steps:
+      - name: Resolve target database
+        run: |
+          if [ "$TARGET" = "production" ]; then
+            if [ "$GITHUB_REF_NAME" != "main" ]; then
+              echo "::error::Production can only be seeded from main (got $GITHUB_REF_NAME)."
+              exit 1
+            fi
+            url="$PROD_DATABASE_URL"
+          else
+            url="$STAGING_DATABASE_URL"
+          fi
+          if [ -z "$url" ]; then
+            echo "::error::No database secret configured for $TARGET."
+            exit 1
+          fi
+          echo "DATABASE_URL=$url" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Load seeds
+        run: |
+          if [ -n "$SEED" ]; then
+            case "$SEED" in
+              */*|*..*) echo "::error::Seed must be a file name under seeds/."; exit 1 ;;
+            esac
+            files="seeds/$SEED"
+          else
+            files=$(ls seeds/*.json)
+          fi
+          for f in $files; do
+            pnpm seed:load "$f"
+          done
