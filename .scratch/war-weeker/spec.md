@@ -190,7 +190,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - `get_history(year)`
 
   While standings are hidden, `get_leaderboard` returns an explicit "hidden until closing ceremonies" result and no numbers.
-- **Extraction script.** Run by hand at dev time. It sends each old wiki text file to the Claude API (`claude-sonnet-5`, structured output against the seed schemas) and writes one seed JSON file per year. The output is fixed by hand and committed. It uses `ANTHROPIC_API_KEY` and is never called at runtime.
+- **Extraction script.** Run by hand at dev time. It sends each old wiki text file to Claude through the Vercel AI Gateway (AI SDK, model `anthropic/claude-sonnet-5`, structured output against the seed schemas) and writes one seed JSON file per year. The output is fixed by hand and committed. It uses `AI_GATEWAY_API_KEY` and is never called at runtime.
 - **Theming.** The War Week's Appearance Theme (primary and accent colors, logo, banner, one of 2–3 font presets) is applied as CSS variables at the War Week layout. Archived War Weeks render in their own theme.
 
 ### Schema (entities and key rules)
@@ -313,7 +313,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Prerequisites the developer handles:**
   - Google OAuth client (Internal consent screen; redirect `/api/auth/callback/google` on localhost and on the Vercel domain)
   - `BETTER_AUTH_SECRET`
-  - `ANTHROPIC_API_KEY`
+  - `AI_GATEWAY_API_KEY` (Vercel AI Gateway)
   - the Vercel project and Neon database (later)
   - the organizer allowlist (in the XI seed)
 

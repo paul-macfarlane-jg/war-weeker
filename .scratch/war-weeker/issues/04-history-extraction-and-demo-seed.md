@@ -7,7 +7,7 @@
 **Status:** ready-for-agent
 
 **Notes:**
-- The extraction script is run by hand at dev time. It sends each `old-wikis/<year>.txt` to the Claude API (`claude-sonnet-5`, structured output against the shared seed schemas) and writes one seed file per year. It uses `ANTHROPIC_API_KEY` and is never called at runtime.
+- The extraction script is run by hand at dev time. It sends each `old-wikis/<year>.txt` to Claude through the Vercel AI Gateway (AI SDK, model `anthropic/claude-sonnet-5`, structured output against the shared seed schemas) and writes one seed file per year. It uses `AI_GATEWAY_API_KEY` and is never called at runtime.
 - Historical content comes only from `old-wikis/` (Competiscore data is gone). Past years may have no Points Entries; winner and highlights are stored text.
 - Don't include real employee personal data beyond what's already on the public JG wiki. Participant emails may be omitted.
 
