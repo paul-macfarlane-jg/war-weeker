@@ -51,15 +51,33 @@ banned-term scan only covers `src/`, `scripts/`, and `drizzle/`.
 
 ## Seed idempotence rules
 
-- `war_week` rows are upserted by `edition`, the seed's natural key. Loading
-  the same seed file twice must leave exactly one row.
-- `day` rows are upserted by `(war_week_id, date)`, their natural key within
-  a War Week. Loading a seed removes any `day` whose date is no longer
-  present in the seed file, so a War Week's days always match its seed
-  exactly after a load.
-- `standings_hidden` is admin-owned state, not seed content: the seed value
-  is applied only when a War Week is first inserted. Reloading an existing
-  War Week's seed never overwrites an organizer's `standings_hidden` choice.
-  Tickets that add other organizer-controlled fields (e.g. Reveal state in
-  ticket 03, Points Entries in ticket 09) must follow the same rule: seed
-  data initializes, it does not clobber admin state on reload.
+A seed file loads in one transaction. Loading the same file twice leaves the
+same rows with the same values (only `updated_at` moves).
+
+- `war_week` rows are upserted by `edition`, the seed's natural key.
+- **Setup data** is owned by the seed. Each row is upserted by its natural
+  key within the War Week, and any row absent from the seed is deleted, so
+  setup always matches the seed exactly after a load:
+  - Day: `(war_week_id, date)`
+  - Schedule Item: `(day_id, start_time, title)`
+  - Team: `(war_week_id, name)`
+  - Participant: `(war_week_id, display_name)`
+  - Competition: `(war_week_id, name)`
+  - FAQ Item: `(war_week_id, question)`; sort order is the position in the
+    seed's `faqItems` list
+
+  Seed references between entities use these names (a Points Entry names its
+  Competition, Team or Participant). Removing a Team, Participant or
+  Competition from the seed also deletes its Points Entries and Award
+  recipients, and renaming one counts as a removal plus an addition, so fix
+  spellings before organizers start entering points.
+  - Changing a Competition's `scoring` in the seed does not re-check its
+    existing Points Entries; the target-kind rule is enforced in zod (seed
+    files and organizer actions), not the database.
+- **Organizer-owned data** is seed-initialized but never clobbered:
+  - `standings_hidden` is applied only when a War Week is first inserted.
+  - Points Entries, Awards (with their recipients) and Announcements in a
+    seed carry a `key`. The loader inserts a keyed record only when no record
+    with that key exists, and never updates or deletes one. Records organizers
+    create in the app have no key and are never touched by a load. Adding a
+    new keyed record to a seed and reloading adds just that record.
