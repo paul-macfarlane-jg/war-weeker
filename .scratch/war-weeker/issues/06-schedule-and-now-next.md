@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] Schedule Items are grouped by Day in time order, each Day with its Day Theme, all times in ET whatever the viewer's timezone
 - [ ] The page opens scrolled to today when today is within the War Week

@@ -228,6 +228,50 @@ async function assertLeaderboard() {
   }
 }
 
+async function assertSchedule() {
+  const check =
+    "GET /xi/schedule groups by Day with Day Themes, ET times and Competition links";
+  try {
+    const res = await fetch(`${BASE_URL}/xi/schedule`);
+    const body = await res.text();
+    const checks = {
+      dayTheme: body.includes("Tournament Day"),
+      anchor: body.includes('id="day-2026-02-23"'),
+      etTime: body.includes("7:00 AM ET"),
+      competitionLink: body.includes('href="/xi/competitions/'),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertHomeNowNext() {
+  const check =
+    "GET /xi?at=<Tournament Day 12:30 ET> shows today's Day Theme and now/next";
+  try {
+    const at = encodeURIComponent("2026-02-23T12:30:00-05:00");
+    const res = await fetch(`${BASE_URL}/xi?at=${at}`);
+    const body = await res.text();
+    const checks = {
+      dayTheme: body.includes("Tournament Day"),
+      onNow: body.includes("On now") && body.includes("Electric City Matrix"),
+      upNext: body.includes("Up next"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
 async function mcpRequest(
   body: Record<string, unknown>,
   sessionId?: string,
@@ -287,7 +331,11 @@ async function assertMcp() {
     const tools =
       (toolsList.json?.result as { tools?: { name: string }[] } | undefined)
         ?.tools ?? [];
-    for (const name of ["get_current_war_week", "get_leaderboard"]) {
+    for (const name of [
+      "get_current_war_week",
+      "get_leaderboard",
+      "get_schedule",
+    ]) {
       if (tools.some((tool) => tool.name === name)) {
         ok(`MCP tools/list includes ${name}`);
       } else {
@@ -348,6 +396,47 @@ async function assertMcp() {
         ok(check);
       } else {
         fail(check, `result=${JSON.stringify(leaderboard.json)}`);
+      }
+    }
+
+    for (const [id, args, check, expectDays] of [
+      [
+        6,
+        { date: "2026-02-23" },
+        "MCP get_schedule(2026-02-23) returns only Tournament Day",
+        ["2026-02-23"],
+      ],
+      [7, {}, "MCP get_schedule() returns all six XI Days", 6],
+    ] as const) {
+      const schedule = await mcpRequest(
+        {
+          jsonrpc: "2.0",
+          id,
+          method: "tools/call",
+          params: { name: "get_schedule", arguments: args },
+        },
+        sessionId,
+      );
+      const text = (
+        schedule.json?.result as
+          { content?: { type: string; text: string }[] } | undefined
+      )?.content?.[0]?.text;
+      const parsed = text ? JSON.parse(text) : undefined;
+      const days = parsed?.days as
+        { date: string; dayTheme: string; items: unknown[] }[] | undefined;
+      const passed =
+        parsed?.timeZone === "America/New_York" &&
+        Array.isArray(days) &&
+        (typeof expectDays === "number"
+          ? days.length === expectDays
+          : days.length === 1 &&
+            days[0].date === expectDays[0] &&
+            days[0].dayTheme === "Tournament Day" &&
+            days[0].items.length > 0);
+      if (passed) {
+        ok(check);
+      } else {
+        fail(check, `result=${JSON.stringify(schedule.json)}`);
       }
     }
   } catch (error) {
@@ -442,6 +531,8 @@ async function main() {
       await assertXiHome();
       await assertUnknownEdition404();
       await assertLeaderboard();
+      await assertSchedule();
+      await assertHomeNowNext();
       await assertMcp();
     }
   } finally {

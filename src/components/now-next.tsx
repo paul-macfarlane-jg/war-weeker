@@ -1,0 +1,98 @@
+import Link from "next/link";
+
+import { CategoryBadge, formatTimeRange } from "@/components/schedule-item";
+import {
+  type NowNext,
+  type ScheduleEntry,
+  formatDayHeading,
+} from "@/lib/schedule";
+
+function CompactItem({ item }: { item: ScheduleEntry }) {
+  return (
+    <li className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="font-semibold">{item.title}</span>
+        <CategoryBadge category={item.category} />
+      </div>
+      <span className="text-foreground/70 text-sm">
+        {formatTimeRange(item)}
+        {item.location ? ` · ${item.location}` : null}
+      </span>
+    </li>
+  );
+}
+
+/**
+ * Home page summary: today's Day Theme and what's on now and next. Renders
+ * nothing once the War Week's schedule is over.
+ */
+export function NowNextSection({
+  nowNext,
+  edition,
+}: {
+  nowNext: NowNext;
+  edition: string;
+}) {
+  const { today, now, next } = nowNext;
+  if (!today && !next) return null;
+
+  return (
+    <section className="border-border flex flex-col gap-4 rounded-lg border px-4 py-4">
+      <div className="flex items-baseline justify-between">
+        {today ? (
+          <div className="flex flex-col">
+            <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
+              Today
+            </span>
+            <span className="text-primary text-lg font-semibold">
+              {today.dayTheme}
+            </span>
+          </div>
+        ) : (
+          <span className="text-foreground/70 text-sm">
+            War Week hasn&apos;t started yet.
+          </span>
+        )}
+        <Link
+          href={`/${edition}/schedule`}
+          className="text-primary text-sm font-medium"
+        >
+          Full schedule
+        </Link>
+      </div>
+
+      {today ? (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
+            On now
+          </h2>
+          {now.length > 0 ? (
+            <ul className="flex flex-col gap-3">
+              {now.map((item) => (
+                <CompactItem key={item.id} item={item} />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-foreground/70 text-sm">Nothing on right now.</p>
+          )}
+        </div>
+      ) : null}
+
+      {next ? (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
+            Up next
+            {next.date !== today?.date
+              ? ` · ${formatDayHeading(next.date)}`
+              : null}
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {next.items.map((item) => (
+              <CompactItem key={item.id} item={item} />
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  );
+}
