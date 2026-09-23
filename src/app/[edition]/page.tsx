@@ -38,12 +38,12 @@ export default async function EditionHomePage({
   const statusLabel = STATUS_LABEL[warWeek.status];
 
   return (
-    <main className="mx-auto flex max-w-md flex-col">
+    <main className="mx-auto flex max-w-md flex-col md:max-w-3xl md:py-8">
       {warWeek.bannerUrl ? (
         <img
           src={warWeek.bannerUrl}
           alt={`War Week ${editionLabel} banner`}
-          className="h-48 w-full object-cover"
+          className="h-48 w-full object-cover md:h-72 md:rounded-lg"
         />
       ) : (
         <div className="bg-accent text-accent-foreground flex h-48 w-full items-center justify-center text-2xl font-bold">
@@ -85,7 +85,7 @@ export default async function EditionHomePage({
 
         <Button
           size="lg"
-          className="w-full"
+          className="w-full md:w-auto md:self-start"
           nativeButton={false}
           render={
             <a
