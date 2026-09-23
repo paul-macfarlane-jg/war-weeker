@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="War Week XI banner">
+  <rect width="1200" height="400" fill="#000000" />
+  <g stroke="#00ff41" stroke-width="2" opacity="0.35">
+    <line x1="40" y1="0" x2="40" y2="400" />
+    <line x1="140" y1="0" x2="140" y2="400" />
+    <line x1="240" y1="0" x2="240" y2="400" />
+    <line x1="340" y1="0" x2="340" y2="400" />
+    <line x1="440" y1="0" x2="440" y2="400" />
+    <line x1="540" y1="0" x2="540" y2="400" />
+    <line x1="640" y1="0" x2="640" y2="400" />
+    <line x1="740" y1="0" x2="740" y2="400" />
+    <line x1="840" y1="0" x2="840" y2="400" />
+    <line x1="940" y1="0" x2="940" y2="400" />
+    <line x1="1040" y1="0" x2="1040" y2="400" />
+    <line x1="1140" y1="0" x2="1140" y2="400" />
+  </g>
+  <text x="600" y="190" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="56" fill="#00ff41">WAR WEEK XI</text>
+  <text x="600" y="250" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="32" fill="#d1ffd6">THE MATRIX</text>
+</svg>

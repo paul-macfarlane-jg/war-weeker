@@ -1,0 +1,35 @@
+{
+  "edition": "xi",
+  "editionNumber": 11,
+  "year": 2026,
+  "startDate": "2026-02-22",
+  "endDate": "2026-02-27",
+  "storyTheme": "The Matrix",
+  "status": "live",
+  "mode": "teams",
+  "teamLabel": "Team",
+  "leaderTitle": "Captain",
+  "slackChannelUrl": "https://jahnelgroup.slack.com/archives/war-week-xi",
+  "standingsHidden": true,
+  "primary": "#00ff41",
+  "primaryForeground": "#000000",
+  "accent": "#008f11",
+  "background": "#000000",
+  "foreground": "#d1ffd6",
+  "fontPreset": "mono",
+  "logoUrl": "/themes/xi/logo.svg",
+  "bannerUrl": "/themes/xi/banner.svg",
+  "organizerEmails": ["pmacfarlane@jahnelgroup.com"],
+  "highlights": [],
+  "days": [
+    { "date": "2026-02-22", "dayTheme": "The Matrix Has You" },
+    { "date": "2026-02-23", "dayTheme": "Tournament Day" },
+    { "date": "2026-02-24", "dayTheme": "Red vs. Blue" },
+    {
+      "date": "2026-02-25",
+      "dayTheme": "Wellness Wednesday with Dani Milliken"
+    },
+    { "date": "2026-02-26", "dayTheme": "Rise of the Machines AI Day" },
+    { "date": "2026-02-27", "dayTheme": "Closing Ceremonies (Guests Welcome)" }
+  ]
+}
