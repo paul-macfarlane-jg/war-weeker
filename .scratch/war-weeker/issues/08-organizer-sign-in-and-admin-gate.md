@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** in-progress
+**Status:** done
 
 **Human prerequisites:** a Google OAuth client with Internal consent and a redirect `/api/auth/callback/google` on localhost; `BETTER_AUTH_SECRET` and the OAuth values in `.env.local`.
 
@@ -13,13 +13,13 @@
 - The auth tables are a Drizzle schema change, and this is an auth/access change: red-team the plan, and keep the demo seed and migration together (repo policy).
 - Organizer = a signed-in user whose email is on the War Week's allowlist. There are no other roles.
 
-- [ ] Sign-in rejects any email outside `@jahnelgroup.com` server-side, even if the consent screen were misconfigured; covered by a vitest test of the email check
-- [ ] A shared, reusable organizer check (signed-in email on that War Week's allowlist) is used by the `/admin` gate, and later server actions will use it too; covered by a vitest test
-- [ ] `/admin` shows a desktop admin shell to Organizers and refuses signed-in non-organizers and anonymous users
-- [ ] With the require-sign-in env flag on, public pages redirect anonymous users to sign-in, and `/api/mcp` behavior is documented. With it off (default), reads stay public
+- [x] Sign-in rejects any email outside `@jahnelgroup.com` server-side, even if the consent screen were misconfigured; covered by a vitest test of the email check
+- [x] A shared, reusable organizer check (signed-in email on that War Week's allowlist) is used by the `/admin` gate, and later server actions will use it too; covered by a vitest test
+- [x] `/admin` shows a desktop admin shell to Organizers and refuses signed-in non-organizers and anonymous users
+- [x] With the require-sign-in env flag on, public pages redirect anonymous users to sign-in, and `/api/mcp` behavior is documented. With it off (default), reads stay public
 - [ ] Human-gated check: the developer signs in locally with an allowlisted account and reaches `/admin`, then with a non-allowlisted JG account and is refused
-- [ ] Smoke still passes with no OAuth credentials present
-- [ ] Slice gate passes: type-check, lint, vitest, production build, and the smoke test against seeded local Postgres; on failure, stop and report
+- [x] Smoke still passes with no OAuth credentials present
+- [x] Slice gate passes: type-check, lint, vitest, production build, and the smoke test against seeded local Postgres; on failure, stop and report
 
 ## Comments
 
@@ -55,3 +55,51 @@ Fresh-context `atlas-red-team-reviewer` against the plan and the in-progress cod
 - Nits applied: README notes on the harmless CI "default secret" log line and per-environment `BETTER_AUTH_URL`/redirect URIs; `requireOrganizer` comment says to load the War Week from the row being changed, never client input; proxy matcher comment about extension paths; comment on why both smoke servers use an `http://` base URL (unprefixed cookie name).
 - Decision for the developer to confirm: with `REQUIRE_SIGN_IN=true`, `/api/mcp` stays public. The spec calls the MCP server read-only with no auth and MCP clients can't do a Google sign-in, but spec line 227 / story 79 say the flag covers "all reads". The ticket AC only asks for MCP behavior to be documented; it is documented in README and CONTEXT.md.
 - Confirmed sound: `hd` enforcement against the verified claim, `user.update.before` with partial data, email/password and change-email off, better-auth's own trusted-origin check on `callbackURL`, `safeCallbackPath`, path-segment matching, `--reset` not touching auth tables, per-page gate (not layout-only).
+
+### [AI CODE REVIEW] 2026-09-23
+
+Two-axis review (`/code-review`, base `staging`, commit 703d60b).
+
+**Standards**
+- Documented standards: no violations. No banned terms; ADR 0001 layering is respected (pages call a query plus the auth helper, pure rules live in `src/lib/access.ts` with tests written first); smoke covers the UI and admin gate.
+- Smell, Repeated Switches: `assertAdminGate` in smoke switched on the expected outcome twice. Fixed with one `shows` map keyed by the outcome.
+- Smell, inconsistent idiom: the smoke cleanup SQL interpolated constants while the insert above it used parameters. Fixed: `runQuery` takes params and every smoke-user query uses them.
+
+**Spec**
+- Every agent-checkable criterion is implemented, with no scope creep.
+- Noted: story 79 says the flag should cover "read anything", but `/api/mcp` stays public. This is disclosed (see [RED TEAM]) and documented as the AC asks. It needs the developer's confirmation.
+- Noted: a session with a non-JG email counts as anonymous, so `/admin` sends it to sign-in. This is intended defense in depth, and the code has a comment saying so.
+
+### [CLOSEOUT] 2026-09-23
+
+- Repository: war-weeker, branch `feat/08-organizer-sign-in-and-admin-gate`, base `staging`. All implementation by the main session (Claude Opus 5.5). Red-team by a fresh-context `atlas-red-team-reviewer`; review by two Sonnet sub-agents. TDD at the `src/lib/access.ts` seam.
+- Deliverables:
+  - `better-auth` 1.7.5, Google only.
+  - Auth tables in `src/db/schema.ts` and `drizzle/0002_auth_tables.sql`. No seed change: XI already lists its Organizer.
+  - `src/lib/access.ts` with tests.
+  - `src/auth/server.ts`, `src/auth/organizer.ts`, `src/auth/client.ts`.
+  - `/api/auth/[...all]`, `/sign-in`, `/admin` (`gate.ts`, `admin-shell.tsx`).
+  - `src/proxy.ts` (`REQUIRE_SIGN_IN`).
+  - Smoke extensions, README, CONTEXT.md "Access rules", and `.env.example`.
+- DoD:
+  - Sign-in rejects non-`@jahnelgroup.com` emails on the server: PASS.
+    - `isJahnelGroupEmail` tests cover look-alike domains, subdomains and double `@`.
+    - `databaseHooks.user.create/update.before` throws `NOT_JAHNEL_GROUP`, so no user or session row is written. Google `hd` checks the verified claim as well.
+    - Smoke: a session with a non-JG email is treated as anonymous.
+  - One shared organizer check, used by the `/admin` gate and ready for actions: PASS.
+    - `isOrganizer` and `adminAccess` tests.
+    - `getAdminAccess` and `requireOrganizer` both call `isOrganizer`.
+  - `/admin` shows the desktop shell to Organizers and refuses non-organizers and anonymous users: PASS.
+    - Smoke: anonymous users get a 307 to `/sign-in?callbackURL=%2Fadmin`; an Organizer session sees the shell; a JG non-organizer sees "Organizers only".
+    - Screenshots: `test-results/admin-organizer-shell/`, `test-results/admin-refused-non-organizer/`, `test-results/sign-in/`.
+  - Require-sign-in flag: PASS.
+    - A second smoke server runs with `REQUIRE_SIGN_IN=true`. Anonymous `/xi` redirects to sign-in, a signed-in user reaches `/xi`, and `/api/mcp` initialize still works.
+    - With the flag off, every existing public check passes.
+    - MCP behavior is documented in README and CONTEXT.md.
+  - Human-gated check (a real Google sign-in with an allowlisted account, then a non-allowlisted JG account): BLOCKED for the agent. It needs the developer's OAuth client in `.env.local`. **Pending for the developer**; see README "Organizer sign-in".
+  - Smoke passes with no OAuth credentials: PASS. Both smoke servers force empty `GOOGLE_CLIENT_ID`/`SECRET` and assert the "isn't configured" note.
+  - Slice gate: PASS. `test-results/08-gate/gate.log` shows `gate exit status: 0`, 204 vitest tests and 46 smoke checks.
+- Deviations:
+  - Most of the code was drafted while the red-team was running. Every change the red-team asked for was applied before the gate.
+  - Open decision for the developer: `/api/mcp` stays public when `REQUIRE_SIGN_IN` is on.
+- PR: see the PR into `staging` for this branch.

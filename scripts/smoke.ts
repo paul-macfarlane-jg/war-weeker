@@ -300,11 +300,12 @@ async function assertHomeNowNext() {
 
 async function runQuery<T extends Record<string, unknown>>(
   sql: string,
+  params: unknown[] = [],
 ): Promise<T[]> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   try {
     await client.connect();
-    const { rows } = await client.query<T>(sql);
+    const { rows } = await client.query<T>(sql, params);
     return rows;
   } finally {
     await client.end().catch(() => {});
@@ -513,17 +514,19 @@ async function createSmokeSession(email: string): Promise<SmokeSession> {
 
 /** Deletes every smoke user (and, by cascade, their sessions). */
 async function deleteSmokeUsers() {
-  await runQuery(
-    `delete from "user" where email like '${SMOKE_EMAIL_PATTERN}' or email like '${SMOKE_EMAIL_PATTERN_OUTSIDER}'`,
-  );
+  await runQuery(`delete from "user" where email like $1 or email like $2`, [
+    SMOKE_EMAIL_PATTERN,
+    SMOKE_EMAIL_PATTERN_OUTSIDER,
+  ]);
 }
 
 /** Adds or removes the smoke Organizer on War Week XI's allowlist. */
 async function setSmokeOrganizer(on: boolean) {
   await runQuery(
     on
-      ? `update war_week set organizer_emails = array_append(organizer_emails, '${SMOKE_ORGANIZER_EMAIL}') where edition = 'xi' and not ('${SMOKE_ORGANIZER_EMAIL}' = any(organizer_emails))`
-      : `update war_week set organizer_emails = array_remove(organizer_emails, '${SMOKE_ORGANIZER_EMAIL}') where edition = 'xi'`,
+      ? `update war_week set organizer_emails = array_append(organizer_emails, $1) where edition = 'xi' and not ($1 = any(organizer_emails))`
+      : `update war_week set organizer_emails = array_remove(organizer_emails, $1) where edition = 'xi'`,
+    [SMOKE_ORGANIZER_EMAIL],
   );
 }
 
@@ -582,38 +585,44 @@ async function assertAdminGate(sessions: {
     fail(anonymousCheck, String(error));
   }
 
-  for (const [label, session, expect] of [
-    ["an allowlisted Organizer", sessions.organizer, "shell"],
-    ["a signed-in JG user off the allowlist", sessions.notOrganizer, "refused"],
+  type AdminResult = { status: number; body: string; location: string };
+  const shows = {
+    "the admin shell": ({ status, body }: AdminResult) =>
+      status === 200 &&
+      body.includes("Organizer overview") &&
+      body.includes("Admin sections"),
+    "the refusal": ({ status, body }: AdminResult) =>
+      status === 200 &&
+      body.includes("Organizers only") &&
+      !body.includes("Admin sections"),
+    "sign-in": ({ status, location }: AdminResult) =>
+      status === 307 && location.includes("/sign-in"),
+  };
+
+  for (const [label, session, expected] of [
+    ["an allowlisted Organizer", sessions.organizer, "the admin shell"],
+    [
+      "a signed-in JG user off the allowlist",
+      sessions.notOrganizer,
+      "the refusal",
+    ],
     ["a session with a non-JG email", sessions.outsider, "sign-in"],
   ] as const) {
-    const check = `GET /admin as ${label} shows ${expect === "shell" ? "the admin shell" : expect === "refused" ? "the refusal" : "sign-in"}`;
+    const check = `GET /admin as ${label} shows ${expected}`;
     try {
       const res = await fetch(`${BASE_URL}/admin`, {
         headers: { cookie: session.cookie },
         redirect: "manual",
       });
-      const body = await res.text();
-      const shell =
-        body.includes("Organizer overview") && body.includes("Admin sections");
-      const refused =
-        body.includes("Organizers only") && !body.includes("Admin sections");
-      const toSignIn =
-        res.status === 307 &&
-        (res.headers.get("location") ?? "").includes("/sign-in");
-      const passed =
-        expect === "shell"
-          ? res.status === 200 && shell
-          : expect === "refused"
-            ? res.status === 200 && refused
-            : toSignIn;
-      if (passed) {
+      const result = {
+        status: res.status,
+        body: await res.text(),
+        location: res.headers.get("location") ?? "",
+      };
+      if (shows[expected](result)) {
         ok(check);
       } else {
-        fail(
-          check,
-          `status=${res.status} ${JSON.stringify({ shell, refused, toSignIn })}`,
-        );
+        fail(check, `status=${result.status} location=${result.location}`);
       }
     } catch (error) {
       fail(check, String(error));
