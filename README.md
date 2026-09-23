@@ -60,6 +60,30 @@ Point any Streamable HTTP MCP client at that URL, e.g.:
 }
 ```
 
+## Deployment (Vercel + Neon)
+
+Production: **https://war-weeker.vercel.app** (MCP at
+`https://war-weeker.vercel.app/api/mcp`).
+
+- **Hosting:** the Vercel project is connected to this GitHub repo. A push to
+  `main` builds and deploys to production; every other branch (including
+  `staging`) gets a preview deployment behind Vercel's team login.
+- **Databases:** separate Neon Postgres databases for production and
+  staging. Vercel's Production environment uses the production database;
+  Preview deployments (including `staging`) use the staging database.
+- **Vercel env vars** (Project Settings → Environment Variables, per
+  environment): `DATABASE_URL` (that environment's Neon connection string)
+  and `DATABASE_DRIVER=neon`. Later tickets add the auth variables listed in
+  `.env.example`.
+- **GitHub repo secrets:** `PROD_DATABASE_URL` and `STAGING_DATABASE_URL`,
+  used by the Migrate and Seed workflows below.
+
+Release flow: merge PRs into `staging` (staging database migrates, preview
+deploys) → merge `staging` into `main` (production database migrates,
+production deploys). Load or refresh seed data with the Seed workflow; check
+the deploy with the requests in `test-results/ac02-deployed-smoke.md`
+(`/` → `/xi`, `/xi` 200, `/api/mcp` answers `tools/call get_current_war_week`).
+
 ## Deployed migrations
 
 `.github/workflows/migrate.yml` runs `pnpm db:migrate` on every push to
