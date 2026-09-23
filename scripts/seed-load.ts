@@ -2,33 +2,60 @@ import { loadEnvConfig } from "@next/env";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import type { WarWeekSeed } from "@/seed/schema";
+
 loadEnvConfig(process.cwd());
 
+const USAGE = "Usage: pnpm seed:load [--reset] <seed.json> [<seed.json> ...]";
+
 async function main() {
-  const seedPath = process.argv[2];
-  if (!seedPath) {
-    console.error("Usage: pnpm seed:load <path-to-seed.json>");
+  const args = process.argv.slice(2);
+  const reset = args.includes("--reset");
+  const seedPaths = args.filter((arg) => arg !== "--reset");
+  if (!seedPaths.length || seedPaths.some((arg) => arg.startsWith("--"))) {
+    console.error(USAGE);
     process.exit(1);
   }
-
-  const raw = readFileSync(path.resolve(process.cwd(), seedPath), "utf-8");
-  const json = JSON.parse(raw);
 
   const { warWeekSeedSchema } = await import("@/seed/schema");
-  const parsed = warWeekSeedSchema.safeParse(json);
-  if (!parsed.success) {
-    console.error(`Invalid seed at ${seedPath}:`);
-    for (const issue of parsed.error.issues) {
-      console.error(
-        `  - ${issue.path.join(".") || "(root)"}: ${issue.message}`,
-      );
+
+  // Validate every file before loading any, so an invalid file loads
+  // nothing. Each War Week then loads in its own transaction: a database
+  // error on one file leaves the files before it loaded.
+  const seeds: WarWeekSeed[] = [];
+  let invalid = false;
+  for (const seedPath of seedPaths) {
+    const issues = (() => {
+      try {
+        const raw = readFileSync(
+          path.resolve(process.cwd(), seedPath),
+          "utf-8",
+        );
+        const parsed = warWeekSeedSchema.safeParse(JSON.parse(raw));
+        if (parsed.success) {
+          seeds.push(parsed.data);
+          return [];
+        }
+        return parsed.error.issues.map(
+          (issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`,
+        );
+      } catch (error) {
+        return [error instanceof Error ? error.message : String(error)];
+      }
+    })();
+    if (issues.length) {
+      invalid = true;
+      console.error(`Invalid seed at ${seedPath}:`);
+      for (const issue of issues) console.error(`  - ${issue}`);
     }
-    process.exit(1);
   }
+  if (invalid) process.exit(1);
 
   const { loadWarWeekSeed } = await import("@/seed/load");
-  const warWeek = await loadWarWeekSeed(parsed.data);
-  console.log(`Loaded War Week ${warWeek.edition}`);
+  for (const seed of seeds) {
+    const warWeek = await loadWarWeekSeed(seed, undefined, { reset });
+    console.log(`Loaded War Week ${warWeek.edition}${reset ? " (reset)" : ""}`);
+  }
 }
 
 main().catch((error) => {

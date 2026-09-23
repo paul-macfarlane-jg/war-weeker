@@ -1,0 +1,267 @@
+{
+  "edition": "iv",
+  "editionNumber": 4,
+  "year": 2019,
+  "status": "complete",
+  "mode": "free-for-all",
+  "teamLabel": "Team",
+  "leaderTitle": "Captain",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2019",
+  "organizerEmails": [],
+  "winner": "Ian Ballard (MVP 1st Place)",
+  "highlights": [
+    "Ian Ballard was MVP, ahead of Anthony Conway and Tony Mercadante.",
+    "Eleven people made the Centurion Club (100+ hours) and eleven the Four Score Club (80+ hours).",
+    "Anthony Conway stacked Yoda Cups 11 high and won Jedi Training with 133 M&M's.",
+    "JG Bake Off: Abby won Best Style (Darth Vader cake) and Alex E won Best Taste (cinnamon buns)."
+  ],
+  "days": [],
+  "teams": [],
+  "participants": [
+    {
+      "displayName": "Ian Ballard"
+    },
+    {
+      "displayName": "Anthony Conway"
+    },
+    {
+      "displayName": "Tony Mercadante"
+    },
+    {
+      "displayName": "Komal Narwekar"
+    },
+    {
+      "displayName": "Kelly Byrnes"
+    },
+    {
+      "displayName": "Dan Bedian"
+    },
+    {
+      "displayName": "Sam Debnath"
+    },
+    {
+      "displayName": "Carson O’Neill"
+    },
+    {
+      "displayName": "Joshua Cantor-Stone"
+    },
+    {
+      "displayName": "Eva Trimboli"
+    },
+    {
+      "displayName": "Jon Keller"
+    },
+    {
+      "displayName": "Andrew Kroft"
+    },
+    {
+      "displayName": "Janelle Olsen"
+    },
+    {
+      "displayName": "John Lee"
+    },
+    {
+      "displayName": "Darrin Jahnel"
+    },
+    {
+      "displayName": "Bich Dudla"
+    },
+    {
+      "displayName": "Pooja Manjeshwar"
+    },
+    {
+      "displayName": "Josh Jameson"
+    },
+    {
+      "displayName": "Jonathan Beckman"
+    },
+    {
+      "displayName": "James Murphy"
+    },
+    {
+      "displayName": "Jason Jahnel"
+    },
+    {
+      "displayName": "Akshay Palekar"
+    },
+    {
+      "displayName": "Steven Vickers"
+    },
+    {
+      "displayName": "Abby"
+    },
+    {
+      "displayName": "Alex E"
+    },
+    {
+      "displayName": "James Novak"
+    },
+    {
+      "displayName": "Jakub Synowiec"
+    },
+    {
+      "displayName": "James Rivera"
+    },
+    {
+      "displayName": "Aloysius Posillico"
+    },
+    {
+      "displayName": "Dylan Mann"
+    }
+  ],
+  "competitions": [],
+  "pointsEntries": [],
+  "awards": [
+    {
+      "key": "mvp-1st-place",
+      "name": "MVP 1st Place",
+      "participants": ["Ian Ballard"]
+    },
+    {
+      "key": "mvp-2nd-place",
+      "name": "MVP 2nd Place",
+      "participants": ["Anthony Conway"]
+    },
+    {
+      "key": "mvp-3rd-place",
+      "name": "MVP 3rd Place",
+      "participants": ["Tony Mercadante"]
+    },
+    {
+      "key": "hours-champ",
+      "name": "Hours Champ",
+      "participants": ["Komal Narwekar"]
+    },
+    {
+      "key": "billing-hours-champ",
+      "name": "Billing Hours Champ",
+      "participants": ["Kelly Byrnes"]
+    },
+    {
+      "key": "four-score-club",
+      "name": "Four Score Club",
+      "description": "80+ hours",
+      "participants": [
+        "Dan Bedian",
+        "Sam Debnath",
+        "Carson O’Neill",
+        "Joshua Cantor-Stone",
+        "Eva Trimboli",
+        "Jon Keller",
+        "Andrew Kroft",
+        "Tony Mercadante",
+        "Janelle Olsen",
+        "John Lee",
+        "Darrin Jahnel"
+      ]
+    },
+    {
+      "key": "centurion-club",
+      "name": "Centurion Club",
+      "description": "100+ hours",
+      "participants": [
+        "Bich Dudla",
+        "Pooja Manjeshwar",
+        "Josh Jameson",
+        "Jonathan Beckman",
+        "James Murphy",
+        "Komal Narwekar",
+        "Anthony Conway",
+        "Jason Jahnel",
+        "Kelly Byrnes",
+        "Ian Ballard",
+        "Akshay Palekar"
+      ]
+    },
+    {
+      "key": "top-billers",
+      "name": "Top Billers",
+      "participants": [
+        "Steven Vickers",
+        "Joshua Cantor-Stone",
+        "Ian Ballard",
+        "Jonathan Beckman",
+        "Kelly Byrnes",
+        "Komal Narwekar",
+        "Dan Bedian",
+        "Janelle Olsen",
+        "Akshay Palekar"
+      ]
+    },
+    {
+      "key": "settlers-of-catan",
+      "name": "Settlers of Catan",
+      "description": "Won via Tony M",
+      "participants": ["Dan Bedian"]
+    },
+    {
+      "key": "yoda-cups",
+      "name": "Yoda Cups",
+      "description": "11 cups high",
+      "participants": ["Anthony Conway"]
+    },
+    {
+      "key": "bake-off-best-style",
+      "name": "JG Bake Off - Best Style",
+      "description": "Darth Vader cake",
+      "participants": ["Abby"]
+    },
+    {
+      "key": "bake-off-best-taste",
+      "name": "JG Bake Off - Best Taste",
+      "description": "Cinnamon buns",
+      "participants": ["Alex E"]
+    },
+    {
+      "key": "magic-the-gathering",
+      "name": "Magic the Gathering",
+      "participants": ["James Novak"]
+    },
+    {
+      "key": "jedi-training",
+      "name": "Jedi Training",
+      "description": "133 M&M's",
+      "participants": ["Anthony Conway"]
+    },
+    {
+      "key": "code-wars",
+      "name": "Code Wars",
+      "participants": ["Jakub Synowiec"]
+    },
+    {
+      "key": "super-smash-bros",
+      "name": "Super Smash Bros",
+      "participants": ["James Rivera"]
+    },
+    {
+      "key": "jedi-mind-tricks",
+      "name": "Jedi Mind Tricks",
+      "participants": ["Jason Jahnel"]
+    },
+    {
+      "key": "beer-pong",
+      "name": "Beer Pong",
+      "participants": ["James Novak", "Aloysius Posillico"]
+    },
+    {
+      "key": "chess",
+      "name": "Chess",
+      "participants": ["Dylan Mann"]
+    }
+  ],
+  "announcements": [],
+  "faqItems": [],
+  "startDate": "2019-02-24",
+  "endDate": "2019-03-02",
+  "storyTheme": "Star Wars",
+  "primary": "#ffe81f",
+  "primaryForeground": "#000000",
+  "accent": "#4bd5ee",
+  "background": "#05070d",
+  "foreground": "#f5f5f5",
+  "fontPreset": "sans"
+}

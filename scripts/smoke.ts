@@ -1,6 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
@@ -364,13 +364,20 @@ async function main() {
   if (!runStep("pnpm", ["db:migrate"], "pnpm db:migrate")) {
     process.exit(1);
   }
-  // Load the seed twice: the second load proves upsert-by-edition is idempotent.
-  for (const attempt of [1, 2]) {
+  // Load every seed twice: the first load resets each War Week so the counts
+  // below match the seeds exactly; the second proves loading is idempotent.
+  const seedFiles = readdirSync(path.resolve(process.cwd(), "seeds"))
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => `seeds/${f}`);
+  for (const [attempt, flags] of [
+    [1, ["--reset"]],
+    [2, []],
+  ] as const) {
     if (
       !runStep(
         "pnpm",
-        ["seed:load", "seeds/xi.json"],
-        `pnpm seed:load seeds/xi.json (load ${attempt})`,
+        ["seed:load", ...flags, ...seedFiles],
+        `pnpm ${["seed:load", ...flags].join(" ")} (${seedFiles.length} seeds, load ${attempt})`,
       )
     ) {
       process.exit(1);

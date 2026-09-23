@@ -81,3 +81,9 @@ same rows with the same values (only `updated_at` moves).
     with that key exists, and never updates or deletes one. Records organizers
     create in the app have no key and are never touched by a load. Adding a
     new keyed record to a seed and reloading adds just that record.
+
+**Reset exception.** `pnpm seed:load --reset` (and the Seed workflow's reset
+option) deletes each seeded War Week, with all its setup and organizer-owned
+data, before loading, so the War Week matches its seed exactly and
+`standings_hidden` is applied again. It exists to reset demo data; never use
+it on a War Week organizers are running.

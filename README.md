@@ -14,9 +14,27 @@ cp .env.example .env.local   # fill in real values as later tickets need them
 docker compose up -d          # starts local Postgres on localhost:2345
 pnpm install
 pnpm db:migrate
-pnpm seed:load seeds/xi.json
+pnpm seed:all                 # loads every War Week, 2016 (I) to 2026 (XI)
 pnpm dev                      # http://localhost:3000
 ```
+
+### Seeds
+
+`seeds/<edition>.json` holds one War Week each: `i.json` (2016) through
+`x.json` (2025) are the history, extracted from `old-wikis/` and fixed by
+hand; `xi.json` is War Week XI with its real schedule, Teams, roster and
+Competitions plus fictional mid-week demo data (close race, standings
+hidden). Edit a file and reload it; setup data follows the seed, while keyed
+Points Entries, Awards and Announcements are only inserted once (see
+`CONTEXT.md`, "Seed idempotence rules").
+
+- `pnpm seed:all` loads every seed. `pnpm seed:load <file> [<file> ...]`
+  loads specific ones. Every file is validated before anything loads; each
+  War Week then loads in its own transaction.
+- `--reset` (e.g. `pnpm seed:load --reset seeds/xi.json`) deletes each War
+  Week first, including organizer-entered points, Awards and Announcements,
+  so the demo starts from exactly the seed. Never use it on a War Week
+  organizers are running.
 
 Checks:
 
@@ -30,7 +48,8 @@ pnpm build
 ## Smoke test and slice gate
 
 `pnpm smoke` runs an end-to-end check against a production build: it applies
-migrations, loads `seeds/xi.json`, starts the app with `pnpm start -p 3100`,
+migrations, loads every seed (once with `--reset`, then again to prove
+idempotence; this wipes those War Weeks in your local database), starts the app with `pnpm start -p 3100`,
 and asserts `/` redirects to `/xi`, `/xi` and `/xi/leaderboard` respond, and
 `/api/mcp` answers `initialize`, `tools/list`, and a `tools/call` of
 `get_current_war_week` with War Week XI's data. It prints one `ok - <check>`
@@ -94,7 +113,8 @@ and skips. Generate migrations locally with `pnpm db:generate` and commit the
 
 Seeds are never loaded on deploy. To load them, run the **Seed** workflow from
 the Actions tab: pick `staging` or `production` and optionally one file under
-`seeds/` (blank loads all). Production can only be seeded from `main`.
+`seeds/` (blank loads all). Tick **reset** and type the environment name in
+**confirm_reset** to replace existing demo data (see `--reset` above). Production can only be seeded from `main`.
 
 <!-- atlas-v3:readme:start -->
 

@@ -28,12 +28,20 @@ import { WarWeekSeed } from "@/seed/schema";
  *   deleted, so setup always matches the seed after a load.
  * - Organizer-owned data (Points Entries, Awards, Announcements) is inserted
  *   by seed key only when absent, and never updated or deleted.
+ *
+ * `reset` first deletes the War Week and everything under it, including
+ * organizer-owned data, so the load starts from exactly the seed. Use it to
+ * reset demo data, never on a War Week organizers are running.
  */
 export async function loadWarWeekSeed(
   seed: WarWeekSeed,
   dbOrTx: DBOrTx = db,
+  { reset = false }: { reset?: boolean } = {},
 ): Promise<WarWeek> {
   return dbOrTx.transaction(async (tx) => {
+    if (reset) {
+      await tx.delete(warWeek).where(eq(warWeek.edition, seed.edition));
+    }
     const warWeekRow = await upsertWarWeek(tx, seed);
     const warWeekId = warWeekRow.id;
 
