@@ -10,7 +10,15 @@ const visible: Standings = {
     { id: "t1", name: "Blue", color: "#00f", total: 12.5, rank: 1 },
     { id: "t2", name: "Red", color: "#f00", total: 11, rank: 2 },
   ],
-  individual: [{ id: "p1", name: "Neo", teamId: "t1", total: 5, rank: 1 }],
+  individual: [
+    {
+      id: "p1",
+      name: "Neo",
+      team: { name: "Blue", color: "#00f" },
+      total: 5,
+      rank: 1,
+    },
+  ],
 };
 
 describe("toLeaderboardResult", () => {

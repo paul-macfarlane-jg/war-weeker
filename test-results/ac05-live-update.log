@@ -11,7 +11,7 @@ Individual leaderboard | 1 Anthony Conway (Red) 5 | 1 Jory Hutchins (Blue) 5 | 3
 
 ## Live update, no manual refresh
 16:57:48 DB: update points_entry set points = points + 0.25 where seed_key='black-midnight-blue'
-16:57:49 page check started (open /xi/leaderboard tab)
+16:57:49 in-page check started on the /xi/leaderboard tab that was already open since before the change (no navigation or reload)
 16:57:52 page shows: 1 Red 21 | 2 Blue 20.25     -> visible ~4 s after the change
 
 ## /xi home compact view

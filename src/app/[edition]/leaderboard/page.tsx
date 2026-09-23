@@ -18,14 +18,13 @@ export default async function LeaderboardPage({
   if (!warWeek) notFound();
 
   const standings = await getStandings(warWeek);
-  const polling = warWeek.status !== "complete" ? <AutoRefresh /> : null;
 
   if (standings.hidden) {
     return (
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
         <h1 className="text-2xl font-bold">Leaderboard</h1>
         <StandingsHidden />
-        {polling}
+        <AutoRefresh />
       </main>
     );
   }
@@ -39,10 +38,7 @@ export default async function LeaderboardPage({
   const individualSection = (
     <section key="individual" className="flex flex-col gap-3">
       <h2 className="text-lg font-semibold">Individual leaderboard</h2>
-      <IndividualStandingsList
-        rows={standings.individual}
-        teams={standings.team}
-      />
+      <IndividualStandingsList rows={standings.individual} />
     </section>
   );
   // A free-for-all War Week has no Teams, so it shows no team section.
@@ -58,7 +54,7 @@ export default async function LeaderboardPage({
     <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
       <h1 className="text-2xl font-bold">Leaderboard</h1>
       {sections}
-      {polling}
+      <AutoRefresh />
     </main>
   );
 }

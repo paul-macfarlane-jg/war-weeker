@@ -27,8 +27,6 @@ export function toLeaderboardResult(
 ): LeaderboardResult {
   if (standings.hidden) return { hidden: true, message: HIDDEN_MESSAGE };
 
-  const teamNames = new Map(standings.team.map((t) => [t.id, t.name]));
-
   return {
     hidden: false,
     kind,
@@ -42,10 +40,10 @@ export function toLeaderboardResult(
             color,
             total,
           }))
-        : standings.individual.map(({ rank, name, teamId, total }) => ({
+        : standings.individual.map(({ rank, name, team, total }) => ({
             rank,
             name,
-            team: teamId ? (teamNames.get(teamId) ?? null) : null,
+            team: team?.name ?? null,
             total,
           })),
   };

@@ -43,19 +43,15 @@ export function TeamStandingsList({ rows }: { rows: TeamStanding[] }) {
 
 export function IndividualStandingsList({
   rows,
-  teams,
 }: {
   rows: IndividualStanding[];
-  teams: TeamStanding[];
 }) {
   if (rows.length === 0) return <NoPointsYet />;
-
-  const teamsById = new Map(teams.map((t) => [t.id, t]));
 
   return (
     <ol className="flex flex-col gap-1">
       {rows.map((row) => {
-        const team = row.teamId ? teamsById.get(row.teamId) : undefined;
+        const { team } = row;
         return (
           <li
             key={row.id}

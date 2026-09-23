@@ -55,7 +55,7 @@ function input(overrides: Partial<StandingsInput>): StandingsInput {
 
 type Row = { name: string; total: number; rank: number };
 
-function rows(list: { name: string; total: number; rank: number }[]): Row[] {
+function rows(list: Row[]): Row[] {
   return list.map(({ name, total, rank }) => ({ name, total, rank }));
 }
 
@@ -84,7 +84,7 @@ describe("computeStandings", () => {
       individual: [],
     },
     {
-      name: "member entries count toward the team only when Counts Toward Team is on",
+      name: "Participant entries count toward their Team only when Counts Toward Team is on",
       input: input({
         pointsEntries: [
           teamEntry(tug.id, red.id, 1),
@@ -193,6 +193,23 @@ describe("computeStandings", () => {
     expect(standings.team.map((row) => row.color)).toEqual([
       blue.color,
       red.color,
+    ]);
+  });
+
+  it("carries each individual's Team, or null without one", () => {
+    const standings = computeStandings(
+      input({
+        pointsEntries: [
+          participantEntry(chess.id, neo.id, 2),
+          participantEntry(chess.id, morpheus.id, 1),
+        ],
+      }),
+    );
+    if (standings.hidden) throw new Error("expected visible standings");
+
+    expect(standings.individual.map((row) => row.team)).toEqual([
+      { name: red.name, color: red.color },
+      null,
     ]);
   });
 

@@ -40,7 +40,7 @@ export type TeamStanding = {
 export type IndividualStanding = {
   id: string;
   name: string;
-  teamId: string | null;
+  team: { name: string; color: string } | null;
   total: number;
   rank: number;
 };
@@ -74,6 +74,7 @@ export function computeStandings(input: StandingsInput): Standings {
   if (input.standingsHidden) return { hidden: true };
 
   const competitions = new Map(input.competitions.map((c) => [c.id, c]));
+  const teams = new Map(input.teams.map((t) => [t.id, t]));
   const participants = new Map(input.participants.map((p) => [p.id, p]));
   const teamHundredths = new Map(input.teams.map((t) => [t.id, 0]));
   const individualHundredths = new Map<string, number>();
@@ -119,10 +120,11 @@ export function computeStandings(input: StandingsInput): Standings {
   const individual = rank(
     [...individualHundredths].map(([id, hundredths]) => {
       const participant = participants.get(id)!;
+      const team = participant.teamId ? teams.get(participant.teamId) : null;
       return {
         id,
         name: participant.displayName,
-        teamId: participant.teamId,
+        team: team ? { name: team.name, color: team.color } : null,
         total: hundredths / 100,
       };
     }),

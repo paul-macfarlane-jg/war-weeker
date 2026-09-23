@@ -12,13 +12,22 @@ import { Standings, computeStandings } from "@/lib/standings";
 
 /**
  * Loads a War Week's Standings. While standings are hidden it skips the
- * queries entirely and returns `{ hidden: true }`.
+ * queries and lets `computeStandings` return its hidden result.
  */
 export async function getStandings(
   warWeek: Pick<WarWeek, "id" | "mode" | "standingsHidden">,
   dbOrTx: DBOrTx = db,
 ): Promise<Standings> {
-  if (warWeek.standingsHidden) return { hidden: true };
+  if (warWeek.standingsHidden) {
+    return computeStandings({
+      mode: warWeek.mode,
+      standingsHidden: true,
+      teams: [],
+      participants: [],
+      competitions: [],
+      pointsEntries: [],
+    });
+  }
 
   const [teams, participants, competitions, pointsEntries] = await Promise.all([
     dbOrTx

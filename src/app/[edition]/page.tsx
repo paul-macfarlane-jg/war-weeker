@@ -112,7 +112,7 @@ export default async function EditionHomePage({
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between">
             <h2 className="text-lg font-semibold">
-              {standings.hidden || standings.main === "team"
+              {warWeek.mode === "teams"
                 ? `${warWeek.teamLabel} standings`
                 : "Individual leaderboard"}
             </h2>
@@ -130,12 +130,11 @@ export default async function EditionHomePage({
           ) : (
             <IndividualStandingsList
               rows={standings.individual.slice(0, HOME_INDIVIDUAL_ROWS)}
-              teams={standings.team}
             />
           )}
         </section>
       </div>
-      {warWeek.status !== "complete" ? <AutoRefresh /> : null}
+      <AutoRefresh />
     </main>
   );
 }
