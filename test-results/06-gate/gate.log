@@ -14,8 +14,8 @@ Generating route types...
 
 
 /Users/pmacfarlane/jg-code/war-weeker/src/app/[edition]/page.tsx
-  63:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-  77:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  54:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  68:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 ✖ 2 problems (0 errors, 2 warnings)
 
@@ -32,8 +32,8 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  Test Files  11 passed (11)
       Tests  125 passed (125)
-   Start at  18:18:45
-   Duration  577ms (transform 346ms, setup 0ms, import 1.25s, tests 112ms, environment 1ms)
+   Start at  18:34:45
+   Duration  1.08s (transform 374ms, setup 0ms, import 2.92s, tests 141ms, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -41,15 +41,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 16ms
+✓ Running next.config.ts took 24ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 1338ms
+✓ Compiled successfully in 1639ms
   Running TypeScript ...
-  Finished TypeScript in 1885ms ...
+  Finished TypeScript in 2.1s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 131ms
+✓ Generating static pages using 9 workers (3/3) in 93ms
   Finalizing page optimization ...
 
 Route (app)
@@ -128,8 +128,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 140ms
-✓ Running next.config.ts took 92ms
+✓ Ready in 137ms
+✓ Running next.config.ts took 107ms
 ok - server ready
 ok - GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden

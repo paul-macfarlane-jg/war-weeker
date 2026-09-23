@@ -1,3 +1,6 @@
+import { TZDate } from "@date-fns/tz";
+import { format, isValid, parse, parseISO, subDays } from "date-fns";
+
 import type { Day, ScheduleItem } from "@/db/schema";
 
 export const WAR_WEEK_TIME_ZONE = "America/New_York";
@@ -42,26 +45,10 @@ export type NowNext = {
   next: { date: string; items: ScheduleEntry[] } | null;
 };
 
-const clockFormatter = new Intl.DateTimeFormat("en-US", {
-  timeZone: WAR_WEEK_TIME_ZONE,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
-  hourCycle: "h23",
-});
-
 /** Reads an instant on the ET wall clock, whatever the host's timezone. */
 export function toEasternClock(instant: Date): EasternClock {
-  const parts = Object.fromEntries(
-    clockFormatter.formatToParts(instant).map((p) => [p.type, p.value]),
-  );
-  return {
-    date: `${parts.year}-${parts.month}-${parts.day}`,
-    time: `${parts.hour}:${parts.minute}:${parts.second}`,
-  };
+  const et = new TZDate(instant, WAR_WEEK_TIME_ZONE);
+  return { date: format(et, "yyyy-MM-dd"), time: format(et, "HH:mm:ss") };
 }
 
 function compareItems(a: ScheduleEntry, b: ScheduleEntry): number {
@@ -110,9 +97,7 @@ function span(item: ScheduleEntry): { start: number; end: number } {
 
 /** The `YYYY-MM-DD` date before `date`. */
 function previousDate(date: string): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
+  return format(subDays(parseISO(date), 1), "yyyy-MM-dd");
 }
 
 function isOnAt(item: ScheduleEntry, seconds: number): boolean {
@@ -161,11 +146,7 @@ export function computeNowNext(days: ScheduleDay[], at: Date): NowNext {
 
 /** `HH:MM[:SS]` (an ET wall-clock time) as `7:05 AM`. */
 export function formatEtTime(time: string): string {
-  const totalMinutes = Math.floor(toSeconds(time) / 60);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = String(totalMinutes % 60).padStart(2, "0");
-  const period = hours < 12 ? "AM" : "PM";
-  return `${hours % 12 || 12}:${minutes} ${period}`;
+  return format(parse(time.slice(0, 5), "HH:mm", new Date()), "h:mm a");
 }
 
 /** An item's times as `7:00 AM ET` or `6:00 PM – 10:00 PM ET`. */
@@ -178,27 +159,20 @@ export function formatTimeRange(
     : `${start} ET`;
 }
 
-const dayHeadingFormatter = new Intl.DateTimeFormat("en-US", {
-  weekday: "long",
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
-
 /** A Day's `YYYY-MM-DD` date as `Monday, Feb 23`. */
 export function formatDayHeading(date: string): string {
-  return dayHeadingFormatter.format(new Date(`${date}T00:00:00Z`));
+  return format(parseISO(date), "EEEE, MMM d");
 }
 
 /**
  * The clock pages compute now/next from: the `?at=` search param when it is
- * a parseable instant (for demos of a War Week that isn't on right now),
+ * a valid ISO 8601 instant (for demos of a War Week that isn't on right now),
  * otherwise the real time.
  */
 export function resolveClock(at: string | string[] | undefined): Date {
   if (typeof at === "string") {
-    const parsed = new Date(at);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
+    const parsed = parseISO(at);
+    if (isValid(parsed)) return parsed;
   }
   return new Date();
 }

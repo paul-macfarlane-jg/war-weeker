@@ -73,3 +73,12 @@ Two-axis review (`/code-review`, base `staging`).
     - Exit status 0.
 - Deviations: see the scope additions above. None break an acceptance criterion.
 - PR: see the PR into `staging` for this branch.
+
+### [PROGRESS] 2026-09-23: PR review
+
+- Human review asked for a date library. Date handling now uses `date-fns` and `@date-fns/tz`:
+  - `TZDate` reads the ET clock.
+  - `format` and `parseISO` handle Day headings, the home page date range, times and `?at=` parsing.
+- Wall-clock seconds arithmetic stays for the on-now comparisons.
+- Schedule tests pass with the host timezone set to Auckland and Los Angeles.
+- The gate passes again (`test-results/06-gate/gate.log`, exit status 0).

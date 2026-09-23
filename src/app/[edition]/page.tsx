@@ -1,3 +1,4 @@
+import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,19 +26,9 @@ const STATUS_LABEL: Record<WarWeek["status"], string> = {
 const HOME_INDIVIDUAL_ROWS = 5;
 
 function formatDateRange(startDate: string, endDate: string): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-  const yearFormatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  const start = formatter.format(new Date(startDate));
-  const end = formatter.format(new Date(endDate));
-  const year = yearFormatter.format(new Date(endDate));
-  return `${start} – ${end}, ${year}`;
+  const start = format(parseISO(startDate), "MMM d");
+  const end = format(parseISO(endDate), "MMM d, yyyy");
+  return `${start} – ${end}`;
 }
 
 export default async function EditionHomePage({
