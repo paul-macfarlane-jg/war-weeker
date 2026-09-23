@@ -1,15 +1,27 @@
-import { InferInsertModel, InferSelectModel, relations } from "drizzle-orm";
+import {
+  InferInsertModel,
+  InferSelectModel,
+  relations,
+  sql,
+} from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   integer,
+  jsonb,
+  numeric,
   pgEnum,
   pgTable,
+  primaryKey,
+  time,
   timestamp,
   unique,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+import type { Content } from "@/lib/rich-text/content";
 
 export const warWeekStatus = pgEnum("war_week_status", [
   "upcoming",
@@ -20,6 +32,19 @@ export const warWeekStatus = pgEnum("war_week_status", [
 export const warWeekMode = pgEnum("war_week_mode", ["teams", "free-for-all"]);
 
 export const fontPreset = pgEnum("font_preset", ["sans", "serif", "mono"]);
+
+export const scheduleItemCategory = pgEnum("schedule_item_category", [
+  "competition",
+  "education",
+  "social",
+  "meal",
+  "work",
+]);
+
+export const competitionScoring = pgEnum("competition_scoring", [
+  "team",
+  "individual",
+]);
 
 export const warWeek = pgTable("war_week", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -74,13 +99,310 @@ export const day = pgTable(
   (table) => [unique().on(table.warWeekId, table.date)],
 );
 
+export const team = pgTable(
+  "team",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 80 }).notNull(),
+    color: varchar("color", { length: 32 }).notNull(),
+    logoUrl: varchar("logo_url", { length: 500 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.warWeekId, table.name)],
+);
+
+export const participant = pgTable(
+  "participant",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    displayName: varchar("display_name", { length: 120 }).notNull(),
+    companyTag: varchar("company_tag", { length: 40 }),
+    // Optional, and unique within a War Week when present (NULLs are
+    // distinct, so any number of Participants may have no email).
+    email: varchar("email", { length: 254 }),
+    teamId: uuid("team_id").references(() => team.id, {
+      onDelete: "set null",
+    }),
+    isLeader: boolean("is_leader").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique().on(table.warWeekId, table.displayName),
+    unique().on(table.warWeekId, table.email),
+  ],
+);
+
+export const competition = pgTable(
+  "competition",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    description: varchar("description", { length: 2000 }),
+    maxPoints: numeric("max_points", {
+      precision: 8,
+      scale: 2,
+      mode: "number",
+    }),
+    scoring: competitionScoring("scoring").notNull(),
+    countsTowardTeam: boolean("counts_toward_team").notNull().default(false),
+    competitionGroup: varchar("competition_group", { length: 120 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique().on(table.warWeekId, table.name),
+    check(
+      "competition_counts_toward_team_individual_only",
+      sql`not ${table.countsTowardTeam} or ${table.scoring} = 'individual'`,
+    ),
+  ],
+);
+
+export const scheduleItem = pgTable(
+  "schedule_item",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    dayId: uuid("day_id")
+      .notNull()
+      .references(() => day.id, { onDelete: "cascade" }),
+    // Wall-clock times in ET; the Day supplies the date.
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time"),
+    title: varchar("title", { length: 200 }).notNull(),
+    host: varchar("host", { length: 200 }),
+    location: varchar("location", { length: 200 }),
+    virtualLink: varchar("virtual_link", { length: 500 }),
+    description: jsonb("description").$type<Content>(),
+    category: scheduleItemCategory("category").notNull(),
+    competitionId: uuid("competition_id").references(() => competition.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.dayId, table.startTime, table.title)],
+);
+
+export const pointsEntry = pgTable(
+  "points_entry",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competition.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references(() => team.id, {
+      onDelete: "cascade",
+    }),
+    participantId: uuid("participant_id").references(() => participant.id, {
+      onDelete: "cascade",
+    }),
+    points: numeric("points", {
+      precision: 8,
+      scale: 2,
+      mode: "number",
+    }).notNull(),
+    note: varchar("note", { length: 500 }),
+    enteredByEmail: varchar("entered_by_email", { length: 254 }).notNull(),
+    enteredAt: timestamp("entered_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    // Set only on rows that came from a seed file; see CONTEXT.md.
+    seedKey: varchar("seed_key", { length: 80 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique().on(table.competitionId, table.seedKey),
+    check(
+      "points_entry_exactly_one_target",
+      sql`num_nonnulls(${table.teamId}, ${table.participantId}) = 1`,
+    ),
+  ],
+);
+
+export const award = pgTable(
+  "award",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    description: varchar("description", { length: 1000 }),
+    teamId: uuid("team_id").references(() => team.id, {
+      onDelete: "set null",
+    }),
+    seedKey: varchar("seed_key", { length: 80 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.warWeekId, table.seedKey)],
+);
+
+export const awardParticipant = pgTable(
+  "award_participant",
+  {
+    awardId: uuid("award_id")
+      .notNull()
+      .references(() => award.id, { onDelete: "cascade" }),
+    participantId: uuid("participant_id")
+      .notNull()
+      .references(() => participant.id, { onDelete: "cascade" }),
+  },
+  (table) => [primaryKey({ columns: [table.awardId, table.participantId] })],
+);
+
+export const announcement = pgTable(
+  "announcement",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: jsonb("body").$type<Content>().notNull(),
+    videoUrls: varchar("video_urls", { length: 500 })
+      .array()
+      .notNull()
+      .default([]),
+    pinned: boolean("pinned").notNull().default(false),
+    authorEmail: varchar("author_email", { length: 254 }).notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    seedKey: varchar("seed_key", { length: 80 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.warWeekId, table.seedKey)],
+);
+
+export const faqItem = pgTable(
+  "faq_item",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    warWeekId: uuid("war_week_id")
+      .notNull()
+      .references(() => warWeek.id, { onDelete: "cascade" }),
+    question: varchar("question", { length: 300 }).notNull(),
+    answer: jsonb("answer").$type<Content>().notNull(),
+    sortOrder: integer("sort_order").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.warWeekId, table.question)],
+);
+
 export const warWeekRelations = relations(warWeek, ({ many }) => ({
   days: many(day),
+  teams: many(team),
+  participants: many(participant),
+  competitions: many(competition),
+  awards: many(award),
+  announcements: many(announcement),
+  faqItems: many(faqItem),
 }));
 
-export const dayRelations = relations(day, ({ one }) => ({
+export const dayRelations = relations(day, ({ one, many }) => ({
   warWeek: one(warWeek, {
     fields: [day.warWeekId],
+    references: [warWeek.id],
+  }),
+  scheduleItems: many(scheduleItem),
+}));
+
+export const teamRelations = relations(team, ({ one, many }) => ({
+  warWeek: one(warWeek, {
+    fields: [team.warWeekId],
+    references: [warWeek.id],
+  }),
+  participants: many(participant),
+  pointsEntries: many(pointsEntry),
+}));
+
+export const participantRelations = relations(participant, ({ one, many }) => ({
+  warWeek: one(warWeek, {
+    fields: [participant.warWeekId],
+    references: [warWeek.id],
+  }),
+  team: one(team, { fields: [participant.teamId], references: [team.id] }),
+  pointsEntries: many(pointsEntry),
+  awards: many(awardParticipant),
+}));
+
+export const competitionRelations = relations(competition, ({ one, many }) => ({
+  warWeek: one(warWeek, {
+    fields: [competition.warWeekId],
+    references: [warWeek.id],
+  }),
+  pointsEntries: many(pointsEntry),
+  scheduleItems: many(scheduleItem),
+}));
+
+export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
+  day: one(day, { fields: [scheduleItem.dayId], references: [day.id] }),
+  competition: one(competition, {
+    fields: [scheduleItem.competitionId],
+    references: [competition.id],
+  }),
+}));
+
+export const pointsEntryRelations = relations(pointsEntry, ({ one }) => ({
+  competition: one(competition, {
+    fields: [pointsEntry.competitionId],
+    references: [competition.id],
+  }),
+  team: one(team, { fields: [pointsEntry.teamId], references: [team.id] }),
+  participant: one(participant, {
+    fields: [pointsEntry.participantId],
+    references: [participant.id],
+  }),
+}));
+
+export const awardRelations = relations(award, ({ one, many }) => ({
+  warWeek: one(warWeek, {
+    fields: [award.warWeekId],
+    references: [warWeek.id],
+  }),
+  team: one(team, { fields: [award.teamId], references: [team.id] }),
+  participants: many(awardParticipant),
+}));
+
+export const awardParticipantRelations = relations(
+  awardParticipant,
+  ({ one }) => ({
+    award: one(award, {
+      fields: [awardParticipant.awardId],
+      references: [award.id],
+    }),
+    participant: one(participant, {
+      fields: [awardParticipant.participantId],
+      references: [participant.id],
+    }),
+  }),
+);
+
+export const announcementRelations = relations(announcement, ({ one }) => ({
+  warWeek: one(warWeek, {
+    fields: [announcement.warWeekId],
+    references: [warWeek.id],
+  }),
+}));
+
+export const faqItemRelations = relations(faqItem, ({ one }) => ({
+  warWeek: one(warWeek, {
+    fields: [faqItem.warWeekId],
     references: [warWeek.id],
   }),
 }));
@@ -89,3 +411,12 @@ export type WarWeek = InferSelectModel<typeof warWeek>;
 export type NewWarWeek = InferInsertModel<typeof warWeek>;
 export type Day = InferSelectModel<typeof day>;
 export type NewDay = InferInsertModel<typeof day>;
+export type Team = InferSelectModel<typeof team>;
+export type Participant = InferSelectModel<typeof participant>;
+export type Competition = InferSelectModel<typeof competition>;
+export type ScheduleItem = InferSelectModel<typeof scheduleItem>;
+export type PointsEntry = InferSelectModel<typeof pointsEntry>;
+export type Award = InferSelectModel<typeof award>;
+export type AwardParticipant = InferSelectModel<typeof awardParticipant>;
+export type Announcement = InferSelectModel<typeof announcement>;
+export type FaqItem = InferSelectModel<typeof faqItem>;

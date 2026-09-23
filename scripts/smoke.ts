@@ -1,6 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
@@ -63,18 +63,98 @@ async function portInUse(): Promise<boolean> {
   }
 }
 
-async function assertSingleWarWeek() {
-  const check = "loading the seed twice leaves one War Week XI row";
+/** Rows each table should hold for War Week XI after loading its seed. */
+function expectedXiCounts(): Record<string, number> {
+  const seed = JSON.parse(
+    readFileSync(path.resolve(process.cwd(), "seeds/xi.json"), "utf-8"),
+  );
+  const count = (list: unknown[] | undefined) => list?.length ?? 0;
+  return {
+    war_week: 1,
+    day: count(seed.days),
+    schedule_item: seed.days.reduce(
+      (sum: number, d: { scheduleItems?: unknown[] }) =>
+        sum + count(d.scheduleItems),
+      0,
+    ),
+    team: count(seed.teams),
+    participant: count(seed.participants),
+    competition: count(seed.competitions),
+    points_entry: count(seed.pointsEntries),
+    award: count(seed.awards),
+    announcement: count(seed.announcements),
+    faq_item: count(seed.faqItems),
+  };
+}
+
+const XI_COUNT_QUERIES: Record<string, string> = {
+  war_week: "select count(*) from war_week where edition = 'xi'",
+  day: "select count(*) from day join war_week w on w.id = day.war_week_id where w.edition = 'xi'",
+  schedule_item:
+    "select count(*) from schedule_item s join day d on d.id = s.day_id join war_week w on w.id = d.war_week_id where w.edition = 'xi'",
+  team: "select count(*) from team t join war_week w on w.id = t.war_week_id where w.edition = 'xi'",
+  participant:
+    "select count(*) from participant p join war_week w on w.id = p.war_week_id where w.edition = 'xi'",
+  competition:
+    "select count(*) from competition c join war_week w on w.id = c.war_week_id where w.edition = 'xi'",
+  points_entry:
+    "select count(*) from points_entry e join competition c on c.id = e.competition_id join war_week w on w.id = c.war_week_id where w.edition = 'xi'",
+  award:
+    "select count(*) from award a join war_week w on w.id = a.war_week_id where w.edition = 'xi'",
+  announcement:
+    "select count(*) from announcement a join war_week w on w.id = a.war_week_id where w.edition = 'xi'",
+  faq_item:
+    "select count(*) from faq_item f join war_week w on w.id = f.war_week_id where w.edition = 'xi'",
+};
+
+async function assertSeedLoadedOnce() {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   try {
     await client.connect();
-    const { rows } = await client.query<{ count: string }>(
-      "select count(*)::text as count from war_week where edition = 'xi'",
-    );
-    if (rows[0]?.count === "1") {
-      ok(check);
-    } else {
-      fail(check, `count=${rows[0]?.count}`);
+    const expected = expectedXiCounts();
+    for (const [table, query] of Object.entries(XI_COUNT_QUERIES)) {
+      const check = `after loading the seed twice, War Week XI has ${expected[table]} ${table} rows`;
+      const { rows } = await client.query<{ count: string }>(query);
+      if (Number(rows[0]?.count) === expected[table]) {
+        ok(check);
+      } else {
+        fail(check, `count=${rows[0]?.count}`);
+      }
+    }
+  } catch (error) {
+    fail("seed row counts", String(error));
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+async function assertPointsEntryTargetConstraint() {
+  const check =
+    "the database rejects a Points Entry with both a Team and a Participant";
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  try {
+    await client.connect();
+    await client.query("begin");
+    try {
+      await client.query(
+        `insert into points_entry (competition_id, team_id, participant_id, points, entered_by_email)
+         select c.id, p.team_id, p.id, 1, 'smoke@jahnelgroup.com'
+         from competition c
+         join war_week w on w.id = c.war_week_id
+         join participant p on p.war_week_id = w.id and p.team_id is not null
+         where w.edition = 'xi'
+         limit 1`,
+      );
+      fail(check, "insert succeeded");
+    } catch (error) {
+      const message = String(error);
+      if (message.includes("points_entry_exactly_one_target")) {
+        ok(check);
+      } else {
+        fail(check, message);
+      }
+    } finally {
+      await client.query("rollback");
     }
   } catch (error) {
     fail(check, String(error));
@@ -296,7 +376,8 @@ async function main() {
       process.exit(1);
     }
   }
-  await assertSingleWarWeek();
+  await assertSeedLoadedOnce();
+  await assertPointsEntryTargetConstraint();
 
   const server = spawn("pnpm", ["start", "-p", String(PORT)], {
     env: childEnv,
