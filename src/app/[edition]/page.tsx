@@ -1,7 +1,15 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AutoRefresh } from "@/components/auto-refresh";
+import {
+  IndividualStandingsList,
+  StandingsHidden,
+  TeamStandingsList,
+} from "@/components/standings";
 import { Button } from "@/components/ui/button";
 import type { WarWeek } from "@/db/schema";
+import { getStandings } from "@/queries/standings";
 
 import { getWarWeekForEdition } from "./war-week";
 
@@ -10,6 +18,8 @@ const STATUS_LABEL: Record<WarWeek["status"], string> = {
   upcoming: "Upcoming",
   complete: "Complete",
 };
+
+const HOME_INDIVIDUAL_ROWS = 5;
 
 function formatDateRange(startDate: string, endDate: string): string {
   const formatter = new Intl.DateTimeFormat("en-US", {
@@ -36,6 +46,7 @@ export default async function EditionHomePage({
 
   const editionLabel = warWeek.edition.toUpperCase();
   const statusLabel = STATUS_LABEL[warWeek.status];
+  const standings = await getStandings(warWeek);
 
   return (
     <main className="mx-auto flex max-w-md flex-col">
@@ -97,7 +108,34 @@ export default async function EditionHomePage({
         >
           Join the Slack channel
         </Button>
+
+        <section className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold">
+              {standings.hidden || standings.main === "team"
+                ? `${warWeek.teamLabel} standings`
+                : "Individual leaderboard"}
+            </h2>
+            <Link
+              href={`/${warWeek.edition}/leaderboard`}
+              className="text-primary text-sm font-medium"
+            >
+              Full leaderboard
+            </Link>
+          </div>
+          {standings.hidden ? (
+            <StandingsHidden />
+          ) : standings.main === "team" ? (
+            <TeamStandingsList rows={standings.team} />
+          ) : (
+            <IndividualStandingsList
+              rows={standings.individual.slice(0, HOME_INDIVIDUAL_ROWS)}
+              teams={standings.team}
+            />
+          )}
+        </section>
       </div>
+      {warWeek.status !== "complete" ? <AutoRefresh /> : null}
     </main>
   );
 }

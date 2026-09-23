@@ -193,16 +193,17 @@ async function assertRootRedirect() {
 }
 
 async function assertXiHome() {
-  const check = "GET /xi renders War Week XI";
+  const check = "GET /xi renders War Week XI with Standings hidden";
   try {
     const res = await fetch(`${BASE_URL}/xi`);
     const body = await res.text();
-    if (res.status === 200 && body.includes("War Week XI")) {
+    const hidden = body.includes("Standings hidden");
+    if (res.status === 200 && body.includes("War Week XI") && hidden) {
       ok(check);
     } else {
       fail(
         check,
-        `status=${res.status} bodyIncludes=${body.includes("War Week XI")}`,
+        `status=${res.status} bodyIncludes=${body.includes("War Week XI")} hidden=${hidden}`,
       );
     }
   } catch (error) {
@@ -211,13 +212,16 @@ async function assertXiHome() {
 }
 
 async function assertLeaderboard() {
-  const check = "GET /xi/leaderboard responds";
+  const check =
+    "GET /xi/leaderboard responds and shows Standings hidden for the demo seed";
   try {
     const res = await fetch(`${BASE_URL}/xi/leaderboard`);
-    if (res.status === 200) {
+    const body = await res.text();
+    const hidden = body.includes("Standings hidden");
+    if (res.status === 200 && hidden) {
       ok(check);
     } else {
-      fail(check, `status=${res.status}`);
+      fail(check, `status=${res.status} hidden=${hidden}`);
     }
   } catch (error) {
     fail(check, String(error));
@@ -283,14 +287,15 @@ async function assertMcp() {
     const tools =
       (toolsList.json?.result as { tools?: { name: string }[] } | undefined)
         ?.tools ?? [];
-    const hasTool = tools.some((tool) => tool.name === "get_current_war_week");
-    if (hasTool) {
-      ok("MCP tools/list includes get_current_war_week");
-    } else {
-      fail(
-        "MCP tools/list includes get_current_war_week",
-        `tools=${JSON.stringify(tools)}`,
-      );
+    for (const name of ["get_current_war_week", "get_leaderboard"]) {
+      if (tools.some((tool) => tool.name === name)) {
+        ok(`MCP tools/list includes ${name}`);
+      } else {
+        fail(
+          `MCP tools/list includes ${name}`,
+          `tools=${JSON.stringify(tools)}`,
+        );
+      }
     }
 
     const call = await mcpRequest(
@@ -314,6 +319,36 @@ async function assertMcp() {
         "MCP tools/call get_current_war_week returns edition xi",
         `result=${JSON.stringify(call.json)}`,
       );
+    }
+
+    for (const [id, kind] of [
+      [4, "team"],
+      [5, "individual"],
+    ] as const) {
+      const check = `MCP get_leaderboard(${kind}) returns the hidden result with no numbers`;
+      const leaderboard = await mcpRequest(
+        {
+          jsonrpc: "2.0",
+          id,
+          method: "tools/call",
+          params: { name: "get_leaderboard", arguments: { kind } },
+        },
+        sessionId,
+      );
+      const text = (
+        leaderboard.json?.result as
+          { content?: { type: string; text: string }[] } | undefined
+      )?.content?.[0]?.text;
+      const parsed = text ? JSON.parse(text) : undefined;
+      if (
+        parsed?.hidden === true &&
+        String(parsed.message).includes("hidden until closing ceremonies") &&
+        !/\d/.test(text!)
+      ) {
+        ok(check);
+      } else {
+        fail(check, `result=${JSON.stringify(leaderboard.json)}`);
+      }
     }
   } catch (error) {
     fail("MCP requests succeed", String(error));

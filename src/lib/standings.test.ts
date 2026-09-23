@@ -1,0 +1,212 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  type StandingsInput,
+  type StandingsPointsEntry,
+  computeStandings,
+} from "@/lib/standings";
+
+const red = { id: "team-red", name: "Red", color: "#ff3b3b" };
+const blue = { id: "team-blue", name: "Blue", color: "#3b82f6" };
+
+const neo = { id: "p-neo", displayName: "Neo", teamId: red.id };
+const trinity = { id: "p-trinity", displayName: "Trinity", teamId: blue.id };
+const morpheus = { id: "p-morpheus", displayName: "Morpheus", teamId: null };
+
+const tug = { id: "c-tug", scoring: "team", countsTowardTeam: false } as const;
+const chess = {
+  id: "c-chess",
+  scoring: "individual",
+  countsTowardTeam: true,
+} as const;
+const wellness = {
+  id: "c-wellness",
+  scoring: "individual",
+  countsTowardTeam: false,
+} as const;
+
+function teamEntry(
+  competitionId: string,
+  teamId: string,
+  points: number,
+): StandingsPointsEntry {
+  return { competitionId, teamId, participantId: null, points };
+}
+
+function participantEntry(
+  competitionId: string,
+  participantId: string,
+  points: number,
+): StandingsPointsEntry {
+  return { competitionId, teamId: null, participantId, points };
+}
+
+function input(overrides: Partial<StandingsInput>): StandingsInput {
+  return {
+    mode: "teams",
+    standingsHidden: false,
+    teams: [red, blue],
+    participants: [neo, trinity, morpheus],
+    competitions: [tug, chess, wellness],
+    pointsEntries: [],
+    ...overrides,
+  };
+}
+
+type Row = { name: string; total: number; rank: number };
+
+function rows(list: { name: string; total: number; rank: number }[]): Row[] {
+  return list.map(({ name, total, rank }) => ({ name, total, rank }));
+}
+
+describe("computeStandings", () => {
+  const cases: {
+    name: string;
+    input: StandingsInput;
+    main: "team" | "individual";
+    team: Row[];
+    individual: Row[];
+  }[] = [
+    {
+      name: "team totals made only of team entries",
+      input: input({
+        pointsEntries: [
+          teamEntry(tug.id, red.id, 3),
+          teamEntry(tug.id, blue.id, 1),
+          teamEntry(tug.id, blue.id, 1),
+        ],
+      }),
+      main: "team",
+      team: [
+        { name: "Red", total: 3, rank: 1 },
+        { name: "Blue", total: 2, rank: 2 },
+      ],
+      individual: [],
+    },
+    {
+      name: "member entries count toward the team only when Counts Toward Team is on",
+      input: input({
+        pointsEntries: [
+          teamEntry(tug.id, red.id, 1),
+          participantEntry(chess.id, trinity.id, 2),
+          participantEntry(wellness.id, neo.id, 5),
+          participantEntry(chess.id, morpheus.id, 4),
+        ],
+      }),
+      main: "team",
+      team: [
+        { name: "Blue", total: 2, rank: 1 },
+        { name: "Red", total: 1, rank: 2 },
+      ],
+      individual: [
+        { name: "Neo", total: 5, rank: 1 },
+        { name: "Morpheus", total: 4, rank: 2 },
+        { name: "Trinity", total: 2, rank: 3 },
+      ],
+    },
+    {
+      name: "free-for-all makes individual standings the main leaderboard",
+      input: input({
+        mode: "free-for-all",
+        teams: [],
+        participants: [
+          { ...neo, teamId: null },
+          { ...trinity, teamId: null },
+        ],
+        pointsEntries: [
+          participantEntry(chess.id, neo.id, 1),
+          participantEntry(chess.id, trinity.id, 3),
+        ],
+      }),
+      main: "individual",
+      team: [],
+      individual: [
+        { name: "Trinity", total: 3, rank: 1 },
+        { name: "Neo", total: 1, rank: 2 },
+      ],
+    },
+    {
+      name: "fractional points sum without floating-point drift",
+      input: input({
+        pointsEntries: [
+          teamEntry(tug.id, red.id, 0.1),
+          teamEntry(tug.id, red.id, 0.2),
+          participantEntry(chess.id, neo.id, 1.5),
+          teamEntry(tug.id, blue.id, 1.75),
+        ],
+      }),
+      main: "team",
+      team: [
+        { name: "Red", total: 1.8, rank: 1 },
+        { name: "Blue", total: 1.75, rank: 2 },
+      ],
+      individual: [{ name: "Neo", total: 1.5, rank: 1 }],
+    },
+    {
+      name: "tied totals share a rank and the next rank skips",
+      input: input({
+        teams: [red, blue, { id: "team-green", name: "Green", color: "#0f0" }],
+        pointsEntries: [
+          teamEntry(tug.id, red.id, 2),
+          teamEntry(tug.id, blue.id, 2),
+          teamEntry(tug.id, "team-green", 1),
+          participantEntry(chess.id, neo.id, 1),
+          participantEntry(chess.id, trinity.id, 1),
+        ],
+      }),
+      main: "team",
+      team: [
+        { name: "Blue", total: 3, rank: 1 },
+        { name: "Red", total: 3, rank: 1 },
+        { name: "Green", total: 1, rank: 3 },
+      ],
+      individual: [
+        { name: "Neo", total: 1, rank: 1 },
+        { name: "Trinity", total: 1, rank: 1 },
+      ],
+    },
+    {
+      name: "no entries: every Team at zero sharing first, no individuals",
+      input: input({}),
+      main: "team",
+      team: [
+        { name: "Blue", total: 0, rank: 1 },
+        { name: "Red", total: 0, rank: 1 },
+      ],
+      individual: [],
+    },
+  ];
+
+  it.each(cases)("$name", ({ input, main, team, individual }) => {
+    const standings = computeStandings(input);
+    if (standings.hidden) throw new Error("expected visible standings");
+
+    expect(standings.main).toBe(main);
+    expect(rows(standings.team)).toEqual(team);
+    expect(rows(standings.individual)).toEqual(individual);
+  });
+
+  it("carries each Team's color", () => {
+    const standings = computeStandings(input({}));
+    if (standings.hidden) throw new Error("expected visible standings");
+
+    expect(standings.team.map((row) => row.color)).toEqual([
+      blue.color,
+      red.color,
+    ]);
+  });
+
+  it("hides both leaderboards, with no numbers, when standings are hidden", () => {
+    const standings = computeStandings(
+      input({
+        standingsHidden: true,
+        pointsEntries: [
+          teamEntry(tug.id, red.id, 3),
+          participantEntry(chess.id, neo.id, 2),
+        ],
+      }),
+    );
+
+    expect(standings).toEqual({ hidden: true });
+  });
+});

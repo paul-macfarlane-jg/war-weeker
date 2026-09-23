@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 **Notes:**
 - Standings is one pure function (mode, Competitions, Participants with Team memberships, Points Entries, hidden flag) that returns `hidden` or team + individual standings with the main leaderboard marked. Every page and MCP tool uses it; none does its own math. Rules are as in the spec's Standings rules section.
