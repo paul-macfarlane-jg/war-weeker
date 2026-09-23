@@ -1,5 +1,7 @@
 import { loadEnvConfig } from "@next/env";
+import { makeSignature } from "better-auth/crypto";
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
@@ -8,12 +10,34 @@ loadEnvConfig(process.cwd());
 
 const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
+// A second server with REQUIRE_SIGN_IN on.
+const LOCKED_PORT = 3101;
+const LOCKED_BASE_URL = `http://localhost:${LOCKED_PORT}`;
 const READY_TIMEOUT_MS = 30_000;
+
+// The smoke never uses real OAuth credentials: it proves the app runs
+// without them and signs its own session cookies with this secret.
+const AUTH_SECRET =
+  process.env.BETTER_AUTH_SECRET || `smoke-only-secret-${randomUUID()}`;
+const SESSION_COOKIE = "better-auth.session_token";
 
 const childEnv = {
   ...process.env,
   DATABASE_URL: process.env.DATABASE_URL,
   DATABASE_DRIVER: process.env.DATABASE_DRIVER,
+  BETTER_AUTH_SECRET: AUTH_SECRET,
+  BETTER_AUTH_URL: BASE_URL,
+  GOOGLE_CLIENT_ID: "",
+  GOOGLE_CLIENT_SECRET: "",
+  REQUIRE_SIGN_IN: "false",
+};
+
+// An http:// base URL keeps the cookie name unprefixed (no `__Secure-`)
+// under `next start`, so the smoke's cookies match.
+const lockedEnv = {
+  ...childEnv,
+  BETTER_AUTH_URL: LOCKED_BASE_URL,
+  REQUIRE_SIGN_IN: "true",
 };
 
 let failures = 0;
@@ -40,11 +64,11 @@ function runStep(command: string, args: string[], label: string) {
   return true;
 }
 
-async function waitForReady(): Promise<boolean> {
+async function waitForReady(baseUrl = BASE_URL): Promise<boolean> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${BASE_URL}/xi`);
+      const res = await fetch(`${baseUrl}/sign-in`);
       if (res.status === 200) return true;
     } catch {
       // server not up yet
@@ -54,9 +78,9 @@ async function waitForReady(): Promise<boolean> {
   return false;
 }
 
-async function portInUse(): Promise<boolean> {
+async function portInUse(baseUrl: string): Promise<boolean> {
   try {
-    await fetch(`${BASE_URL}/`, { redirect: "manual" });
+    await fetch(`${baseUrl}/`, { redirect: "manual" });
     return true;
   } catch {
     return false;
@@ -454,9 +478,211 @@ async function assertFreeForAllRoster() {
   }
 }
 
+type SmokeSession = { cookie: string };
+
+// Smoke users never share an email with a real person, so cleanup can't
+// touch a real account.
+const SMOKE_EMAIL_PATTERN = "smoke-%@jahnelgroup.com";
+const SMOKE_EMAIL_PATTERN_OUTSIDER = "smoke-%@example.com";
+const SMOKE_ORGANIZER_EMAIL = "smoke-organizer@jahnelgroup.com";
+
+/**
+ * Inserts a user and a session straight into the database and returns the
+ * session cookie better-auth would have set after a Google sign-in.
+ */
+async function createSmokeSession(email: string): Promise<SmokeSession> {
+  const userId = `smoke-${randomUUID()}`;
+  const token = `smoke-${randomUUID()}`;
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  try {
+    await client.connect();
+    await client.query(
+      `insert into "user" (id, name, email, email_verified) values ($1, 'Smoke', $2, true)`,
+      [userId, email],
+    );
+    await client.query(
+      `insert into session (id, token, user_id, expires_at) values ($1, $2, $3, now() + interval '1 day')`,
+      [`smoke-${randomUUID()}`, token, userId],
+    );
+  } finally {
+    await client.end().catch(() => {});
+  }
+  const signed = `${token}.${await makeSignature(token, AUTH_SECRET)}`;
+  return { cookie: `${SESSION_COOKIE}=${encodeURIComponent(signed)}` };
+}
+
+/** Deletes every smoke user (and, by cascade, their sessions). */
+async function deleteSmokeUsers() {
+  await runQuery(
+    `delete from "user" where email like '${SMOKE_EMAIL_PATTERN}' or email like '${SMOKE_EMAIL_PATTERN_OUTSIDER}'`,
+  );
+}
+
+/** Adds or removes the smoke Organizer on War Week XI's allowlist. */
+async function setSmokeOrganizer(on: boolean) {
+  await runQuery(
+    on
+      ? `update war_week set organizer_emails = array_append(organizer_emails, '${SMOKE_ORGANIZER_EMAIL}') where edition = 'xi' and not ('${SMOKE_ORGANIZER_EMAIL}' = any(organizer_emails))`
+      : `update war_week set organizer_emails = array_remove(organizer_emails, '${SMOKE_ORGANIZER_EMAIL}') where edition = 'xi'`,
+  );
+}
+
+async function assertSignInPage() {
+  const check =
+    "GET /sign-in renders without OAuth credentials and says Google isn't configured";
+  try {
+    const res = await fetch(`${BASE_URL}/sign-in?callbackURL=%2Fadmin`);
+    const body = await res.text();
+    const checks = {
+      heading: body.includes("Sign in to War Weeker"),
+      domain: body.includes("Use your @jahnelgroup.com Google account."),
+      notConfigured: body.includes("configured on this server"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+
+  const sessionCheck = "GET /api/auth/get-session answers null with no session";
+  try {
+    const res = await fetch(`${BASE_URL}/api/auth/get-session`);
+    const body = await res.text();
+    if (res.status === 200 && body.trim() === "null") {
+      ok(sessionCheck);
+    } else {
+      fail(sessionCheck, `status=${res.status} body=${body.slice(0, 200)}`);
+    }
+  } catch (error) {
+    fail(sessionCheck, String(error));
+  }
+}
+
+async function assertAdminGate(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+  outsider: SmokeSession;
+}) {
+  const anonymousCheck = "anonymous GET /admin redirects to sign-in";
+  try {
+    const res = await fetch(`${BASE_URL}/admin`, { redirect: "manual" });
+    const location = res.headers.get("location") ?? "";
+    if (
+      res.status === 307 &&
+      location.includes("/sign-in?callbackURL=%2Fadmin")
+    ) {
+      ok(anonymousCheck);
+    } else {
+      fail(anonymousCheck, `status=${res.status} location=${location}`);
+    }
+  } catch (error) {
+    fail(anonymousCheck, String(error));
+  }
+
+  for (const [label, session, expect] of [
+    ["an allowlisted Organizer", sessions.organizer, "shell"],
+    ["a signed-in JG user off the allowlist", sessions.notOrganizer, "refused"],
+    ["a session with a non-JG email", sessions.outsider, "sign-in"],
+  ] as const) {
+    const check = `GET /admin as ${label} shows ${expect === "shell" ? "the admin shell" : expect === "refused" ? "the refusal" : "sign-in"}`;
+    try {
+      const res = await fetch(`${BASE_URL}/admin`, {
+        headers: { cookie: session.cookie },
+        redirect: "manual",
+      });
+      const body = await res.text();
+      const shell =
+        body.includes("Organizer overview") && body.includes("Admin sections");
+      const refused =
+        body.includes("Organizers only") && !body.includes("Admin sections");
+      const toSignIn =
+        res.status === 307 &&
+        (res.headers.get("location") ?? "").includes("/sign-in");
+      const passed =
+        expect === "shell"
+          ? res.status === 200 && shell
+          : expect === "refused"
+            ? res.status === 200 && refused
+            : toSignIn;
+      if (passed) {
+        ok(check);
+      } else {
+        fail(
+          check,
+          `status=${res.status} ${JSON.stringify({ shell, refused, toSignIn })}`,
+        );
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
+async function assertRequireSignIn(session: SmokeSession) {
+  const redirectCheck =
+    "REQUIRE_SIGN_IN=true: anonymous GET /xi redirects to sign-in";
+  try {
+    const res = await fetch(`${LOCKED_BASE_URL}/xi`, { redirect: "manual" });
+    const location = res.headers.get("location") ?? "";
+    if (res.status === 307 && location.includes("/sign-in?callbackURL=%2Fxi")) {
+      ok(redirectCheck);
+    } else {
+      fail(redirectCheck, `status=${res.status} location=${location}`);
+    }
+  } catch (error) {
+    fail(redirectCheck, String(error));
+  }
+
+  const signedInCheck = "REQUIRE_SIGN_IN=true: a signed-in user reaches /xi";
+  try {
+    const res = await fetch(`${LOCKED_BASE_URL}/xi`, {
+      headers: { cookie: session.cookie },
+      redirect: "manual",
+    });
+    const body = await res.text();
+    if (res.status === 200 && body.includes("War Week XI")) {
+      ok(signedInCheck);
+    } else {
+      fail(signedInCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(signedInCheck, String(error));
+  }
+
+  const mcpCheck =
+    "REQUIRE_SIGN_IN=true: /api/mcp still answers initialize without a session";
+  try {
+    const { json } = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2025-06-18",
+          capabilities: {},
+          clientInfo: { name: "smoke-test", version: "0.1.0" },
+        },
+      },
+      undefined,
+      LOCKED_BASE_URL,
+    );
+    if (json?.result) {
+      ok(mcpCheck);
+    } else {
+      fail(mcpCheck, `result=${JSON.stringify(json)}`);
+    }
+  } catch (error) {
+    fail(mcpCheck, String(error));
+  }
+}
+
 async function mcpRequest(
   body: Record<string, unknown>,
   sessionId?: string,
+  baseUrl = BASE_URL,
 ): Promise<{
   json: Record<string, unknown> | undefined;
   sessionId: string | undefined;
@@ -467,7 +693,7 @@ async function mcpRequest(
   };
   if (sessionId) headers["mcp-session-id"] = sessionId;
 
-  const res = await fetch(`${BASE_URL}/api/mcp`, {
+  const res = await fetch(`${baseUrl}/api/mcp`, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
@@ -626,6 +852,16 @@ async function assertMcp() {
   }
 }
 
+function startServer(port: number, env: NodeJS.ProcessEnv): ChildProcess {
+  return spawn("pnpm", ["start", "-p", String(port)], {
+    env,
+    stdio: "inherit",
+    // pnpm forks a `next start` child; detach into its own process group
+    // so killing the group (not just the pnpm wrapper) stops the server.
+    detached: true,
+  });
+}
+
 function killProcessGroup(pid: number, signal: NodeJS.Signals) {
   try {
     process.kill(-pid, signal);
@@ -660,11 +896,13 @@ async function main() {
     process.exit(1);
   }
 
-  if (await portInUse()) {
-    console.error(
-      `FAIL - something is already listening on ${BASE_URL}; stop it before running the smoke`,
-    );
-    process.exit(1);
+  for (const baseUrl of [BASE_URL, LOCKED_BASE_URL]) {
+    if (await portInUse(baseUrl)) {
+      console.error(
+        `FAIL - something is already listening on ${baseUrl}; stop it before running the smoke`,
+      );
+      process.exit(1);
+    }
   }
 
   if (!runStep("pnpm", ["db:migrate"], "pnpm db:migrate")) {
@@ -692,15 +930,23 @@ async function main() {
   await assertSeedLoadedOnce();
   await assertPointsEntryTargetConstraint();
 
-  const server = spawn("pnpm", ["start", "-p", String(PORT)], {
-    env: childEnv,
-    stdio: "inherit",
-    // pnpm forks a `next start` child; detach into its own process group
-    // so killing the group (not just the pnpm wrapper) stops the server.
-    detached: true,
-  });
+  // Clear leftovers from an interrupted run, then add the smoke Organizer
+  // to XI's allowlist until the run ends.
+  await deleteSmokeUsers();
+  await setSmokeOrganizer(true);
+  const sessions = {
+    organizer: await createSmokeSession(SMOKE_ORGANIZER_EMAIL),
+    notOrganizer: await createSmokeSession("smoke-participant@jahnelgroup.com"),
+    // Can't happen through sign-in (the user-create hook refuses it); the
+    // session check still treats it as anonymous.
+    outsider: await createSmokeSession("smoke-outsider@example.com"),
+  };
+
+  const server = startServer(PORT, childEnv);
+  const lockedServer = startServer(LOCKED_PORT, lockedEnv);
 
   try {
+    const lockedReady = waitForReady(LOCKED_BASE_URL);
     const ready = await waitForReady();
     if (!ready) {
       fail(
@@ -721,9 +967,26 @@ async function main() {
       await assertTeams();
       await assertFreeForAllRoster();
       await assertMcp();
+      await assertSignInPage();
+      await assertAdminGate(sessions);
+    }
+    if (!(await lockedReady)) {
+      fail(
+        "REQUIRE_SIGN_IN server ready",
+        `did not respond on ${LOCKED_BASE_URL}/sign-in within ${READY_TIMEOUT_MS}ms`,
+      );
+    } else {
+      ok("REQUIRE_SIGN_IN server ready");
+      await assertRequireSignIn(sessions.notOrganizer);
     }
   } finally {
-    await killServer(server);
+    await Promise.all([killServer(server), killServer(lockedServer)]);
+    await deleteSmokeUsers().catch((error) =>
+      fail("delete smoke users", String(error)),
+    );
+    await setSmokeOrganizer(false).catch((error) =>
+      fail("remove the smoke Organizer from XI", String(error)),
+    );
   }
 
   process.exit(failures > 0 ? 1 : 0);

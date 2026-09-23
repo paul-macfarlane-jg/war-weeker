@@ -15,6 +15,13 @@
       "when": 1790193767185,
       "tag": "0001_thankful_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790205553194,
+      "tag": "0002_auth_tables",
+      "breakpoints": true
     }
   ]
 }

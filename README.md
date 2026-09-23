@@ -79,6 +79,33 @@ Point any Streamable HTTP MCP client at that URL, e.g.:
 }
 ```
 
+## Organizer sign-in
+
+Organizers sign in at `/sign-in` with their `@jahnelgroup.com` Google
+account and manage the current War Week at `/admin`. A War Week's
+Organizers are the `organizerEmails` in its seed file.
+
+Local setup (only needed to sign in; the app and `pnpm smoke` run without
+it):
+
+1. In Google Cloud Console, create an OAuth client (Web application) with an
+   **Internal** consent screen, and add the redirect URI
+   `http://localhost:3000/api/auth/callback/google`.
+2. In `.env.local`, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+   `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and
+   `BETTER_AUTH_URL=http://localhost:3000`.
+3. `pnpm db:migrate`, then `pnpm dev` and open `/admin`.
+
+Any Google account outside `@jahnelgroup.com` is refused at sign-in, even if
+the consent screen were misconfigured. A JG employee who isn't on the
+allowlist can sign in but `/admin` refuses them.
+
+`REQUIRE_SIGN_IN=true` makes every page require a signed-in JG account
+(anonymous visitors are redirected to `/sign-in`). It is off by default.
+`/api/mcp` stays public and unauthenticated even with the flag on: the spec
+makes the MCP server read-only with no auth, and MCP clients can't complete
+a Google sign-in. Locking MCP down too would need its own auth.
+
 ## Deployment (Vercel + Neon)
 
 Production: **https://war-weeker.vercel.app** (MCP at
@@ -92,8 +119,15 @@ Production: **https://war-weeker.vercel.app** (MCP at
   Preview deployments (including `staging`) use the staging database.
 - **Vercel env vars** (Project Settings → Environment Variables, per
   environment): `DATABASE_URL` (that environment's Neon connection string)
-  and `DATABASE_DRIVER=neon`. Later tickets add the auth variables listed in
-  `.env.example`.
+  and `DATABASE_DRIVER=neon`, plus the auth variables from `.env.example`
+  (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` set to that deployment's URL,
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, optional `REQUIRE_SIGN_IN`).
+  Staging and production each need their own `BETTER_AUTH_URL`, and the
+  OAuth client needs each deployment's
+  `<deployment URL>/api/auth/callback/google` as a redirect URI. A build with
+  no `BETTER_AUTH_SECRET` (e.g. CI) logs a "default secret" error while
+  collecting page data; it is harmless there, but a deployment without the
+  secret answers 500 on any page that checks the session.
 - **GitHub repo secrets:** `PROD_DATABASE_URL` and `STAGING_DATABASE_URL`,
   used by the Migrate and Seed workflows below.
 
