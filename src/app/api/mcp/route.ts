@@ -2,7 +2,9 @@ import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
 import { toLeaderboardResult } from "@/mcp/leaderboard";
+import { toScheduleResult } from "@/mcp/schedule";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
+import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
@@ -50,6 +52,35 @@ const handler = createMcpHandler(
               await getStandings(warWeek),
               kind,
               warWeek.teamLabel,
+            )
+          : { warWeek: null };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_schedule",
+      {
+        title: "Get schedule",
+        description:
+          "Returns the current War Week's schedule, grouped by Day with each Day Theme. Pass a date (YYYY-MM-DD) for one Day; omit it for the whole week. All times are ET (America/New_York) wall-clock HH:MM.",
+        inputSchema: z.object({
+          date: z.iso
+            .date()
+            .optional()
+            .describe("A Day's date, YYYY-MM-DD. Omit for the full schedule."),
+        }),
+      },
+      async ({ date }) => {
+        const warWeek = await getCurrentWarWeek();
+        const result = warWeek
+          ? toScheduleResult(
+              warWeek.edition,
+              await getSchedule(warWeek.id, { date }),
+              date,
             )
           : { warWeek: null };
 

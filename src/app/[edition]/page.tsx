@@ -1,7 +1,9 @@
+import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AutoRefresh } from "@/components/auto-refresh";
+import { NowNextSection } from "@/components/now-next";
 import {
   IndividualStandingsList,
   StandingsHidden,
@@ -9,6 +11,8 @@ import {
 } from "@/components/standings";
 import { Button } from "@/components/ui/button";
 import type { WarWeek } from "@/db/schema";
+import { computeNowNext, resolveClock } from "@/lib/schedule";
+import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 
 import { getWarWeekForEdition } from "./war-week";
@@ -22,31 +26,27 @@ const STATUS_LABEL: Record<WarWeek["status"], string> = {
 const HOME_INDIVIDUAL_ROWS = 5;
 
 function formatDateRange(startDate: string, endDate: string): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-  const yearFormatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  const start = formatter.format(new Date(startDate));
-  const end = formatter.format(new Date(endDate));
-  const year = yearFormatter.format(new Date(endDate));
-  return `${start} – ${end}, ${year}`;
+  const start = format(parseISO(startDate), "MMM d");
+  const end = format(parseISO(endDate), "MMM d, yyyy");
+  return `${start} – ${end}`;
 }
 
 export default async function EditionHomePage({
   params,
+  searchParams,
 }: PageProps<"/[edition]">) {
   const { edition } = await params;
+  const { at } = await searchParams;
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
 
   const editionLabel = warWeek.edition.toUpperCase();
   const statusLabel = STATUS_LABEL[warWeek.status];
-  const standings = await getStandings(warWeek);
+  const [standings, schedule] = await Promise.all([
+    getStandings(warWeek),
+    getSchedule(warWeek.id),
+  ]);
+  const nowNext = computeNowNext(schedule, resolveClock(at));
 
   return (
     <main className="mx-auto flex max-w-md flex-col">
@@ -108,6 +108,8 @@ export default async function EditionHomePage({
         >
           Join the Slack channel
         </Button>
+
+        <NowNextSection nowNext={nowNext} edition={warWeek.edition} />
 
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between">

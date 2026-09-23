@@ -49,6 +49,19 @@ Seed content copied verbatim from `old-wikis/` (e.g. a day theme literally
 called "Tournament Day") is exempt: it is historical data, not code, and the
 banned-term scan only covers `src/`, `scripts/`, and `drizzle/`.
 
+## Schedule display rules
+
+All Schedule Item times are ET wall-clock times; the Day supplies the date.
+Now/next is computed on the ET clock, whatever the viewer's timezone.
+
+- An item is **on now** from its start time (inclusive) to its end time
+  (exclusive). An item with no end time counts as on for 60 minutes. An end
+  time at or before the start time runs past midnight into the next day.
+- **Up next** is every item sharing the earliest start time after now, on
+  today's Day or a later one.
+- Home and schedule pages accept `?at=<ISO instant>` to show the schedule as
+  of that moment, for demos of a War Week that isn't on right now.
+
 ## Seed idempotence rules
 
 A seed file loads in one transaction. Loading the same file twice leaves the

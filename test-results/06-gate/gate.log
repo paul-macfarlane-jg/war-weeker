@@ -30,10 +30,10 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
 
- Test Files  9 passed (9)
-      Tests  93 passed (93)
-   Start at  17:01:01
-   Duration  662ms (transform 390ms, setup 0ms, import 1.10s, tests 85ms, environment 1ms)
+ Test Files  11 passed (11)
+      Tests  125 passed (125)
+   Start at  18:34:45
+   Duration  1.08s (transform 374ms, setup 0ms, import 2.92s, tests 141ms, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -41,15 +41,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 15ms
+✓ Running next.config.ts took 24ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.1s
+✓ Compiled successfully in 1639ms
   Running TypeScript ...
-  Finished TypeScript in 2.3s ...
+  Finished TypeScript in 2.1s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 132ms
+✓ Generating static pages using 9 workers (3/3) in 93ms
   Finalizing page optimization ...
 
 Route (app)
@@ -128,16 +128,22 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 141ms
-✓ Running next.config.ts took 112ms
+✓ Ready in 137ms
+✓ Running next.config.ts took 107ms
 ok - server ready
 ok - GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
 ok - GET /zz returns 404
 ok - GET /xi/leaderboard responds and shows Standings hidden for the demo seed
+ok - GET /xi/schedule groups by Day with Day Themes, ET times and Competition links
+ok - GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next
 ok - MCP tools/list includes get_current_war_week
 ok - MCP tools/list includes get_leaderboard
+ok - MCP tools/list includes get_schedule
 ok - MCP tools/call get_current_war_week returns edition xi
 ok - MCP get_leaderboard(team) returns the hidden result with no numbers
 ok - MCP get_leaderboard(individual) returns the hidden result with no numbers
+ok - MCP get_schedule(2026-02-24) returns only that Day
+ok - MCP get_schedule() returns all six XI Days
  ELIFECYCLE  Command failed with exit code 143.
+gate exit status: 0
