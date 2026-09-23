@@ -1,7 +1,9 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
+import { toLeaderboardResult } from "@/mcp/leaderboard";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
+import { getStandings } from "@/queries/standings";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +24,34 @@ const handler = createMcpHandler(
         // different shape ({ warWeek: null }) from the populated one.
         const warWeek = await getCurrentWarWeek();
         const result = toCurrentWarWeekResult(warWeek);
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_leaderboard",
+      {
+        title: "Get leaderboard",
+        description:
+          "Returns the current War Week's team or individual Standings, ranked by total points. While standings are hidden it returns only a 'hidden until closing ceremonies' message and no numbers.",
+        inputSchema: z.object({
+          kind: z
+            .enum(["team", "individual"])
+            .describe("Which leaderboard: team standings or individual."),
+        }),
+      },
+      async ({ kind }) => {
+        const warWeek = await getCurrentWarWeek();
+        const result = warWeek
+          ? toLeaderboardResult(
+              await getStandings(warWeek),
+              kind,
+              warWeek.teamLabel,
+            )
+          : { warWeek: null };
 
         return {
           content: [{ type: "text", text: JSON.stringify(result) }],
