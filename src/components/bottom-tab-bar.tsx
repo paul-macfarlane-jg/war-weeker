@@ -10,7 +10,13 @@ function tabsFor(edition: string) {
     { label: "Schedule", href: `/${edition}/schedule`, icon: ListChecks },
     { label: "Leaderboard", href: `/${edition}/leaderboard`, icon: Trophy },
     { label: "News", href: `/${edition}/news`, icon: Newspaper },
-    { label: "More", href: `/${edition}/more`, icon: Menu },
+    {
+      label: "More",
+      href: `/${edition}/more`,
+      icon: Menu,
+      // Pages reached from the More tab keep it highlighted.
+      subpaths: [`/${edition}/competitions`, `/${edition}/teams`],
+    },
   ];
 }
 
@@ -24,8 +30,12 @@ export function BottomTabBar({ edition }: { edition: string }) {
       className="border-border bg-background fixed inset-x-0 bottom-0 z-50 border-t pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="flex items-stretch justify-around">
-        {tabs.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href;
+        {tabs.map(({ label, href, icon: Icon, subpaths = [] }) => {
+          const active =
+            pathname === href ||
+            subpaths.some(
+              (path) => pathname === path || pathname.startsWith(`${path}/`),
+            );
           return (
             <li key={href} className="flex-1">
               <Link

@@ -62,6 +62,19 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - Home and schedule pages accept `?at=<ISO instant>` to show the schedule as
   of that moment, for demos of a War Week that isn't on right now.
 
+## Competition and roster display rules
+
+- While standings are hidden, a Competition page shows its description, max
+  points and scoring but not its Points Entries ("Points hidden 🔒"). Summing
+  the entries would reveal the totals the Reveal keeps secret.
+- The Competitions list orders Competition Groups, and Competitions within
+  each, by name. Competitions with no group come last, under "Other
+  Competitions" (no heading when nothing is grouped).
+- A Competition's Points Entries are listed oldest first.
+- The Teams page lists Teams by name, each with its Leaders first (marked
+  with the Leader Title), then Participants by name. A free-for-all War Week
+  shows one list of all Participants.
+
 ## Seed idempotence rules
 
 A seed file loads in one transaction. Loading the same file twice leaves the

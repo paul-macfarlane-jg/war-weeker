@@ -274,6 +274,186 @@ async function assertHomeNowNext() {
   }
 }
 
+async function runQuery<T extends Record<string, unknown>>(
+  sql: string,
+): Promise<T[]> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  try {
+    await client.connect();
+    const { rows } = await client.query<T>(sql);
+    return rows;
+  } finally {
+    await client.end().catch(() => {});
+  }
+}
+
+async function assertMoreLinks() {
+  const check = "GET /xi/more links to Competitions and Teams";
+  try {
+    const res = await fetch(`${BASE_URL}/xi/more`);
+    const body = await res.text();
+    const checks = {
+      competitions: body.includes('href="/xi/competitions"'),
+      teams: body.includes('href="/xi/teams"'),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertCompetitions() {
+  const check =
+    "GET /xi/competitions groups Competitions with max points and scoring";
+  try {
+    const res = await fetch(`${BASE_URL}/xi/competitions`);
+    const body = await res.text();
+    const checks = {
+      group: body.includes("Team Night Events"),
+      ungrouped: body.includes("Other Competitions"),
+      maxPoints: body.includes("Max 1.5 pts"),
+      scoring: body.includes("Individual · counts toward Team"),
+      link: body.includes('href="/xi/competitions/'),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertCompetitionDetail() {
+  let id: string | undefined;
+  try {
+    const rows = await runQuery<{ id: string }>(
+      `select c.id from competition c join war_week w on w.id = c.war_week_id
+       where w.edition = 'xi' and c.name = 'Winning the Day Challenge'`,
+    );
+    id = rows[0]?.id;
+  } catch (error) {
+    fail("look up the Winning the Day Challenge id", String(error));
+    return;
+  }
+  if (!id) {
+    fail("look up the Winning the Day Challenge id", "not found");
+    return;
+  }
+
+  const url = `${BASE_URL}/xi/competitions/${id}`;
+  const note = "First to finish all 10 wellness tasks";
+
+  const hiddenCheck =
+    "GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden";
+  try {
+    const res = await fetch(url);
+    const body = await res.text();
+    const checks = {
+      name: body.includes("Winning the Day Challenge"),
+      hidden: body.includes("Points hidden"),
+      noEntry: !body.includes(note) && !body.includes("Dani Milliken"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(hiddenCheck);
+    } else {
+      fail(hiddenCheck, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(hiddenCheck, String(error));
+  }
+
+  // Briefly reveal XI to see the ledger, then hide it again. The smoke
+  // resets every seed on its next run, so an interrupted run heals itself.
+  const shownCheck =
+    "GET /xi/competitions/[id] lists Points Entries (target, points, note) once standings are revealed";
+  try {
+    await runQuery(
+      "update war_week set standings_hidden = false where edition = 'xi'",
+    );
+    const res = await fetch(url);
+    const body = await res.text();
+    const checks = {
+      target: body.includes("Dani Milliken"),
+      note: body.includes(note),
+      notHidden: !body.includes("Points hidden"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(shownCheck);
+    } else {
+      fail(shownCheck, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(shownCheck, String(error));
+  } finally {
+    await runQuery(
+      "update war_week set standings_hidden = true where edition = 'xi'",
+    ).catch((error) => fail("hide XI standings again", String(error)));
+  }
+
+  for (const bad of ["00000000-0000-4000-8000-000000000000", "not-a-uuid"]) {
+    const check = `GET /xi/competitions/${bad} returns 404`;
+    try {
+      const res = await fetch(`${BASE_URL}/xi/competitions/${bad}`);
+      if (res.status === 404) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
+async function assertTeams() {
+  const check =
+    "GET /xi/teams shows each Team with Leaders marked by Leader Title and Company Tags";
+  try {
+    const res = await fetch(`${BASE_URL}/xi/teams`);
+    const body = await res.text();
+    const checks = {
+      red: body.includes("Red"),
+      blue: body.includes("Blue"),
+      leaderTitle: body.includes(">Captain<"),
+      leader: body.includes("Ashley Schuliger"),
+      companyTag: body.includes(">LTI<"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertFreeForAllRoster() {
+  const check =
+    "GET /iv/teams shows one roster of all Participants for a free-for-all War Week";
+  try {
+    const res = await fetch(`${BASE_URL}/iv/teams`);
+    const body = await res.text();
+    const checks = {
+      heading: body.includes("Participants"),
+      participant: body.includes("Ian Ballard"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
 async function mcpRequest(
   body: Record<string, unknown>,
   sessionId?: string,
@@ -535,6 +715,11 @@ async function main() {
       await assertLeaderboard();
       await assertSchedule();
       await assertHomeNowNext();
+      await assertMoreLinks();
+      await assertCompetitions();
+      await assertCompetitionDetail();
+      await assertTeams();
+      await assertFreeForAllRoster();
       await assertMcp();
     }
   } finally {
