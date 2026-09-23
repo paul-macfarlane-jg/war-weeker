@@ -35,8 +35,8 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  Test Files  13 passed (13)
       Tests  149 passed (149)
-   Start at  19:08:02
-   Duration  1.14s (transform 482ms, setup 0ms, import 2.92s, tests 142ms, environment 1ms)
+   Start at  19:43:08
+   Duration  1.30s (transform 716ms, setup 0ms, import 3.92s, tests 151ms, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -44,15 +44,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 16ms
+✓ Running next.config.ts took 21ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 854ms
+✓ Compiled successfully in 2.8s
   Running TypeScript ...
-  Finished TypeScript in 2.2s ...
+  Finished TypeScript in 3.5s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 111ms
+✓ Generating static pages using 9 workers (3/3) in 113ms
   Finalizing page optimization ...
 
 Route (app)
@@ -134,8 +134,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 136ms
-✓ Running next.config.ts took 98ms
+✓ Ready in 126ms
+✓ Running next.config.ts took 102ms
 ok - server ready
 ok - GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden

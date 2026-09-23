@@ -27,7 +27,7 @@ export default async function MorePage({
   ];
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
+    <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl">
       <h1 className="text-2xl font-bold">More</h1>
       <ul className="border-border flex flex-col rounded-lg border">
         {links.map(({ label, href, icon: Icon }) => (

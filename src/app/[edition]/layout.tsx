@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { BottomTabBar } from "@/components/bottom-tab-bar";
+import { BottomTabBar, TopNav } from "@/components/primary-nav";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 import { getWarWeekForEdition } from "./war-week";
@@ -31,8 +31,9 @@ export default async function EditionLayout({
   return (
     <div
       style={warWeekThemeStyle(warWeek)}
-      className="bg-background text-foreground min-h-dvh pb-20 font-sans"
+      className="bg-background text-foreground min-h-dvh pb-20 font-sans md:pb-0"
     >
+      <TopNav edition={warWeek.edition} storyTheme={warWeek.storyTheme} />
       {children}
       <BottomTabBar edition={warWeek.edition} />
     </div>
