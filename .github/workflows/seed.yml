@@ -22,6 +22,14 @@ on:
         description: Seed file under seeds/ (e.g. xi.json); leave blank for all
         type: string
         required: false
+      reset:
+        description: Reset first (deletes each seeded War Week, including organizer-entered data)
+        type: boolean
+        default: false
+      confirm_reset:
+        description: To reset, type the target environment name (staging or production)
+        type: string
+        required: false
 
 concurrency:
   group: seed-${{ inputs.environment }}
@@ -35,6 +43,8 @@ jobs:
       PROD_DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
       TARGET: ${{ inputs.environment }}
       SEED: ${{ inputs.seed }}
+      RESET: ${{ inputs.reset }}
+      CONFIRM_RESET: ${{ inputs.confirm_reset }}
     steps:
       - name: Resolve target database
         run: |
@@ -74,6 +84,12 @@ jobs:
           else
             files=$(ls seeds/*.json)
           fi
-          for f in $files; do
-            pnpm seed:load "$f"
-          done
+          flags=""
+          if [ "$RESET" = "true" ]; then
+            if [ "$CONFIRM_RESET" != "$TARGET" ]; then
+              echo "::error::Reset deletes organizer-entered data. Type \"$TARGET\" in confirm_reset to proceed."
+              exit 1
+            fi
+            flags="--reset"
+          fi
+          pnpm seed:load $flags $files

@@ -152,7 +152,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ### History extraction (developer)
 
-74. As the developer, I want a script that sends each old wiki page to Claude and gets back structured seed JSON that passes the seed schema, so that ten years of history don't have to be typed in by hand.
+74. As the developer, I want Claude to read each old wiki page and write structured seed JSON that passes the seed schema, so that ten years of history don't have to be typed in by hand.
 75. As the developer, I want the extracted JSON committed and editable by hand, so that I can fix what the extraction gets wrong and the app never calls Claude at runtime.
 76. As the developer, I want the same extraction to produce War Week XI's schedule, Teams, roster and Competitions, so that the live demo War Week uses real data.
 
@@ -190,7 +190,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - `get_history(year)`
 
   While standings are hidden, `get_leaderboard` returns an explicit "hidden until closing ceremonies" result and no numbers.
-- **Extraction script.** Run by hand at dev time. It sends each old wiki text file to Claude through the Vercel AI Gateway (AI SDK, model `anthropic/claude-sonnet-5`, structured output against the seed schemas) and writes one seed JSON file per year. The output is fixed by hand and committed. It uses `AI_GATEWAY_API_KEY` and is never called at runtime.
+- **History extraction.** Done once at dev time by Claude Code reading each old wiki text file and writing one seed JSON file per year (`seeds/<edition>.json`), validated by the seed schema. The output is fixed by hand and committed; the app never calls Claude. (An AI Gateway script was dropped: the gateway free tier doesn't serve the model, and Claude Code does the same job.)
 - **Theming.** The War Week's Appearance Theme (primary and accent colors, logo, banner, one of 2–3 font presets) is applied as CSS variables at the War Week layout. Archived War Weeks render in their own theme.
 
 ### Schema (entities and key rules)
@@ -313,7 +313,6 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Prerequisites the developer handles:**
   - Google OAuth client (Internal consent screen; redirect `/api/auth/callback/google` on localhost and on the Vercel domain)
   - `BETTER_AUTH_SECRET`
-  - `AI_GATEWAY_API_KEY` (Vercel AI Gateway)
   - the Vercel project and Neon database (later)
   - the organizer allowlist (in the XI seed)
 

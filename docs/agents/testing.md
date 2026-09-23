@@ -21,7 +21,7 @@ rereading this guide.
 | format | `pnpm format` (check: `pnpm format:check`) | Consistent formatting | Before lint | verified |
 | unit | `pnpm test` (vitest) | Pure modules and services through public interfaces; no DB for pure-module tests | During implementation and per slice gate | verified |
 | build | `pnpm build` | Next.js production build | Per slice gate, before PR | verified |
-| e2e | `pnpm smoke` (needs `pnpm build` and local Postgres via `docker compose up -d`) | Migrates, loads the XI seed twice, starts the app; /, /xi, /xi/leaderboard, /api/mcp respond; seed row counts and DB constraints. Only coverage for UI and admin forms | Per slice gate, before PR | verified |
+| e2e | `pnpm smoke` (needs `pnpm build` and local Postgres via `docker compose up -d`) | Migrates, loads every seed twice (first with `--reset`, which wipes those War Weeks in the local DB, then plain to prove idempotence), starts the app; /, /xi, /xi/leaderboard, /api/mcp respond; seed row counts and DB constraints. Only coverage for UI and admin forms | Per slice gate, before PR | verified |
 | run | `pnpm dev` | Local dev server | Manual verification and smoke | verified |
 | gate | `pnpm gate` | typecheck, lint, test, build and smoke in order | Per slice gate, before PR | verified |
 

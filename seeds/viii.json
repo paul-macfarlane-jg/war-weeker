@@ -1,0 +1,253 @@
+{
+  "edition": "viii",
+  "editionNumber": 8,
+  "year": 2023,
+  "startDate": "2023-02-26",
+  "endDate": "2023-03-03",
+  "storyTheme": "Harry Potter: The Houses of Hogwarts",
+  "status": "complete",
+  "mode": "teams",
+  "teamLabel": "House",
+  "leaderTitle": "Head of House",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "primary": "#740001",
+  "primaryForeground": "#fff8e7",
+  "accent": "#d3a625",
+  "background": "#f5ecd7",
+  "foreground": "#2b1d0e",
+  "fontPreset": "serif",
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2023",
+  "organizerEmails": [],
+  "winner": "Slytherin",
+  "highlights": [
+    "Slytherin won the House Cup with 58 points, edging Hufflepuff (57), Ravenclaw (55) and Gryffindor (41) in the final standings.",
+    "The company was split into the four houses of Hogwarts, with just under 30 remotes traveling in, an all-time record.",
+    "Slytherin took Midnight Club with 13 members, ahead of Ravenclaw (9), Gryffindor (8) and Hufflepuff (5).",
+    "Ravenclaw won both the Tri-Wizard Tournament (led by Ashley Schuliger) and the Battle of the Memes.",
+    "Dom Favata swept Super Smash Bros. and Mario Kart at Gaming Night, then won the Beer Pong Finals with Lucas Fernandes as The Splash Bros.",
+    "Monday through Thursday were House Days, with each house providing all three meals for House Cup points."
+  ],
+  "days": [
+    { "date": "2023-02-27", "dayTheme": "Hufflepuff Day", "scheduleItems": [] },
+    { "date": "2023-02-28", "dayTheme": "Gryffindor Day", "scheduleItems": [] },
+    { "date": "2023-03-01", "dayTheme": "Ravenclaw Day", "scheduleItems": [] },
+    { "date": "2023-03-02", "dayTheme": "Slytherin Day", "scheduleItems": [] }
+  ],
+  "teams": [
+    { "name": "Hufflepuff", "color": "#ecb939" },
+    { "name": "Gryffindor", "color": "#ae0001" },
+    { "name": "Ravenclaw", "color": "#222f5b" },
+    { "name": "Slytherin", "color": "#2a623d" }
+  ],
+  "participants": [
+    { "displayName": "Linda Martin", "team": "Hufflepuff", "isLeader": true },
+    { "displayName": "Darrin Jahnel", "team": "Gryffindor", "isLeader": true },
+    { "displayName": "Steven Zgaljic", "team": "Ravenclaw", "isLeader": true },
+    { "displayName": "Jon Keller", "team": "Slytherin", "isLeader": true },
+    { "displayName": "Solomon Mori", "team": "Ravenclaw" },
+    { "displayName": "Carson O'Neill", "team": "Hufflepuff" },
+    { "displayName": "Kyle Gancarz", "team": "Slytherin" },
+    { "displayName": "Ashvin Gokhool", "team": "Gryffindor" },
+    { "displayName": "Dan Kollar", "team": "Hufflepuff" },
+    { "displayName": "Sean Mullen", "team": "Slytherin" },
+    { "displayName": "Alex Nikolis", "team": "Hufflepuff" },
+    { "displayName": "James Murphy", "team": "Hufflepuff" },
+    { "displayName": "Tristin Knapp", "team": "Slytherin" },
+    { "displayName": "Ashley Schuliger", "team": "Ravenclaw" },
+    { "displayName": "Dom Favata", "team": "Hufflepuff" },
+    { "displayName": "Lucas Fernandes", "team": "Ravenclaw" }
+  ],
+  "competitions": [
+    {
+      "name": "Midnight Club",
+      "description": "One point per house member who works from 12:00 AM to noon Sunday; houses ranked 10 / 5 / 3 / 1.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Black Tuesday",
+      "description": "No talking from 6:00 AM to 1:00 PM Tuesday; houses ranked 10 / 5 / 3 / 1.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Daily Workouts",
+      "description": "One point per member completing all four workouts (2 Beast Mode, 2 Yoga); houses ranked 10 / 5 / 3 / 1.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Stairs Challenge",
+      "description": "One point per member per day with at least 5 full trips; houses ranked 10 / 5 / 3 / 1.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Tri-Wizard Tournament",
+      "description": "Elimination-style wizarding challenges; each house puts forth its 12 best. Points 10 / 5 / 3 / 1 by order of elimination.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Battle of the Memes",
+      "description": "Live meme showdown at the talent show; points 10 / 5 / 3 / 1 by team voting.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Billable Hours",
+      "description": "House War Week billable hours vs. its four-week average; 10 / 5 / 3 / 1 by percentage.",
+      "maxPoints": 10,
+      "scoring": "team",
+      "group": "Challenges Decided by Houses"
+    },
+    {
+      "name": "Spirit / Discretionary",
+      "description": "JG gear, HP gear, decorations, participation, enthusiasm, meals, morning announcements and more.",
+      "scoring": "team",
+      "group": "Discretionary House Points"
+    },
+    {
+      "name": "Settlers of Catan",
+      "description": "5 House Cup points to the winner's house; 3 to the second table winner.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Challenges Decided by Individuals"
+    },
+    {
+      "name": "Magic the Gathering",
+      "description": "3 House Cup points for the advanced champ, 1 for the beginner champ.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Challenges Decided by Individuals"
+    },
+    {
+      "name": "War Week Beer & Cards",
+      "description": "3 House Cup points for the advanced champ, 1 for the beginner champ.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Challenges Decided by Individuals"
+    },
+    {
+      "name": "Gaming Night",
+      "description": "Super Smash Bros. Ultimate, Mario Kart and CS:GO tournaments; each winner earns 3 points for their house.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Challenges Decided by Individuals"
+    },
+    {
+      "name": "Wizard's Chess Tournament",
+      "description": "5 / 3 / 1 House Cup points for 1st, 2nd and 3rd; 1 point to the beginners bracket winner.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Challenges Decided by Individuals"
+    }
+  ],
+  "pointsEntries": [],
+  "awards": [
+    {
+      "key": "house-cup",
+      "name": "House Cup",
+      "description": "Highest final House Cup total: Slytherin 58, Hufflepuff 57, Ravenclaw 55, Gryffindor 41.",
+      "team": "Slytherin"
+    },
+    {
+      "key": "billable-hours-champ",
+      "name": "Billable Hours Champ",
+      "description": "Ravenclaw earned the top 10 points in Billable Hours in the final standings.",
+      "team": "Ravenclaw"
+    },
+    {
+      "key": "midnight-club-winning-house",
+      "name": "Midnight Club Winning House",
+      "description": "Slytherin had 13 Midnight Club members.",
+      "team": "Slytherin"
+    },
+    {
+      "key": "tri-wizard-tournament-champion",
+      "name": "Tri-Wizard Tournament Champion",
+      "description": "Ravenclaw won with Ashley Schuliger.",
+      "team": "Ravenclaw",
+      "participants": ["Ashley Schuliger"]
+    },
+    {
+      "key": "battle-of-the-memes-champion",
+      "name": "Battle of the Memes Champion",
+      "team": "Ravenclaw"
+    },
+    {
+      "key": "wizards-chess-champion",
+      "name": "Wizard's Chess Champion",
+      "participants": ["Solomon Mori"]
+    },
+    {
+      "key": "wizards-chess-runner-up",
+      "name": "Wizard's Chess Runner-Up",
+      "description": "Three-way tie for 2nd.",
+      "participants": ["Carson O'Neill", "Kyle Gancarz", "Ashvin Gokhool"]
+    },
+    {
+      "key": "catan-premier-champion",
+      "name": "Settlers of Catan Premier Champion",
+      "participants": ["Dan Kollar"]
+    },
+    {
+      "key": "catan-second-table-champion",
+      "name": "Settlers of Catan Second Table Champion",
+      "participants": ["Sean Mullen"]
+    },
+    {
+      "key": "magic-advanced-champion",
+      "name": "Magic the Gathering Advanced Champion",
+      "participants": ["Carson O'Neill"]
+    },
+    {
+      "key": "magic-beginner-champion",
+      "name": "Magic the Gathering Beginner Champion",
+      "participants": ["Alex Nikolis"]
+    },
+    {
+      "key": "beer-and-cards-advanced-champion",
+      "name": "Beer & Cards Advanced Champion",
+      "participants": ["James Murphy"]
+    },
+    {
+      "key": "beer-and-cards-beginner-champion",
+      "name": "Beer & Cards Beginner Champion",
+      "participants": ["Tristin Knapp"]
+    },
+    {
+      "key": "super-smash-bros-champion",
+      "name": "Super Smash Bros. Champion",
+      "participants": ["Dom Favata"]
+    },
+    {
+      "key": "mario-kart-champion",
+      "name": "Mario Kart Champion",
+      "participants": ["Dom Favata"]
+    },
+    { "key": "csgo-champion", "name": "CS:GO Champion", "team": "Slytherin" },
+    {
+      "key": "beer-pong-finals-champion",
+      "name": "Beer Pong Finals Champion",
+      "description": "The Splash Bros.",
+      "participants": ["Lucas Fernandes", "Dom Favata"]
+    }
+  ],
+  "announcements": [],
+  "faqItems": []
+}

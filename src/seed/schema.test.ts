@@ -92,9 +92,9 @@ describe("warWeekSeedSchema", () => {
       expect(
         rejectionOf(
           withEntry({
-            competition: "Tournament Night",
+            competition: "Black Midnight",
             team: "Red",
-            participant: "Thomas Anderson",
+            participant: "Paul Macfarlane",
           }),
         ),
       ).toContain(
@@ -104,7 +104,7 @@ describe("warWeekSeedSchema", () => {
 
     it("rejects an entry with neither a team nor a participant", () => {
       expect(
-        rejectionOf(withEntry({ competition: "Tournament Night" })),
+        rejectionOf(withEntry({ competition: "Black Midnight" })),
       ).toContain(
         "pointsEntries.0.team: a Points Entry must target exactly one of team or participant",
       );
@@ -114,12 +114,12 @@ describe("warWeekSeedSchema", () => {
       expect(
         rejectionOf(
           withEntry({
-            competition: "Tournament Night",
-            participant: "Thomas Anderson",
+            competition: "Black Midnight",
+            participant: "Paul Macfarlane",
           }),
         ),
       ).toContain(
-        'pointsEntries.0.participant: "Tournament Night" is a team Competition, so its Points Entries must target a team',
+        'pointsEntries.0.participant: "Black Midnight" is a team Competition, so its Points Entries must target a team',
       );
     });
 
@@ -144,7 +144,7 @@ describe("warWeekSeedSchema", () => {
     it("accepts fractional points", () => {
       const result = warWeekSeedSchema.safeParse(
         withEntry({
-          competition: "Tournament Night",
+          competition: "Black Midnight",
           team: "Red",
           points: 1.5,
         }),
@@ -165,7 +165,7 @@ describe("warWeekSeedSchema", () => {
   it("rejects Counts Toward Team on a team Competition", () => {
     const fixture = loadFixture();
     fixture.competitions.push({
-      name: "Beast Mode Workout",
+      name: "Pushup Contest",
       scoring: "team",
       countsTowardTeam: true,
     });
