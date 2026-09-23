@@ -48,12 +48,11 @@ and planning-artifact publication.
 | `plan-review` | Plan written; red-team review runs here when required |
 | `in-progress` | Implementation underway on a feature branch |
 | `ai-review` | Implementation complete; aggregate AI review and verification |
-| `human-review` | PR open for the human to review and merge |
-| `done` | PR merged to main |
+| `done` | Verified and PR opened into `staging`; the human reviews and merges it |
 
-Human-only states: `done`.
+Human-only states: none.
 
-Recommended lifecycle: `needs-triage` → `ready-for-agent` → `planning` → `plan-review` → `in-progress` → `ai-review` → `human-review` → `done`.
+Recommended lifecycle: `needs-triage` → `ready-for-agent` → `planning` → `plan-review` → `in-progress` → `ai-review` → `done`.
 
 ## Read and write rules
 
@@ -70,13 +69,18 @@ Recommended lifecycle: `needs-triage` → `ready-for-agent` → `planning` → `
 - Enter `in-progress` only when implementation starts.
 - Enter `ai-review` only when aggregate AI code review starts.
 - Record blocks, approved scope changes, proof of work, and the PR URL.
-- Enter `human-review` only after verification and PR creation.
+- Enter `done` in the ticket's final commit on the feature branch, after
+  verification and together with the closeout record, so the PR carries it and
+  no follow-up commit is needed. Review changes requested on the PR are made
+  on the same branch; the ticket stays `done`.
 - Compare the next Atlas phase with the last-known tracker state from the
   initial ticket read or most recent successful transition. Do not fetch the
   ticket solely for this comparison. When both map to the same state, record
   the phase in its configured phase record or comment without requesting a
   same-status transition.
-- Never enter `done`; a human does that after reviewing the PR.
+- A `blocked by` ticket that is `done` may still have an unmerged PR. Before
+  starting dependent work, check that its PR has merged into `staging` and
+  branch from the latest `staging`; if it hasn't merged, say so and stop.
 - When blocked, preserve work, record the exact reason and resume instructions,
   and follow the configured blocked-state behavior. On resume, reread the ticket
   and avoid duplicating claims, transitions, workers, commits, or comments.
@@ -88,7 +92,7 @@ Recommended lifecycle: `needs-triage` → `ready-for-agent` → `planning` → `
   `[EXECUTION PLAN]`, `[PROGRESS]`, `[SCOPE CHANGE]`, `[BLOCKED]`,
   `[AI CODE REVIEW]`, and `[CLOSEOUT]` records rather than silently rewriting
   the contract. Write the complete AI Code Review output to the ticket before
-  entering `human-review`.
+  entering `done`.
 
 Before creating, classifying, prioritizing, or decomposing tickets, also read
 and follow `docs/agents/triage-labels.md`. Do not infer labels or priority from
@@ -106,7 +110,7 @@ Available to claim: Status is `ready-for-agent`, no claim/owner recorded, and ev
 
 | Repository | Path | Source host | Base branch | PR creation command |
 |---|---|---|---|---|
-| `war-weeker` | `.` | github | `main` | `gh pr create --base main --head <feature-branch>` |
+| `war-weeker` | `.` | github | `staging` | `gh pr create --base staging --head <feature-branch>` |
 
 Open one PR per affected repository.
 

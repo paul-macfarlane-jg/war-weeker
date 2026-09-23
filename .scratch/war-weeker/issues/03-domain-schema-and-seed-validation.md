@@ -4,7 +4,7 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
 **Notes:**
 - Entities, fields and rules are exactly as listed in the spec's Schema section.
