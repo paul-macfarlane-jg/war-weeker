@@ -10,9 +10,6 @@ loadEnvConfig(process.cwd());
 
 const PORT = 3100;
 const BASE_URL = `http://localhost:${PORT}`;
-// A second server with REQUIRE_SIGN_IN on.
-const LOCKED_PORT = 3101;
-const LOCKED_BASE_URL = `http://localhost:${LOCKED_PORT}`;
 const READY_TIMEOUT_MS = 30_000;
 
 // The smoke never uses real OAuth credentials: it proves the app runs
@@ -29,18 +26,20 @@ const childEnv = {
   BETTER_AUTH_URL: BASE_URL,
   GOOGLE_CLIENT_ID: "",
   GOOGLE_CLIENT_SECRET: "",
-  REQUIRE_SIGN_IN: "false",
-};
-
-// An http:// base URL keeps the cookie name unprefixed (no `__Secure-`)
-// under `next start`, so the smoke's cookies match.
-const lockedEnv = {
-  ...childEnv,
-  BETTER_AUTH_URL: LOCKED_BASE_URL,
-  REQUIRE_SIGN_IN: "true",
 };
 
 let failures = 0;
+
+// Every page needs a sign-in, so page checks run as a signed-in JG user
+// (a smoke session, set in main before the server starts).
+let viewerCookie = "";
+
+function signedInFetch(url: string, init: RequestInit = {}) {
+  return fetch(url, {
+    ...init,
+    headers: { cookie: viewerCookie, ...init.headers },
+  });
+}
 
 function ok(check: string) {
   console.log(`ok - ${check}`);
@@ -64,11 +63,11 @@ function runStep(command: string, args: string[], label: string) {
   return true;
 }
 
-async function waitForReady(baseUrl = BASE_URL): Promise<boolean> {
+async function waitForReady(): Promise<boolean> {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${baseUrl}/sign-in`);
+      const res = await fetch(`${BASE_URL}/sign-in`);
       if (res.status === 200) return true;
     } catch {
       // server not up yet
@@ -190,7 +189,7 @@ async function assertPointsEntryTargetConstraint() {
 async function assertUnknownEdition404() {
   const check = "GET /zz returns 404";
   try {
-    const res = await fetch(`${BASE_URL}/zz`);
+    const res = await signedInFetch(`${BASE_URL}/zz`);
     if (res.status === 404) {
       ok(check);
     } else {
@@ -202,9 +201,9 @@ async function assertUnknownEdition404() {
 }
 
 async function assertRootRedirect() {
-  const check = "GET / redirects to /xi";
+  const check = "signed-in GET / redirects to /xi";
   try {
-    const res = await fetch(`${BASE_URL}/`, { redirect: "manual" });
+    const res = await signedInFetch(`${BASE_URL}/`, { redirect: "manual" });
     const location = res.headers.get("location");
     if (res.status === 307 && location && location.endsWith("/xi")) {
       ok(check);
@@ -219,7 +218,7 @@ async function assertRootRedirect() {
 async function assertXiHome() {
   const check = "GET /xi renders War Week XI with Standings hidden";
   try {
-    const res = await fetch(`${BASE_URL}/xi`);
+    const res = await signedInFetch(`${BASE_URL}/xi`);
     const body = await res.text();
     const hidden = body.includes("Standings hidden");
     if (res.status === 200 && body.includes("War Week XI") && hidden) {
@@ -239,7 +238,7 @@ async function assertLeaderboard() {
   const check =
     "GET /xi/leaderboard responds and shows Standings hidden for the demo seed";
   try {
-    const res = await fetch(`${BASE_URL}/xi/leaderboard`);
+    const res = await signedInFetch(`${BASE_URL}/xi/leaderboard`);
     const body = await res.text();
     const hidden = body.includes("Standings hidden");
     if (res.status === 200 && hidden) {
@@ -256,7 +255,7 @@ async function assertSchedule() {
   const check =
     "GET /xi/schedule groups by Day with Day Themes, ET times and Competition links";
   try {
-    const res = await fetch(`${BASE_URL}/xi/schedule`);
+    const res = await signedInFetch(`${BASE_URL}/xi/schedule`);
     const body = await res.text();
     const checks = {
       dayTheme: body.includes("Red vs. Blue"),
@@ -279,7 +278,7 @@ async function assertHomeNowNext() {
     "GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next";
   try {
     const at = encodeURIComponent("2026-02-24T12:30:00-05:00");
-    const res = await fetch(`${BASE_URL}/xi?at=${at}`);
+    const res = await signedInFetch(`${BASE_URL}/xi?at=${at}`);
     const body = await res.text();
     const checks = {
       dayTheme: body.includes("Red vs. Blue"),
@@ -315,7 +314,7 @@ async function runQuery<T extends Record<string, unknown>>(
 async function assertMoreLinks() {
   const check = "GET /xi/more links to Competitions and Teams";
   try {
-    const res = await fetch(`${BASE_URL}/xi/more`);
+    const res = await signedInFetch(`${BASE_URL}/xi/more`);
     const body = await res.text();
     const checks = {
       competitions: body.includes('href="/xi/competitions"'),
@@ -335,7 +334,7 @@ async function assertCompetitions() {
   const check =
     "GET /xi/competitions groups Competitions with max points and scoring";
   try {
-    const res = await fetch(`${BASE_URL}/xi/competitions`);
+    const res = await signedInFetch(`${BASE_URL}/xi/competitions`);
     const body = await res.text();
     const checks = {
       group: body.includes("Team Night Events"),
@@ -377,7 +376,7 @@ async function assertCompetitionDetail() {
   const hiddenCheck =
     "GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden";
   try {
-    const res = await fetch(url);
+    const res = await signedInFetch(url);
     const body = await res.text();
     const checks = {
       name: body.includes("Winning the Day Challenge"),
@@ -401,7 +400,7 @@ async function assertCompetitionDetail() {
     await runQuery(
       "update war_week set standings_hidden = false where edition = 'xi'",
     );
-    const res = await fetch(url);
+    const res = await signedInFetch(url);
     const body = await res.text();
     const checks = {
       target: body.includes("Dani Milliken"),
@@ -424,7 +423,7 @@ async function assertCompetitionDetail() {
   for (const bad of ["00000000-0000-4000-8000-000000000000", "not-a-uuid"]) {
     const check = `GET /xi/competitions/${bad} returns 404`;
     try {
-      const res = await fetch(`${BASE_URL}/xi/competitions/${bad}`);
+      const res = await signedInFetch(`${BASE_URL}/xi/competitions/${bad}`);
       if (res.status === 404) {
         ok(check);
       } else {
@@ -440,7 +439,7 @@ async function assertTeams() {
   const check =
     "GET /xi/teams shows each Team with Leaders marked by Leader Title and Company Tags";
   try {
-    const res = await fetch(`${BASE_URL}/xi/teams`);
+    const res = await signedInFetch(`${BASE_URL}/xi/teams`);
     const body = await res.text();
     const checks = {
       red: body.includes("Red"),
@@ -463,7 +462,7 @@ async function assertFreeForAllRoster() {
   const check =
     "GET /iv/teams shows one roster of all Participants for a free-for-all War Week";
   try {
-    const res = await fetch(`${BASE_URL}/iv/teams`);
+    const res = await signedInFetch(`${BASE_URL}/iv/teams`);
     const body = await res.text();
     const checks = {
       heading: body.includes("Participants"),
@@ -630,41 +629,30 @@ async function assertAdminGate(sessions: {
   }
 }
 
-async function assertRequireSignIn(session: SmokeSession) {
-  const redirectCheck =
-    "REQUIRE_SIGN_IN=true: anonymous GET /xi redirects to sign-in";
-  try {
-    const res = await fetch(`${LOCKED_BASE_URL}/xi`, { redirect: "manual" });
-    const location = res.headers.get("location") ?? "";
-    if (res.status === 307 && location.includes("/sign-in?callbackURL=%2Fxi")) {
-      ok(redirectCheck);
-    } else {
-      fail(redirectCheck, `status=${res.status} location=${location}`);
+async function assertSignInRequired() {
+  for (const target of ["/", "/xi", "/xi/leaderboard"]) {
+    const check = `anonymous GET ${target} redirects to sign-in`;
+    try {
+      const res = await fetch(`${BASE_URL}${target}`, { redirect: "manual" });
+      const location = res.headers.get("location") ?? "";
+      const callback = `callbackURL=${encodeURIComponent(target)}`;
+      if (
+        res.status === 307 &&
+        location.includes("/sign-in?") &&
+        location.includes(callback)
+      ) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status} location=${location}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
     }
-  } catch (error) {
-    fail(redirectCheck, String(error));
   }
 
-  const signedInCheck = "REQUIRE_SIGN_IN=true: a signed-in user reaches /xi";
+  const mcpCheck = "anonymous POST /api/mcp answers 401";
   try {
-    const res = await fetch(`${LOCKED_BASE_URL}/xi`, {
-      headers: { cookie: session.cookie },
-      redirect: "manual",
-    });
-    const body = await res.text();
-    if (res.status === 200 && body.includes("War Week XI")) {
-      ok(signedInCheck);
-    } else {
-      fail(signedInCheck, `status=${res.status}`);
-    }
-  } catch (error) {
-    fail(signedInCheck, String(error));
-  }
-
-  const mcpCheck =
-    "REQUIRE_SIGN_IN=true: /api/mcp still answers initialize without a session";
-  try {
-    const { json } = await mcpRequest(
+    const { status } = await mcpRequest(
       {
         jsonrpc: "2.0",
         id: 1,
@@ -676,23 +664,53 @@ async function assertRequireSignIn(session: SmokeSession) {
         },
       },
       undefined,
-      LOCKED_BASE_URL,
-    );
-    if (json?.result) {
+      "",
+    ).catch(() => ({ status: -1 }));
+    if (status === 401) {
       ok(mcpCheck);
     } else {
-      fail(mcpCheck, `result=${JSON.stringify(json)}`);
+      fail(mcpCheck, `status=${status}`);
     }
   } catch (error) {
     fail(mcpCheck, String(error));
   }
 }
 
+async function assertAdminLink(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  for (const [label, session, expected] of [
+    ["an Organizer", sessions.organizer, true],
+    ["a non-Organizer", sessions.notOrganizer, false],
+  ] as const) {
+    const check = `GET /xi/more as ${label} ${expected ? "shows" : "hides"} the Admin link and shows the account`;
+    try {
+      const res = await fetch(`${BASE_URL}/xi/more`, {
+        headers: { cookie: session.cookie },
+      });
+      const body = await res.text();
+      const checks = {
+        admin: body.includes('href="/admin"') === expected,
+        account: body.includes("Signed in as") && body.includes("Sign out"),
+      };
+      if (res.status === 200 && Object.values(checks).every(Boolean)) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
 async function mcpRequest(
   body: Record<string, unknown>,
   sessionId?: string,
-  baseUrl = BASE_URL,
+  cookie = viewerCookie,
 ): Promise<{
+  status: number;
   json: Record<string, unknown> | undefined;
   sessionId: string | undefined;
 }> {
@@ -700,9 +718,10 @@ async function mcpRequest(
     "Content-Type": "application/json",
     Accept: "application/json, text/event-stream",
   };
+  if (cookie) headers.cookie = cookie;
   if (sessionId) headers["mcp-session-id"] = sessionId;
 
-  const res = await fetch(`${baseUrl}/api/mcp`, {
+  const res = await fetch(`${BASE_URL}/api/mcp`, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
@@ -724,7 +743,11 @@ async function mcpRequest(
     json = JSON.parse(text);
   }
 
-  return { json, sessionId: res.headers.get("mcp-session-id") ?? undefined };
+  return {
+    status: res.status,
+    json,
+    sessionId: res.headers.get("mcp-session-id") ?? undefined,
+  };
 }
 
 async function assertMcp() {
@@ -905,13 +928,11 @@ async function main() {
     process.exit(1);
   }
 
-  for (const baseUrl of [BASE_URL, LOCKED_BASE_URL]) {
-    if (await portInUse(baseUrl)) {
-      console.error(
-        `FAIL - something is already listening on ${baseUrl}; stop it before running the smoke`,
-      );
-      process.exit(1);
-    }
+  if (await portInUse(BASE_URL)) {
+    console.error(
+      `FAIL - something is already listening on ${BASE_URL}; stop it before running the smoke`,
+    );
+    process.exit(1);
   }
 
   if (!runStep("pnpm", ["db:migrate"], "pnpm db:migrate")) {
@@ -950,12 +971,11 @@ async function main() {
     // session check still treats it as anonymous.
     outsider: await createSmokeSession("smoke-outsider@example.com"),
   };
+  viewerCookie = sessions.notOrganizer.cookie;
 
   const server = startServer(PORT, childEnv);
-  const lockedServer = startServer(LOCKED_PORT, lockedEnv);
 
   try {
-    const lockedReady = waitForReady(LOCKED_BASE_URL);
     const ready = await waitForReady();
     if (!ready) {
       fail(
@@ -978,18 +998,11 @@ async function main() {
       await assertMcp();
       await assertSignInPage();
       await assertAdminGate(sessions);
-    }
-    if (!(await lockedReady)) {
-      fail(
-        "REQUIRE_SIGN_IN server ready",
-        `did not respond on ${LOCKED_BASE_URL}/sign-in within ${READY_TIMEOUT_MS}ms`,
-      );
-    } else {
-      ok("REQUIRE_SIGN_IN server ready");
-      await assertRequireSignIn(sessions.notOrganizer);
+      await assertSignInRequired();
+      await assertAdminLink(sessions);
     }
   } finally {
-    await Promise.all([killServer(server), killServer(lockedServer)]);
+    await killServer(server);
     await deleteSmokeUsers().catch((error) =>
       fail("delete smoke users", String(error)),
     );

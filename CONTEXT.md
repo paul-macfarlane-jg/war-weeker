@@ -86,9 +86,9 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   `requireOrganizer` (both in `src/auth/organizer.ts`).
 - `/admin` manages the current War Week. Anonymous visitors are sent to
   sign-in; signed-in non-Organizers see "Organizers only".
-- Reads are public unless `REQUIRE_SIGN_IN=true`, which sends anonymous
-  visitors to `/sign-in` for every page. `/sign-in`, `/api/auth/*` and
-  `/api/mcp` stay public either way; MCP is read-only and unauthenticated.
+- Every page and API route needs a JG sign-in. Anonymous visitors to a
+  page go to `/sign-in` and come back afterwards; API routes, `/api/mcp`
+  included, answer 401. Only `/sign-in` and `/api/auth/*` are public.
 
 ## Seed idempotence rules
 

@@ -42,21 +42,15 @@ export function adminAccess(
   return isOrganizer(email, warWeek) ? "organizer" : "not-organizer";
 }
 
-/** Reads the `REQUIRE_SIGN_IN` env flag: only `true` or `1` turn it on. */
-export function isRequireSignInOn(value: string | undefined): boolean {
-  const normalized = value?.trim().toLowerCase();
-  return normalized === "true" || normalized === "1";
-}
-
-const ALWAYS_PUBLIC_PREFIXES = ["/sign-in", "/api/auth", "/api/mcp"];
+const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];
 
 /**
- * Paths that stay reachable without a session even when sign-in is
- * required for reads: the sign-in page, better-auth's own routes, and the
- * read-only MCP server (see CONTEXT.md, "Access rules").
+ * The only paths reachable without a session: the sign-in page and
+ * better-auth's own routes. Everything else, `/api/mcp` included, needs a
+ * Jahnel Group sign-in (see CONTEXT.md, "Access rules").
  */
-export function isAlwaysPublicPath(pathname: string): boolean {
-  return ALWAYS_PUBLIC_PREFIXES.some(
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

@@ -16,7 +16,7 @@
 - [x] Sign-in rejects any email outside `@jahnelgroup.com` server-side, even if the consent screen were misconfigured; covered by a vitest test of the email check
 - [x] A shared, reusable organizer check (signed-in email on that War Week's allowlist) is used by the `/admin` gate, and later server actions will use it too; covered by a vitest test
 - [x] `/admin` shows a desktop admin shell to Organizers and refuses signed-in non-organizers and anonymous users
-- [x] With the require-sign-in env flag on, public pages redirect anonymous users to sign-in, and `/api/mcp` behavior is documented. With it off (default), reads stay public
+- [x] ~~With the require-sign-in env flag on, public pages redirect anonymous users to sign-in, and `/api/mcp` behavior is documented. With it off (default), reads stay public~~ Superseded by [SCOPE CHANGE] 2026-09-23: every page always requires sign-in, with no flag, and `/api/mcp` answers 401 without a session (documented)
 - [ ] Human-gated check: the developer signs in locally with an allowlisted account and reaches `/admin`, then with a non-allowlisted JG account and is refused
 - [x] Smoke still passes with no OAuth credentials present
 - [x] Slice gate passes: type-check, lint, vitest, production build, and the smoke test against seeded local Postgres; on failure, stop and report
@@ -103,3 +103,13 @@ Two-axis review (`/code-review`, base `staging`, commit 703d60b).
   - Most of the code was drafted while the red-team was running. Every change the red-team asked for was applied before the gate.
   - Open decision for the developer: `/api/mcp` stays public when `REQUIRE_SIGN_IN` is on.
 - PR: see the PR into `staging` for this branch.
+
+### [SCOPE CHANGE] 2026-09-23 (developer request after PR #15 opened)
+
+- The developer: "every page requires a login". Sign-in is no longer optional, and the `REQUIRE_SIGN_IN` flag is removed. `src/proxy.ts` always requires a JG session: pages redirect to `/sign-in?callbackURL=…`, and API routes answer 401. Only `/sign-in` and `/api/auth/*` are public.
+- The developer chose to lock down MCP too. `/api/mcp` needs a session like everything else, so MCP clients (Claude) can't connect until MCP-client auth is built. better-auth 1.7.5 has no MCP OAuth plugin, so that is follow-up work.
+- The developer said they couldn't find where to sign in. Now every page sends anonymous visitors to sign-in. The desktop header shows the account email, Sign out, and an Admin link for current-War-Week Organizers; on mobile, More shows the account, Sign out and Admin.
+- The desktop top nav from PR #5 had merged into `main`, not `staging`. It is restored in PR #16 (`fix/restore-desktop-nav`), merged into this branch.
+- Updated: spec (stories 79 and 67 context, "Auth and access", MCP), README, CONTEXT.md "Access rules", and `.env.example`. Also `docs/agents/planning.md`: the MCP row now says it needs a session. That is a team-owned doc, so please review the change.
+- Smoke: page checks run as a signed-in smoke user. New checks: anonymous `/`, `/xi` and `/xi/leaderboard` redirect to sign-in; anonymous `/api/mcp` gets 401; `/xi/more` shows the account, and shows the Admin link only to an Organizer. The second `REQUIRE_SIGN_IN` smoke server is gone.
+- Evidence: `test-results/08-gate/gate.log` (`gate exit status: 0`, 192 vitest tests, 48 smoke checks). Screenshots: `test-results/desktop-home-signed-in-organizer/`, `test-results/mobile-more-account/`, and the refreshed sign-in/admin ones.

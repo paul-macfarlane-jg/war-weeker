@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   adminAccess,
-  isAlwaysPublicPath,
   isJahnelGroupEmail,
   isOrganizer,
-  isRequireSignInOn,
+  isPublicPath,
   safeCallbackPath,
 } from "@/lib/access";
 
@@ -89,40 +88,24 @@ describe("adminAccess", () => {
   });
 });
 
-describe("isRequireSignInOn", () => {
-  it.each(["true", "TRUE", "1", " true "])("is on for %j", (value) => {
-    expect(isRequireSignInOn(value)).toBe(true);
-  });
-
-  it.each([undefined, "", "false", "0", "no", "yes"])(
-    "is off for %j",
-    (value) => {
-      expect(isRequireSignInOn(value)).toBe(false);
+describe("isPublicPath", () => {
+  it.each(["/sign-in", "/api/auth", "/api/auth/callback/google"])(
+    "keeps %j public",
+    (pathname) => {
+      expect(isPublicPath(pathname)).toBe(true);
     },
   );
-});
-
-describe("isAlwaysPublicPath", () => {
-  it.each([
-    "/sign-in",
-    "/api/auth",
-    "/api/auth/callback/google",
-    "/api/mcp",
-    "/api/mcp/",
-  ])("keeps %j public", (pathname) => {
-    expect(isAlwaysPublicPath(pathname)).toBe(true);
-  });
 
   it.each([
     "/",
     "/xi",
     "/xi/leaderboard",
     "/admin",
+    "/api/mcp",
     "/sign-in-other",
-    "/api/mcpx",
     "/api/authx",
-  ])("does not keep %j public", (pathname) => {
-    expect(isAlwaysPublicPath(pathname)).toBe(false);
+  ])("requires sign-in for %j", (pathname) => {
+    expect(isPublicPath(pathname)).toBe(false);
   });
 });
 

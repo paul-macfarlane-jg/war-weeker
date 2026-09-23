@@ -1,10 +1,11 @@
-import { ChevronRight, Trophy, Users } from "lucide-react";
+import { ChevronRight, Shield, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { SignOutButton } from "@/components/auth-buttons";
 import { rosterHeading } from "@/lib/roster";
 
-import { getWarWeekForEdition } from "../war-week";
+import { getNavAccount, getWarWeekForEdition } from "../war-week";
 
 export default async function MorePage({
   params,
@@ -12,6 +13,7 @@ export default async function MorePage({
   const { edition } = await params;
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
+  const account = await getNavAccount();
 
   const links = [
     {
@@ -24,6 +26,9 @@ export default async function MorePage({
       href: `/${warWeek.edition}/teams`,
       icon: Users,
     },
+    ...(account.isOrganizer
+      ? [{ label: "Admin", href: "/admin", icon: Shield }]
+      : []),
   ];
 
   return (
@@ -40,6 +45,12 @@ export default async function MorePage({
           </li>
         ))}
       </ul>
+      <div className="border-border flex items-center gap-3 rounded-lg border px-4 py-3 text-sm">
+        <span className="text-foreground/70 min-w-0 flex-1 truncate">
+          Signed in as {account.email}
+        </span>
+        <SignOutButton />
+      </div>
     </main>
   );
 }

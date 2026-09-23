@@ -4,6 +4,11 @@ import { Home, ListChecks, Menu, Newspaper, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { SignOutButton } from "@/components/auth-buttons";
+
+/** The signed-in user, as shown in the navigation. */
+export type NavAccount = { email: string; isOrganizer: boolean };
+
 type Destination = {
   label: string;
   href: string;
@@ -77,16 +82,21 @@ export function BottomTabBar({ edition }: { edition: string }) {
 export function TopNav({
   edition,
   storyTheme,
+  account,
 }: {
   edition: string;
   storyTheme: string;
+  account: NavAccount;
 }) {
   const pathname = usePathname();
 
   return (
     <header className="border-border bg-background sticky top-0 z-50 hidden border-b md:block">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-3">
-        <Link href={`/${edition}`} className="flex items-baseline gap-2">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-3">
+        <Link
+          href={`/${edition}`}
+          className="flex shrink-0 items-baseline gap-2 whitespace-nowrap"
+        >
           <span className="text-lg font-bold">
             War Week {edition.toUpperCase()}
           </span>
@@ -115,6 +125,23 @@ export function TopNav({
             })}
           </ul>
         </nav>
+        <div className="flex min-w-0 items-center gap-3 text-sm whitespace-nowrap">
+          {account.isOrganizer && (
+            <Link
+              href="/admin"
+              className="text-primary underline-offset-4 hover:underline"
+            >
+              Admin
+            </Link>
+          )}
+          <span
+            title={account.email}
+            className="text-foreground/60 hidden max-w-56 truncate lg:inline"
+          >
+            {account.email}
+          </span>
+          <SignOutButton />
+        </div>
       </div>
     </header>
   );

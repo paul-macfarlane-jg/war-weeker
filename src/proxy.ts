@@ -1,28 +1,27 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import { auth } from "@/auth/server";
-import {
-  isAlwaysPublicPath,
-  isJahnelGroupEmail,
-  isRequireSignInOn,
-} from "@/lib/access";
+import { isJahnelGroupEmail, isPublicPath } from "@/lib/access";
 
 /**
- * With `REQUIRE_SIGN_IN` on, every page and API route except the sign-in
- * page, better-auth's routes and `/api/mcp` needs a Jahnel Group session.
- * With it off (the default), this does nothing and reads stay public.
+ * Every page and API route, `/api/mcp` included, needs a Jahnel Group
+ * session. Pages redirect anonymous visitors to `/sign-in` and come back
+ * afterwards; API routes answer 401.
  */
 export async function proxy(request: NextRequest) {
-  if (!isRequireSignInOn(process.env.REQUIRE_SIGN_IN)) {
-    return NextResponse.next();
-  }
-
   const { pathname, search } = request.nextUrl;
-  if (isAlwaysPublicPath(pathname)) return NextResponse.next();
+  if (isPublicPath(pathname)) return NextResponse.next();
 
   const session = await auth.api.getSession({ headers: request.headers });
   if (session && isJahnelGroupEmail(session.user.email)) {
     return NextResponse.next();
+  }
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { error: "Sign in with a @jahnelgroup.com account." },
+      { status: 401 },
+    );
   }
 
   const signIn = new URL("/sign-in", request.url);
