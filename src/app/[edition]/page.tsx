@@ -1,4 +1,3 @@
-import { format, parseISO } from "date-fns";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -10,26 +9,14 @@ import {
   TeamStandingsList,
 } from "@/components/standings";
 import { Button } from "@/components/ui/button";
-import type { WarWeek } from "@/db/schema";
 import { computeNowNext, resolveClock } from "@/lib/schedule";
+import { WAR_WEEK_STATUS_LABEL, formatDateRange } from "@/lib/war-week-display";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 
 import { getWarWeekForEdition } from "./war-week";
 
-const STATUS_LABEL: Record<WarWeek["status"], string> = {
-  live: "Live now",
-  upcoming: "Upcoming",
-  complete: "Complete",
-};
-
 const HOME_INDIVIDUAL_ROWS = 5;
-
-function formatDateRange(startDate: string, endDate: string): string {
-  const start = format(parseISO(startDate), "MMM d");
-  const end = format(parseISO(endDate), "MMM d, yyyy");
-  return `${start} – ${end}`;
-}
 
 export default async function EditionHomePage({
   params,
@@ -41,7 +28,7 @@ export default async function EditionHomePage({
   if (!warWeek) notFound();
 
   const editionLabel = warWeek.edition.toUpperCase();
-  const statusLabel = STATUS_LABEL[warWeek.status];
+  const statusLabel = WAR_WEEK_STATUS_LABEL[warWeek.status];
   const [standings, schedule] = await Promise.all([
     getStandings(warWeek),
     getSchedule(warWeek.id),

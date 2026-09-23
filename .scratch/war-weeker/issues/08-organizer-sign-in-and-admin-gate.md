@@ -113,3 +113,10 @@ Two-axis review (`/code-review`, base `staging`, commit 703d60b).
 - Updated: spec (stories 79 and 67 context, "Auth and access", MCP), README, CONTEXT.md "Access rules", and `.env.example`. Also `docs/agents/planning.md`: the MCP row now says it needs a session. That is a team-owned doc, so please review the change.
 - Smoke: page checks run as a signed-in smoke user. New checks: anonymous `/`, `/xi` and `/xi/leaderboard` redirect to sign-in; anonymous `/api/mcp` gets 401; `/xi/more` shows the account, and shows the Admin link only to an Organizer. The second `REQUIRE_SIGN_IN` smoke server is gone.
 - Evidence: `test-results/08-gate/gate.log` (`gate exit status: 0`, 192 vitest tests, 48 smoke checks). Screenshots: `test-results/desktop-home-signed-in-organizer/`, `test-results/mobile-more-account/`, and the refreshed sign-in/admin ones.
+
+### [PROGRESS] 2026-09-23: themed sign-in page (developer request)
+
+- `/sign-in` now uses the current War Week's Appearance Theme: colors, font, a primary-color glow, the banner, and the logo. It shows the edition, Story Theme, status and dates, with a full-width "Sign in with Google" button that carries the Google mark. It follows each year's theme with no code change, and falls back to the plain card when there is no current War Week.
+- `formatDateRange` and the status labels moved to `src/lib/war-week-display.ts` (with a test), and the home page and sign-in share them.
+- Screenshots: `test-results/sign-in/`, `test-results/sign-in-mobile/`, `test-results/sign-in-refused/`. These were rendered with placeholder Google client values, only so the button appears; there was no real OAuth.
+- Gate: PASS (`test-results/08-gate/gate.log`, 193 vitest tests, 48 smoke checks).

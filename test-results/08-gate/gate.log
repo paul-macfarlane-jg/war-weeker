@@ -14,13 +14,17 @@ Generating route types...
 
 
 /Users/pmacfarlane/jg-code/war-weeker/src/app/[edition]/page.tsx
-  54:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-  68:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  41:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  55:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/pmacfarlane/jg-code/war-weeker/src/app/sign-in/page.tsx
+  46:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  57:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 /Users/pmacfarlane/jg-code/war-weeker/src/components/roster.tsx
   56:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-✖ 3 problems (0 errors, 3 warnings)
+✖ 5 problems (0 errors, 5 warnings)
 
 
 > war-weeker@0.1.0 test /Users/pmacfarlane/jg-code/war-weeker
@@ -33,10 +37,10 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
 
- Test Files  14 passed (14)
-      Tests  192 passed (192)
-   Start at  19:49:09
-   Duration  1.17s (transform 425ms, setup 0ms, import 2.79s, tests 138ms, environment 1ms)
+ Test Files  15 passed (15)
+      Tests  193 passed (193)
+   Start at  19:59:09
+   Duration  1.35s (transform 494ms, setup 0ms, import 4.17s, tests 167ms, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -44,15 +48,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 16ms
+✓ Running next.config.ts took 18ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 629ms
+✓ Compiled successfully in 980ms
   Running TypeScript ...
-  Finished TypeScript in 2.6s ...
+  Finished TypeScript in 2.3s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 111ms
+✓ Generating static pages using 9 workers (3/3) in 100ms
   Finalizing page optimization ...
 
 Route (app)
@@ -139,8 +143,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 127ms
-✓ Running next.config.ts took 43ms
+✓ Ready in 123ms
+✓ Running next.config.ts took 40ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
