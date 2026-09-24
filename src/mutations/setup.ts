@@ -14,8 +14,8 @@ import type { MutationContext, MutationResult } from "@/mutations/types";
 const WAR_WEEK_NOT_FOUND = "That War Week no longer exists.";
 const DAY_NOT_FOUND = "That Day no longer exists.";
 
-/** Postgres unique_violation: another save took the date in the meantime. */
-function isUniqueViolation(error: unknown): boolean {
+/** Postgres unique_violation: another save took the natural key meanwhile. */
+export function isUniqueViolation(error: unknown): boolean {
   const cause = (error as { cause?: { code?: string } })?.cause;
   return (
     (error as { code?: string })?.code === "23505" || cause?.code === "23505"

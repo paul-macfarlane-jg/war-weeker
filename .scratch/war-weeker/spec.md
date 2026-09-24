@@ -286,7 +286,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   3. placement presets (1st/2nd/3rd turned into points) (delivered: ticket 22)
   4. a video node inside the rich-text editor (delivered: ticket 23)
   5. `llms.txt` (delivered: ticket 24)
-  6. setup CRUD screens (in progress: ticket 25 War Week settings and Days; 26 and 27 to follow)
+  6. setup CRUD screens (in progress: ticket 25 War Week settings and Days and ticket 27 Schedule and FAQ delivered; 26 to follow)
 
 ## Further Notes
 

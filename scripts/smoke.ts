@@ -1,3 +1,4 @@
+import { TZDate } from "@date-fns/tz";
 import { loadEnvConfig } from "@next/env";
 import { makeSignature } from "better-auth/crypto";
 import { type ChildProcess, spawn, spawnSync } from "node:child_process";
@@ -6,6 +7,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
+import { WAR_WEEK_TIME_ZONE } from "@/lib/schedule";
 import { MCP_TOOLS } from "@/mcp/tools";
 
 loadEnvConfig(process.cwd());
@@ -2582,6 +2584,208 @@ async function assertSetup(sessions: {
   }
 }
 
+/**
+ * /admin/setup/schedule and /admin/setup/faq: the pages, the Schedule Item
+ * validation refusals, and one new Schedule Item and one new FAQ Item that
+ * the public site shows. Deletes both after.
+ */
+async function assertSetupScheduleFaq(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const run = async (check: string, body: () => Promise<string | null>) => {
+    try {
+      const problem = await body();
+      if (problem === null) ok(check);
+      else fail(check, problem);
+    } catch (error) {
+      fail(check, String(error));
+    }
+  };
+
+  await run(
+    "GET /admin/setup/schedule and /admin/setup/faq show the setup pages to an Organizer and the refusal to a non-Organizer",
+    async () => {
+      const problems: string[] = [];
+      for (const [page, marker] of [
+        ["/admin/setup", 'href="/admin/setup/faq"'],
+        ["/admin/setup/schedule", 'aria-label="Schedule Items"'],
+        ["/admin/setup/schedule/new", 'aria-label="Schedule Item"'],
+        ["/admin/setup/faq", 'aria-label="FAQ Items"'],
+        ["/admin/setup/faq/new", 'aria-label="FAQ Item"'],
+      ] as const) {
+        const organizer = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.organizer.cookie },
+        });
+        const body = await organizer.text();
+        if (organizer.status !== 200 || !body.includes(marker)) {
+          problems.push(`${page} organizer status=${organizer.status}`);
+        }
+        const refused = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.notOrganizer.cookie },
+        });
+        if (!(await refused.text()).includes("Organizers only")) {
+          problems.push(`${page} not refused`);
+        }
+      }
+      return problems.length === 0 ? null : problems.join("; ");
+    },
+  );
+
+  const ids = serverActionIds();
+  const missing = [
+    "createScheduleItem",
+    "updateScheduleItem",
+    "deleteScheduleItem",
+    "createFaqItem",
+    "updateFaqItem",
+    "deleteFaqItem",
+    "moveFaqItem",
+  ].filter((name) => !ids[name]);
+  if (missing.length > 0) {
+    fail(
+      "setup Schedule and FAQ server action ids in the build manifest",
+      missing.join(", "),
+    );
+    return;
+  }
+
+  const [xiDay] = await runQuery<{ id: string; date: string }>(
+    `select d.id, d.date::text from day d join war_week w on w.id = d.war_week_id
+     where w.edition = 'xi' order by d.date limit 1`,
+  );
+  const title = "smoke-schedule-item";
+  const question = "smoke-faq-question?";
+  const paragraph = (text: string) => ({
+    type: "doc",
+    content: [{ type: "paragraph", content: [{ type: "text", text }] }],
+  });
+  const item = {
+    dayId: xiDay.id,
+    startTime: "23:10",
+    endTime: "23:50",
+    title,
+    host: "",
+    location: "",
+    virtualLink: "",
+    category: "social",
+    competitionId: "",
+    description: paragraph("smoke description"),
+  };
+
+  try {
+    await run(
+      "createScheduleItem refuses an end before the start and a non-Organizer",
+      async () => {
+        const backwards = await callAction(
+          ids.createScheduleItem,
+          [{ ...item, endTime: "23:00" }],
+          sessions.organizer,
+        );
+        const outsider = await callAction(
+          ids.createScheduleItem,
+          [item],
+          sessions.notOrganizer,
+        );
+        return !backwards.ok &&
+          backwards.error === "End time must be after the start time." &&
+          !outsider.ok &&
+          /not an Organizer/.test(outsider.error)
+          ? null
+          : `backwards=${JSON.stringify(backwards)} outsider=${JSON.stringify(outsider)}`;
+      },
+    );
+
+    await run(
+      "an Organizer adds a Schedule Item; GET /xi/schedule lists it, GET /xi shows it in Now/Next while it's on, and a duplicate is refused",
+      async () => {
+        const created = await callAction(
+          ids.createScheduleItem,
+          [item],
+          sessions.organizer,
+        );
+        const duplicate = await callAction(
+          ids.createScheduleItem,
+          [item],
+          sessions.organizer,
+        );
+        const schedule = await (
+          await signedInFetch(`${BASE_URL}/xi/schedule`)
+        ).text();
+        const [year, month, date] = xiDay.date.split("-").map(Number);
+        const at = new TZDate(
+          year,
+          month - 1,
+          date,
+          23,
+          20,
+          0,
+          0,
+          WAR_WEEK_TIME_ZONE,
+        ).toISOString();
+        const home = await (
+          await signedInFetch(`${BASE_URL}/xi?at=${encodeURIComponent(at)}`)
+        ).text();
+        return created.ok &&
+          !duplicate.ok &&
+          /already a Schedule Item/.test(duplicate.error) &&
+          schedule.includes(title) &&
+          home.includes(title)
+          ? null
+          : `created=${JSON.stringify(created)} duplicate=${JSON.stringify(duplicate)} schedule=${schedule.includes(title)} home=${home.includes(title)}`;
+      },
+    );
+
+    await run(
+      "an Organizer adds an FAQ Item and GET /xi/faq lists it last",
+      async () => {
+        const created = await callAction(
+          ids.createFaqItem,
+          [{ question, answer: paragraph("smoke answer") }],
+          sessions.organizer,
+        );
+        const body = await (await signedInFetch(`${BASE_URL}/xi/faq`)).text();
+        const last = XI_FAQ_QUESTIONS.at(-1) ?? "";
+        return created.ok &&
+          body.includes(question) &&
+          body.indexOf(question) > body.indexOf(escapeHtml(last))
+          ? null
+          : `created=${JSON.stringify(created)} shown=${body.includes(question)}`;
+      },
+    );
+
+    await run(
+      "an Organizer deletes the new Schedule Item and FAQ Item",
+      async () => {
+        const [row] = await runQuery<{ id: string }>(
+          "select id from schedule_item where title = $1",
+          [title],
+        );
+        const [faq] = await runQuery<{ id: string }>(
+          "select id from faq_item where question = $1",
+          [question],
+        );
+        const items = await callAction(
+          ids.deleteScheduleItem,
+          [row?.id],
+          sessions.organizer,
+        );
+        const faqs = await callAction(
+          ids.deleteFaqItem,
+          [faq?.id],
+          sessions.organizer,
+        );
+        return items.ok && faqs.ok
+          ? null
+          : `schedule=${JSON.stringify(items)} faq=${JSON.stringify(faqs)}`;
+      },
+    );
+  } finally {
+    await runQuery("delete from schedule_item where title = $1", [title]);
+    await runQuery("delete from faq_item where question = $1", [question]);
+  }
+}
+
 async function assertSignInRequired() {
   for (const target of ["/", "/xi", "/xi/leaderboard"]) {
     const check = `anonymous GET ${target} redirects to sign-in`;
@@ -3196,6 +3400,7 @@ async function main() {
       await assertAwardActions(sessions);
       await assertAwardAdminPages(sessions);
       await assertSetup(sessions);
+      await assertSetupScheduleFaq(sessions);
     }
   } finally {
     await killServer(server);

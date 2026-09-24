@@ -182,7 +182,8 @@ same rows with the same values (only `updated_at` moves).
     new keyed record to a seed and reloading adds just that record.
 
 **Setup in the UI.** Organizers can also edit setup in `/admin/setup`
-(War Week settings, the Appearance Theme and Days so far). The seed stays the
+(War Week settings, the Appearance Theme, Days, Schedule Items and FAQ
+Items so far). The seed stays the
 way to bootstrap a War Week, and there's no merge: reloading a seed makes
 its War Week match the seed again, overwriting settings, Days and other
 setup data edited in the UI and deleting setup rows the seed doesn't list.

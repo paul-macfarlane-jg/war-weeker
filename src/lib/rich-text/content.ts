@@ -371,3 +371,29 @@ export const contentInputSchema = z.unknown().transform((content, ctx) => {
   }
   return result.content;
 });
+
+/**
+ * Whether rich text holds nothing a reader would see: a document whose
+ * blocks are all paragraphs or headings with no visible text. Anything that
+ * isn't a document is not blank, so validation still reports it.
+ */
+export function isBlankContent(input: unknown): boolean {
+  if (
+    !isRecord(input) ||
+    input.type !== "doc" ||
+    !Array.isArray(input.content)
+  ) {
+    return false;
+  }
+  return input.content.every(
+    (block) =>
+      isRecord(block) &&
+      (block.type === "paragraph" || block.type === "heading") &&
+      (!Array.isArray(block.content) ||
+        block.content.every(
+          (inline) =>
+            isRecord(inline) &&
+            (typeof inline.text !== "string" || inline.text.trim() === ""),
+        )),
+  );
+}
