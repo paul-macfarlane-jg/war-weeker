@@ -1,7 +1,13 @@
 import { type ZodType, z } from "zod";
 
-import type { WarWeek } from "@/db/schema";
-import { daySeedSchema, warWeekSettingsSeedShape as seed } from "@/seed/schema";
+import type { Competition, Participant, Team, WarWeek } from "@/db/schema";
+import {
+  competitionSeedSchema,
+  daySeedSchema,
+  participantSeedSchema,
+  warWeekSettingsSeedShape as seed,
+  teamSeedSchema,
+} from "@/seed/schema";
 
 /** The War Week settings form's raw fields, all as the inputs hold them. */
 export type WarWeekSettingsInput = {
@@ -125,6 +131,62 @@ const daySchema = z.object({
 export type DayInput = { date: string; dayTheme: string };
 export type DayValues = z.infer<typeof daySchema>;
 
+const teamSchema = z.object({
+  name: trimmed(teamSeedSchema.shape.name),
+  color: trimmed(teamSeedSchema.shape.color),
+  logoUrl: optional(teamSeedSchema.shape.logoUrl),
+});
+
+export type TeamInput = { name: string; color: string; logoUrl: string };
+export type TeamValues = Pick<Team, "name" | "color" | "logoUrl">;
+
+const participantSchema = z
+  .object({
+    displayName: trimmed(participantSeedSchema.shape.displayName),
+    companyTag: optional(participantSeedSchema.shape.companyTag),
+    email: optional(participantSeedSchema.shape.email),
+    /** A Team id of this War Week; blank means no Team. */
+    teamId: optional(z.uuid({ error: "Choose a Team." }).nullish()),
+    isLeader: z.boolean(),
+  })
+  .refine((p) => !p.isLeader || p.teamId !== null, {
+    error: "A Leader needs a Team.",
+    path: ["isLeader"],
+  });
+
+export type ParticipantInput = {
+  displayName: string;
+  companyTag: string;
+  email: string;
+  teamId: string;
+  isLeader: boolean;
+};
+export type ParticipantValues = Pick<
+  Participant,
+  "displayName" | "companyTag" | "email" | "teamId" | "isLeader"
+>;
+
+export type CompetitionInput = {
+  name: string;
+  description: string;
+  scoring: string;
+  maxPoints: string;
+  /** Points for 1st, 2nd, 3rd…, separated by commas or spaces. */
+  placementPoints: string;
+  countsTowardTeam: boolean;
+  group: string;
+};
+export type CompetitionValues = Pick<
+  Competition,
+  | "name"
+  | "description"
+  | "scoring"
+  | "maxPoints"
+  | "placementPoints"
+  | "countsTowardTeam"
+  | "competitionGroup"
+>;
+
 const FIELD_LABELS: Record<string, string> = {
   storyTheme: "Story Theme",
   startDate: "Start date",
@@ -146,15 +208,33 @@ const FIELD_LABELS: Record<string, string> = {
   fontPreset: "Font",
   date: "Date",
   dayTheme: "Day Theme",
+  name: "Name",
+  color: "Color",
+  displayName: "Display name",
+  companyTag: "Company Tag",
+  email: "Email",
+  description: "Description",
+  scoring: "Scoring",
+  maxPoints: "Max points",
+  placementPoints: "Placement Points",
+  group: "Group",
 };
 
 /** A zod issue worded as "must …", or null when it is already a sentence. */
 function mustPhrase(issue: z.core.$ZodIssue): string | null {
   switch (issue.code) {
     case "too_small":
-      return issue.origin === "string" ? "must not be empty" : null;
+      if (issue.origin === "string") return "must not be empty";
+      if (issue.origin !== "number") return null;
+      if (issue.message.startsWith("must ")) return issue.message;
+      return `must be ${issue.inclusive ? "at least" : "more than"} ${issue.minimum}`;
     case "too_big":
-      return `must be at most ${issue.maximum} characters`;
+      if (issue.origin === "string") {
+        return `must be at most ${issue.maximum} characters`;
+      }
+      return issue.message.startsWith("must ") ? issue.message : null;
+    case "custom":
+      return issue.message.startsWith("must ") ? issue.message : null;
     case "invalid_value":
       return `must be one of ${issue.values.join(", ")}`;
     case "invalid_format":
@@ -216,6 +296,192 @@ export function parseWarWeekSettingsInput(
 /** Validates one Day's form. Never throws; returns the first error. */
 export function parseDayInput(input: DayInput): Parsed<DayValues> {
   return parseWith(daySchema, input);
+}
+
+/** Validates one Team's form. Never throws; returns the first error. */
+export function parseTeamInput(input: TeamInput): Parsed<TeamValues> {
+  return parseWith(teamSchema, input);
+}
+
+/** Validates one Participant's form. Never throws; returns the first error. */
+export function parseParticipantInput(
+  input: ParticipantInput,
+): Parsed<ParticipantValues> {
+  return parseWith(participantSchema, input, (issue) =>
+    issue.path[0] === "isLeader" ? issue.message : null,
+  );
+}
+
+const NUMBER = /^-?\d+(\.\d+)?$/;
+
+/**
+ * Validates one Competition's form against the seed's Competition rules.
+ * Never throws; returns the first error.
+ */
+export function parseCompetitionInput(
+  input: CompetitionInput,
+): Parsed<CompetitionValues> {
+  const maxPoints = input.maxPoints.trim();
+  if (maxPoints && !NUMBER.test(maxPoints)) {
+    return { ok: false, error: "Max points must be a number." };
+  }
+  const places = input.placementPoints.split(/[\s,]+/).filter(Boolean);
+  if (!places.every((place) => NUMBER.test(place))) {
+    return {
+      ok: false,
+      error:
+        "Placement Points must be numbers separated by commas, 1st place first.",
+    };
+  }
+
+  const parsed = parseWith(
+    competitionSeedSchema,
+    {
+      name: input.name.trim(),
+      description: input.description.trim() || null,
+      scoring: input.scoring,
+      maxPoints: maxPoints ? Number(maxPoints) : null,
+      placementPoints: places.length > 0 ? places.map(Number) : null,
+      countsTowardTeam: input.countsTowardTeam,
+      group: input.group.trim() || null,
+    },
+    (issue) => {
+      // The seed words these for seed authors; reword them for the form.
+      if (issue.path[0] === "countsTowardTeam") {
+        return "Only an individual Competition can count toward the Team.";
+      }
+      if (issue.path[0] !== "placementPoints" || issue.path.length > 1) {
+        return null;
+      }
+      if (issue.code === "too_big") {
+        return `Placement Points cover at most ${issue.maximum} places.`;
+      }
+      if (issue.code !== "custom") return null;
+      // Two seed refines share this path; the 1st-vs-max one names 1st.
+      return issue.message.startsWith("1st")
+        ? "1st place's Placement Points can't be more than Max points."
+        : "Each place's Placement Points must be no more than the place above it.";
+    },
+  );
+  if (!parsed.ok) return parsed;
+  const { group, ...value } = parsed.value;
+  return {
+    ok: true,
+    value: {
+      ...value,
+      description: value.description ?? null,
+      maxPoints: value.maxPoints ?? null,
+      placementPoints: value.placementPoints ?? null,
+      competitionGroup: group ?? null,
+    },
+  };
+}
+
+const FREE_FOR_ALL_HAS_NO_TEAMS = "A free-for-all War Week has no Teams.";
+
+/** Refuses a Team in a free-for-all or one whose name is taken. */
+export function teamGuardError(
+  values: Pick<TeamValues, "name">,
+  ctx: { mode: WarWeek["mode"]; nameTaken: boolean },
+): string | null {
+  if (ctx.mode === "free-for-all") {
+    return `${FREE_FOR_ALL_HAS_NO_TEAMS} Switch the mode to teams first.`;
+  }
+  if (ctx.nameTaken) return `There's already a Team named "${values.name}".`;
+  return null;
+}
+
+/**
+ * Refuses a Participant whose email or display name another Participant of
+ * the War Week has, or whose Team isn't one of the War Week's.
+ */
+export function participantGuardError(
+  values: Pick<ParticipantValues, "displayName" | "email" | "teamId">,
+  ctx: {
+    mode: WarWeek["mode"];
+    teamExists: boolean;
+    nameTaken: boolean;
+    /** The display name of the other Participant with this email. */
+    emailTakenBy: string | null;
+  },
+): string | null {
+  if (values.teamId !== null) {
+    if (ctx.mode === "free-for-all") return FREE_FOR_ALL_HAS_NO_TEAMS;
+    if (!ctx.teamExists) return "That Team no longer exists.";
+  }
+  if (ctx.emailTakenBy !== null) {
+    return `${values.email} is already ${ctx.emailTakenBy}'s email.`;
+  }
+  if (ctx.nameTaken) {
+    return `There's already a Participant named "${values.displayName}".`;
+  }
+  return null;
+}
+
+/**
+ * Refuses a Competition whose name is taken, a team Competition in a
+ * free-for-all, or a scoring change that would strand its Points Entries.
+ */
+export function competitionGuardError(
+  values: Pick<CompetitionValues, "name" | "scoring">,
+  ctx: {
+    mode: WarWeek["mode"];
+    nameTaken: boolean;
+    /** The saved Competition when editing. */
+    existing: {
+      scoring: Competition["scoring"];
+      pointsEntryCount: number;
+    } | null;
+  },
+): string | null {
+  if (ctx.nameTaken) {
+    return `There's already a Competition named "${values.name}".`;
+  }
+  if (ctx.mode === "free-for-all" && values.scoring === "team") {
+    return "A free-for-all War Week has no Teams, so its Competitions are individual.";
+  }
+  const existing = ctx.existing;
+  if (
+    existing &&
+    existing.scoring !== values.scoring &&
+    existing.pointsEntryCount > 0
+  ) {
+    return `This Competition has ${counted(existing.pointsEntryCount, "Points Entry", "Points Entries")}, so its scoring can't change. Delete them first.`;
+  }
+  return null;
+}
+
+function counted(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}
+
+/** How many of a record refer to another, with its singular and plural. */
+export type UsageCount = [count: number, singular: string, plural: string];
+
+/** ["3 Participants", "1 Points Entry"], skipping zero counts. */
+export function countedParts(counts: UsageCount[]): string[] {
+  return counts
+    .filter(([n]) => n > 0)
+    .map(([n, singular, plural]) => counted(n, singular, plural));
+}
+
+/**
+ * Refuses deleting a record that other records still refer to, naming each
+ * count, e.g. "This Team has 3 Participants and 1 Points Entry. …". Null
+ * when every count is 0. There's no cascading delete of scoring data.
+ */
+export function inUseError(
+  thing: string,
+  counts: UsageCount[],
+  fix: string,
+): string | null {
+  const parts = countedParts(counts);
+  if (parts.length === 0) return null;
+  const list =
+    parts.length === 1
+      ? parts[0]
+      : `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}`;
+  return `This ${thing} has ${list}. ${fix}`;
 }
 
 /**
