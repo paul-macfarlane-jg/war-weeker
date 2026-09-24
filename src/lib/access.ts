@@ -46,8 +46,9 @@ const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];
 
 /**
  * The only paths reachable without a session: the sign-in page and
- * better-auth's own routes. Everything else, `/api/mcp` included, needs a
- * Jahnel Group sign-in (see CONTEXT.md, "Access rules").
+ * better-auth's own routes. Everything else needs a Jahnel Group sign-in,
+ * except that `/api/mcp` also takes `canUseMcp` (see CONTEXT.md, "Access
+ * rules").
  */
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
