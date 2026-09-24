@@ -4,6 +4,10 @@ War Week: themes, schedule, teams, competitions, points, awards, and
 announcements for Jahnel Group's annual War Week, plus a curated War Week
 history. See `CONTEXT.md` for the domain glossary.
 
+**Changing War Weeker?** Start with the
+[maintainer's guide](./docs/maintainers-guide.md): access, where things
+live, the branch-to-production loop, and prompts to give Claude.
+
 ## Fresh clone setup
 
 Prerequisites: Node 24, `pnpm` via corepack (`corepack enable`), Docker

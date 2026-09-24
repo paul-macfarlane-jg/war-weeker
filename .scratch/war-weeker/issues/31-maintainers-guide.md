@@ -4,7 +4,7 @@
 
 **Blocked by:** none. It reads best after 20–28 merge, so the recipes match the final app. Write it before the Fri 2026-09-25 10:00 AM submission.
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Decisions
 
