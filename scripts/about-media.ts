@@ -50,8 +50,8 @@ const DEMO_EMAIL = "about-demo@jahnelgroup.com";
 const STILL = { width: 1280, height: 720 };
 const PHONE = { width: 390, height: 844 };
 /** Around the Reveal: this much of the hidden state before, and after. */
-const LEAD_IN_MS = 2_000;
-const HOLD_MS = 2_500;
+const LEAD_IN_MS = 2_500;
+const HOLD_MS = 3_500;
 /** A time inside XI's week for the Now / Next still (ET). */
 const SCHEDULE_AT = "2026-02-24T12:15:00-05:00";
 
@@ -529,7 +529,7 @@ const escapeHtml = (s: string) =>
  * A chat card in XI's theme: the question, then Claude's answer written
  * from the real tool result, with the tool call shown underneath.
  */
-function chatCard(result: LeaderboardResult): string {
+function chatCardUrl(result: LeaderboardResult): string {
   const answer = result.hidden
     ? `<p>${escapeHtml(result.message)}</p>`
     : `<p>${escapeHtml(result.teamLabel)} Standings for War Week XI right now:</p><ol>${result.standings
@@ -708,7 +708,7 @@ async function main() {
     await still(slugs[4], cookie, "/history");
     const result = await askMcp(cookie);
     note(`ask-claude: get_leaderboard hidden=${result.hidden}`);
-    await still(slugs[5], null, chatCard(result));
+    await still(slugs[5], null, chatCardUrl(result));
 
     await evidence();
 

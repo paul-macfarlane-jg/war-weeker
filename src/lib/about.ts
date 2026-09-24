@@ -1,6 +1,5 @@
+import { REPO_URL } from "@/lib/site";
 import type { ThemeColors } from "@/lib/theme";
-
-import { REPO_URL } from "./site";
 
 /**
  * Everything the public About page (ticket 28) needs that would otherwise
@@ -38,14 +37,14 @@ export const ABOUT_FEATURES = [
   {
     slug: "points",
     title: "Points entry with Placement Points",
-    text: "Pick the Competition, pick the Team, tap “1st · 5”. Placement Points are presets an Organizer sets once per Competition, so scoring is one tap and the Standings move on the spot.",
+    text: "Pick the Competition, pick the Team or Participant, tap “1st · 5”. Placement Points are presets an Organizer sets once per Competition, so scoring is one tap and the Standings move on the spot.",
     alt: "The Points Entry form with Settlers of Catan selected and the 1st, 2nd and 3rd Placement Points buttons.",
   },
   {
     slug: "schedule",
     title: "Schedule with Now / Next",
     text: "Every Day Theme and every item on the ET clock. The home screen says what's on now and what's up next, so nobody has to ask.",
-    alt: "War Week XI's schedule, one Day at a time, with the day's items and times.",
+    alt: "War Week XI's home: today's Day Theme, what's on now and what's up next on the ET clock, then the pinned Announcement.",
   },
   {
     slug: "announcements",
@@ -66,5 +65,3 @@ export const ABOUT_FEATURES = [
     alt: "A chat with Claude asking who's winning War Week XI, answered from War Weeker's MCP connector.",
   },
 ] as const;
-
-export type AboutFeatureSlug = (typeof ABOUT_FEATURES)[number]["slug"];

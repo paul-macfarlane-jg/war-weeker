@@ -4,7 +4,7 @@
 
 **Blocked by:** 20, 26, 27 (Paul, 2026-09-24: core features; the cards and stills should show them).
 
-**Status:** in-progress
+**Status:** done
 
 Route: polish, plus a red-team for the public path (see decision 3).
 
@@ -103,3 +103,42 @@ Status → `in-progress` on branch `feat/28-splash-and-submission` from `staging
 7. **Verify.** `pnpm gate`, then `/code-review`, closeout, `done`.
 
 Red-team (required by `docs/agents/planning.md` for an access-control change): recorded below.
+
+### [RED TEAM] 2026-09-24 — atlas red-team reviewer (fresh context) on the execution plan
+
+**Verdict: approve with changes.** All applied before implementation.
+
+1. **Blocker: a real employee email would land in public media.** Admin stills signed in as the seeded Organizer would show `pmacfarlane@jahnelgroup.com` in the AdminShell header, the Points ledger's "Entered by" column and the TopNav; `public/about/` bypasses the proxy, and `docs/agents/testing.md` bans real employee data beyond wiki names. **Applied:** `scripts/about-media.ts` signs in as a made-up `about-demo@jahnelgroup.com`, adds it to XI's allowlist and lends XI's seeded Points Entries and Announcements to it for the run (restored in `finally`), and fails any capture whose `innerText` contains another email.
+2. **Should-fix: `/about` as a prefix opens `/about/leaderboard`.** The top-level `[edition]` route resolves `/about/<page>` as an edition page (404 today, but public database reads and a future `about` edition). **Applied:** `/about` is an exact match (`PUBLIC_PATHS`), with unit tests for `/about/`, `/about/leaderboard`, `/about/x`, `/about%2Fxi`, `/About`, `/aboutx/y`, and a smoke check that anonymous `/about/leaderboard` and `/aboutx` redirect to sign-in.
+3. **Should-fix: prove the page is static.** **Applied:** the build route table shows `○ /about`; the media script fails unless `.next/server/app/about.html` exists and logs it (`test-results/28-splash/about-media.txt`); the unit test asserts the page source imports nothing from `@/queries`, `@/db` or `@/auth` and has no `force-dynamic`.
+4. Clean: case/encoded variants stay private; Google-only sign-in and `/api/mcp` unchanged; `sw.js` caches nothing; root layout and `SiteFooter` read no data; `theme.ts`'s schema import is type-only; an anonymous prefetch of `/xi` from `/about` only hits the sign-in redirect.
+5. Note: `standings_hidden` restored in `finally`; a dedicated synthetic user rather than `smoke-evidence@…`. **Applied.**
+6. Note: iOS autoplay needs `muted playsInline loop autoPlay`. **Applied.** Reduced-motion visitors still fetch the video's metadata (`preload="metadata"`); accepted, the file is 233 KB.
+7. Note: the maintainer's guide link is `blob/main`, which resolves once `staging` is promoted; production smoke should click it. **Recorded in the runbook step 5 below.**
+8. Note: keep the banned-word test case-insensitive with a word boundary on "agent". **Applied.**
+
+### [AI CODE REVIEW] 2026-09-24 — `/code-review origin/staging` (two parallel reviewers, Claude Fable 5.1)
+
+**Standards.** No hard violations: no banned terms in new code or copy, access rules and CONTEXT.md agree, evidence policy met (test-results holds only 28-splash, no real email in any artifact). Judgement calls, all applied: extracted the twice-repeated "Open War Week XI" CTA into `OpenCurrentEdition`; added a vitest that `ABOUT_THEME` equals `seeds/xi.json`'s Appearance Theme so the hand copy can't drift silently; deleted the unused `AboutFeatureSlug` type; `@/lib/site` import; `chatCard` → `chatCardUrl`. Accepted: the CDP `Page` class in `scripts/about-media.ts` is another self-contained copy like every other evidence script (this one adds events, screencast and full-page clips; it would seed a shared `scripts/lib/cdp.ts` if a twelfth script appears).
+
+**Spec.** All six card titles match decision 8; decisions 3, 6 and 7 verified (imports, no `force-dynamic`, `○ /about` in the build table, story facts, no build tooling). Findings, applied: card 2 copy now says "pick the Team or Participant" (the still shows an Individual Competition); card 3's alt text now describes the XI home's Now / Next section, which is the still; the clip is now 11.2 s (lead-in 2.5 s, hold 3.5 s) rather than 9.7 s; the gate log now ends with its own `exit=0` line (the earlier `ELIFECYCLE 143` was pnpm reporting the smoke's `next start` child being stopped). Noted, not changed: the Archive still is `/history` (every edition's card in its own colors) rather than one other edition's home, because the card says "every War Week since 2016" and the grid shows the variety at a glance; decision 3's `PUBLIC_PREFIXES` wording is superseded by the red-team's exact-match `PUBLIC_PATHS`; deleting `test-results/20-you-highlight/` follows `docs/agents/testing.md` ("the proof-artifact root contains only the latest work package's evidence").
+
+### [CLOSEOUT] 2026-09-24
+
+- **Delivery:** `war-weeker`, branch `feat/28-splash-and-submission` from `staging` `a70a43c`, one implementer (Claude Fable 5.1, `/implement`; red-team and both reviewers as fresh-context sub-agents). PR: recorded in the next comment.
+- **Deliverables:** `src/app/about/page.tsx` (+ test), `src/lib/about.ts`, `src/components/about-reveal-demo.tsx`, `src/components/about-feature-grid.tsx`, `src/lib/access.ts` (`PUBLIC_PATHS`), links in `src/app/[edition]/more/page.tsx`, `src/app/sign-in/page.tsx`, `src/components/site-footer.tsx`, `scripts/about-media.ts`, `public/about/` (reveal.mp4 233 KB, reveal-poster.png, six stills; 2.5 MB), smoke checks, `CONTEXT.md`.
+- **Acceptance criteria:**
+  - Anonymous render at 390 and desktop in XI's theme, hero video with poster and reduced-motion fallback, six cards, Paul's section, "Open War Week XI": **PASS** (`test-results/28-splash/about-390.png`, `about-desktop.png`, `about-desktop-reduced-motion.png`, `about-media.txt`).
+  - No live data, no DB or session read, no build tooling: **PASS** (page test on imports and copy; `○ /about` prerendered; smoke `noTooling`).
+  - Linked from More, `/sign-in`, footer: **PASS** (smoke `assertMoreLinks`, sign-in `about` check, footer test).
+  - `isPublicPath("/about")` true, `/aboutx` and `/about-anything` private: **PASS** (`src/lib/access.test.ts`, plus `/about/…` cases).
+  - `pnpm smoke` anonymous 200 on `/about`: **PASS** (`gate.txt`).
+  - `pnpm tsx scripts/about-media.ts` regenerates the media: **PASS** (run four times today; `about-media.txt`).
+  - `CONTEXT.md` lists `/about` public: **PASS**.
+  - Red-team recorded in Comments: **PASS** (above).
+  - Screenshot evidence in `test-results/28-splash/`: **PASS**.
+  - `pnpm gate` passes: **PASS** (`test-results/28-splash/gate.txt`, `pnpm gate exit=0`, 139 smoke ok, 496 unit tests).
+- **Verified run command:** `pnpm gate`; media: `pnpm build && pnpm tsx scripts/about-media.ts` (needs Chrome, ffmpeg, seeded local Postgres).
+- **Deviations:** `/about` is an exact public path, not a prefix (red-team). The Archive still is `/history`. The maintainer's guide link points at `blob/main`, so it resolves once `staging` is promoted: click it during the production smoke (runbook step 5).
+- **Paragraph set:** unchanged from grilling; nothing from it is on the site.
+- **Status:** done.

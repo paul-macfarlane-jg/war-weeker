@@ -32,8 +32,6 @@ export const metadata: Metadata = {
  * `motion-reduce:animate-none` for visitors who asked for no motion.
  */
 export default function AboutPage() {
-  const openXi = `Open War Week ${CURRENT_EDITION.label}`;
-
   return (
     <div
       style={warWeekThemeStyle(ABOUT_THEME)}
@@ -70,13 +68,7 @@ export default function AboutPage() {
               no code, and every War Week since 2016 is still here.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                href={CURRENT_EDITION.href}
-                className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-              >
-                {openXi}
-                <ArrowRight aria-hidden className="size-4" />
-              </Link>
+              <OpenCurrentEdition />
               <a
                 href="#features"
                 className={buttonVariants({ size: "lg", variant: "outline" })}
@@ -164,13 +156,7 @@ export default function AboutPage() {
             Ready when you are.
           </h2>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={CURRENT_EDITION.href}
-              className={cn(buttonVariants({ size: "lg" }), "gap-2")}
-            >
-              {openXi}
-              <ArrowRight aria-hidden className="size-4" />
-            </Link>
+            <OpenCurrentEdition />
             <a
               href={MAINTAINERS_GUIDE_URL}
               target="_blank"
@@ -196,6 +182,19 @@ export default function AboutPage() {
       </main>
       <SiteFooter className="relative" />
     </div>
+  );
+}
+
+/** The page's one call to action, in the hero and at the end. */
+function OpenCurrentEdition() {
+  return (
+    <Link
+      href={CURRENT_EDITION.href}
+      className={cn(buttonVariants({ size: "lg" }), "gap-2")}
+    >
+      Open War Week {CURRENT_EDITION.label}
+      <ArrowRight aria-hidden className="size-4" />
+    </Link>
   );
 }
 

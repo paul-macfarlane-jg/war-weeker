@@ -42,13 +42,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 <repo>
 
-(node:945) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:5376) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
  Test Files  42 passed (42)
-      Tests  495 passed (495)
-   Start at  15:27:48
-   Duration  4.60s (transform 2.20s, setup 0ms, import 17.54s, tests 11.30s, environment 2ms)
+      Tests  496 passed (496)
+   Start at  15:33:08
+   Duration  4.94s (transform 3.64s, setup 0ms, import 18.38s, tests 13.92s, environment 2ms)
 
 
 > war-weeker@0.1.0 build <repo>
@@ -56,18 +56,18 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 15ms
+✓ Running next.config.ts took 54ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 956ms
+✓ Compiled successfully in 1052ms
   Running TypeScript ...
-  Finished TypeScript in 2.1s ...
+  Finished TypeScript in 1818ms ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/6) ...
   Generating static pages using 9 workers (1/6) 
   Generating static pages using 9 workers (2/6) 
   Generating static pages using 9 workers (4/6) 
-✓ Generating static pages using 9 workers (6/6) in 115ms
+✓ Generating static pages using 9 workers (6/6) in 118ms
   Finalizing page optimization ...
 
 Route (app)
@@ -182,8 +182,8 @@ ok - the XI seed loads 5/3/1 Placement Points for Catan and none for Beast Mode
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 125ms
-✓ Running next.config.ts took 25ms
+✓ Ready in 116ms
+✓ Running next.config.ts took 32ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -310,3 +310,4 @@ ok - an Organizer adds a Schedule Item; GET /xi/schedule lists it, GET /xi shows
 ok - an Organizer adds an FAQ Item and GET /xi/faq lists it last
 ok - an Organizer deletes the new Schedule Item and FAQ Item
  ELIFECYCLE  Command failed with exit code 143.
+pnpm gate exit=0

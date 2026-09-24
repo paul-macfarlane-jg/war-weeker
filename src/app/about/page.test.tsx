@@ -1,7 +1,12 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { ABOUT_FEATURES, MAINTAINERS_GUIDE_URL } from "@/lib/about";
+import {
+  ABOUT_FEATURES,
+  ABOUT_THEME,
+  MAINTAINERS_GUIDE_URL,
+} from "@/lib/about";
 
 import AboutPage from "./page";
 
@@ -49,8 +54,21 @@ describe("AboutPage", () => {
     expect(text).not.toMatch(/\b(event|tournament|member|match|league)s?\b/i);
   });
 
-  it("never reads the database or the session", async () => {
-    const { readFileSync } = await import("node:fs");
+  it("wears War Week XI's seeded Appearance Theme", () => {
+    const seed = JSON.parse(
+      readFileSync(new URL("../../../seeds/xi.json", import.meta.url), "utf8"),
+    );
+    expect(ABOUT_THEME).toEqual({
+      primaryColor: seed.primary,
+      primaryForegroundColor: seed.primaryForeground,
+      accentColor: seed.accent,
+      backgroundColor: seed.background,
+      foregroundColor: seed.foreground,
+      fontPreset: seed.fontPreset,
+    });
+  });
+
+  it("never reads the database or the session", () => {
     const source = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
     expect(source).not.toMatch(/@\/(queries|db|auth)/);
     expect(source).not.toContain("force-dynamic");
