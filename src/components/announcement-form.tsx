@@ -10,13 +10,15 @@ import {
 } from "@/actions/announcements";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import {
+  ANNOUNCEMENT_TITLE_MAX,
+  MAX_VIDEO_LINKS,
+  videoEmbedUrl,
+} from "@/lib/announcements";
 import type { Content } from "@/lib/rich-text/content";
-import { isAllowedVideoUrl } from "@/lib/video";
 
 const fieldClass =
   "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
-const MAX_VIDEO_LINKS = 5;
 
 const EMPTY_BODY: Content = { type: "doc", content: [] };
 
@@ -85,7 +87,7 @@ export function AnnouncementForm({
         <input
           name="title"
           required
-          maxLength={200}
+          maxLength={ANNOUNCEMENT_TITLE_MAX}
           className={fieldClass}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -104,8 +106,8 @@ export function AnnouncementForm({
         </p>
         {videoUrls.map((url, index) => {
           const hint =
-            url.trim() !== "" && !isAllowedVideoUrl(url.trim())
-              ? "Not a YouTube, Loom, Vimeo or Google Drive https link"
+            url.trim() !== "" && videoEmbedUrl(url.trim()) === null
+              ? "Not a recognized YouTube, Loom, Vimeo or Google Drive video link"
               : null;
           return (
             <div key={index} className="flex flex-col gap-1">

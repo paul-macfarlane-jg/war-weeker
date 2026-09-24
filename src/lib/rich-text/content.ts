@@ -150,6 +150,11 @@ function absoluteHttpUrl(value: unknown): string | null {
   }
 }
 
+/** The same absolute http(s) test the write-path sanitizer applies. */
+export function isHttpUrl(value: string): boolean {
+  return absoluteHttpUrl(value) !== null;
+}
+
 function sanitizeMarks(input: unknown): Mark[] {
   if (!Array.isArray(input)) {
     return [];

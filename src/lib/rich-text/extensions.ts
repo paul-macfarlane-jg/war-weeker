@@ -22,6 +22,11 @@ export const editorExtensions = [
     trailingNode: false,
     link: {
       openOnClick: false,
+      // A typed or pasted non-http link (e.g. `mailto:`, `javascript:`) would
+      // otherwise autolink in the editor and then be silently dropped by
+      // the sanitizer on save, leaving the Organizer's text unexpectedly
+      // unlinked.
+      autolink: false,
       HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
     },
   }),

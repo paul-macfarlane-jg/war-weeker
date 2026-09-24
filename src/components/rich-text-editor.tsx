@@ -1,22 +1,15 @@
 "use client";
 
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { type Content, sanitizeContent } from "@/lib/rich-text/content";
+import {
+  type Content,
+  isHttpUrl,
+  sanitizeContent,
+} from "@/lib/rich-text/content";
 import { editorExtensions } from "@/lib/rich-text/extensions";
-
-/**
- * The Organizer's rich-text editor (Announcement bodies), ported from
- * journeys and narrowed to this repo's closed content set: headings, bold,
- * italic, the two lists, links, and images by URL with alt text.
- *
- * Every update goes through `sanitizeContent` before it leaves this
- * component, so form state already holds the stored shape; the server action
- * sanitizes again on write. The sanitized content is never fed back into the
- * editor while the Organizer types.
- */
 
 /**
  * A document with no blocks is one ProseMirror can render but not edit into,
@@ -37,16 +30,6 @@ const EDITOR_CLASS =
 
 const fieldClass =
   "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
-/** The same test the write-path sanitizer applies. */
-function isHttpUrl(value: string): boolean {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
 
 /**
  * `onMouseDown` is swallowed so the selection survives the click: without it
@@ -79,6 +62,16 @@ function ToolbarButton({
   );
 }
 
+/**
+ * The Organizer's rich-text editor (Announcement bodies), ported from
+ * journeys and narrowed to this repo's closed content set: headings, bold,
+ * italic, the two lists, links, and images by URL with alt text.
+ *
+ * Every update goes through `sanitizeContent` before it leaves this
+ * component, so form state already holds the stored shape; the server action
+ * sanitizes again on write. The sanitized content is never fed back into the
+ * editor while the Organizer types.
+ */
 export function RichTextEditor({
   content,
   onChange,
@@ -96,7 +89,6 @@ export function RichTextEditor({
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  const id = useId();
   const [panel, setPanel] = useState<"link" | "image" | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -265,7 +257,6 @@ export function RichTextEditor({
             <label className="flex flex-col gap-1 text-sm font-medium">
               Link URL
               <input
-                id={`${id}-link-url`}
                 autoComplete="off"
                 className={fieldClass}
                 value={linkUrl}
@@ -277,7 +268,6 @@ export function RichTextEditor({
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Image URL
                 <input
-                  id={`${id}-image-url`}
                   autoComplete="off"
                   className={fieldClass}
                   value={imageUrl}
@@ -287,7 +277,6 @@ export function RichTextEditor({
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Alt text
                 <input
-                  id={`${id}-image-alt`}
                   autoComplete="off"
                   className={fieldClass}
                   value={imageAlt}

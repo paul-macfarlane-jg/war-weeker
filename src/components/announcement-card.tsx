@@ -10,13 +10,19 @@ export type AnnouncementCardData = Pick<
 /** One Announcement: title, author and time, body, then any video embeds. */
 export function AnnouncementCard({
   announcement,
+  headingLevel = "h2",
 }: {
   announcement: AnnouncementCardData;
+  /** The title element's heading level, so a page nests headings correctly. */
+  headingLevel?: "h2" | "h3";
 }) {
+  const Heading = headingLevel;
   return (
     <article className="border-border flex flex-col gap-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-semibold">{announcement.title}</h2>
+        <Heading className="text-lg font-semibold">
+          {announcement.title}
+        </Heading>
         {announcement.pinned ? (
           <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
             Pinned
@@ -28,14 +34,14 @@ export function AnnouncementCard({
         {formatPublishedAt(announcement.publishedAt)}
       </p>
       <RichText content={announcement.body} />
-      {announcement.videoUrls.map((url) => {
+      {announcement.videoUrls.map((url, index) => {
         const src = videoEmbedUrl(url);
         if (!src) return null;
         return (
           <iframe
-            key={url}
+            key={`${index}-${url}`}
             src={src}
-            title="Video"
+            title={`Video: ${announcement.title}`}
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             loading="lazy"

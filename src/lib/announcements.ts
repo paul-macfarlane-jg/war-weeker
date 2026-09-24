@@ -4,29 +4,42 @@ import { formatLedgerTime } from "@/lib/points-entry";
 import { contentInputSchema } from "@/lib/rich-text/content";
 import { isAllowedVideoUrl } from "@/lib/video";
 
+/** The Announcement title's column length. */
+export const ANNOUNCEMENT_TITLE_MAX = 200;
+
+/** How many video links an Announcement may carry. */
+export const MAX_VIDEO_LINKS = 5;
+
 /** The Announcement title, as limited by its column. */
 export const announcementTitleSchema = z
   .string()
   .trim()
   .min(1, { error: "must not be empty" })
-  .max(200, { error: "must be at most 200 characters" });
+  .max(ANNOUNCEMENT_TITLE_MAX, {
+    error: `must be at most ${ANNOUNCEMENT_TITLE_MAX} characters`,
+  });
 
 /**
- * An Announcement video link: an https URL within the column length, on one
- * of the allow-listed hosts (YouTube, Loom, Vimeo, Drive). The allow-list
- * itself lives once, in `isAllowedVideoUrl`; the seed schema reuses this.
+ * An Announcement video link: an https URL within the column length that
+ * `videoEmbedUrl` can turn into an embeddable video. The allow-list and the
+ * embed shapes both live once, in `videoEmbedUrl`.
  */
 export const videoUrlSchema = z
   .url({ protocol: /^https$/ })
-  .max(500)
-  .refine(isAllowedVideoUrl, {
-    message: "must be a YouTube, Loom, Vimeo or Google Drive URL",
+  .max(500, { error: "must be at most 500 characters" })
+  .refine((url) => videoEmbedUrl(url) !== null, {
+    error: "must be a YouTube, Loom, Vimeo or Google Drive video link",
   });
 
 export const announcementInputSchema = z.object({
   title: announcementTitleSchema,
   body: contentInputSchema,
-  videoUrls: z.array(videoUrlSchema).max(5).default([]),
+  videoUrls: z
+    .array(videoUrlSchema)
+    .max(MAX_VIDEO_LINKS, {
+      error: `must have at most ${MAX_VIDEO_LINKS} video links`,
+    })
+    .default([]),
   pinned: z.boolean().default(false),
 });
 
@@ -53,10 +66,16 @@ export function parseAnnouncementInput(
 
   const issue = result.error.issues[0];
   if (issue.path[0] === "videoUrls") {
+    if (issue.path.length === 1) {
+      return {
+        ok: false,
+        error: `Add at most ${MAX_VIDEO_LINKS} video links.`,
+      };
+    }
     const index = typeof issue.path[1] === "number" ? issue.path[1] : 0;
     return {
       ok: false,
-      error: `Video link ${index + 1} must be a YouTube, Loom, Vimeo or Google Drive URL.`,
+      error: `Video link ${index + 1} ${issue.message}.`,
     };
   }
   if (issue.path[0] === "body") {
@@ -96,19 +115,20 @@ function matchPath(pathname: string, pattern: RegExp): string | null {
   return match ? match[1] : null;
 }
 
+/** Ids in embed URLs are path segments; a raw `/` or `%` breaks the shape. */
+const VIDEO_ID = /^[A-Za-z0-9_-]+$/;
+/** Vimeo ids are always numeric. */
+const VIMEO_ID = /^\d+$/;
+
 /**
  * The iframe `src` for an Announcement video link, or null when the URL
- * doesn't point at a recognized video on its host (including a host on the
- * allow-list with an unrecognized path). YouTube embeds use the
- * `-nocookie` domain.
+ * isn't on the allow-list (`isAllowedVideoUrl`) or doesn't point at a
+ * recognized video on its host (including a host on the allow-list with an
+ * unrecognized path). YouTube embeds use the `-nocookie` domain.
  */
 export function videoEmbedUrl(url: string): string | null {
-  let parsed: URL;
-  try {
-    parsed = new URL(url);
-  } catch {
-    return null;
-  }
+  if (!isAllowedVideoUrl(url)) return null;
+  const parsed = new URL(url);
   const host = parsed.hostname.toLowerCase();
 
   if (
@@ -119,28 +139,43 @@ export function videoEmbedUrl(url: string): string | null {
     const id =
       parsed.searchParams.get("v") ??
       matchPath(parsed.pathname, /^\/shorts\/([^/]+)/) ??
-      matchPath(parsed.pathname, /^\/embed\/([^/]+)/);
-    return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+      matchPath(parsed.pathname, /^\/embed\/([^/]+)/) ??
+      matchPath(parsed.pathname, /^\/live\/([^/]+)/);
+    return id && VIDEO_ID.test(id)
+      ? `https://www.youtube-nocookie.com/embed/${id}`
+      : null;
   }
   if (host === "youtu.be") {
-    const id = parsed.pathname.replace(/^\//, "");
-    return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+    // Only the first path segment names the video; anything after it (a
+    // stray segment, or an encoded `/`) is not part of the id.
+    const id = parsed.pathname.replace(/^\//, "").split("/")[0];
+    return id && VIDEO_ID.test(id)
+      ? `https://www.youtube-nocookie.com/embed/${id}`
+      : null;
   }
   if (host === "loom.com" || host === "www.loom.com") {
-    const id = matchPath(parsed.pathname, /^\/share\/([^/]+)/);
-    return id ? `https://www.loom.com/embed/${id}` : null;
+    const id =
+      matchPath(parsed.pathname, /^\/share\/([^/]+)/) ??
+      matchPath(parsed.pathname, /^\/embed\/([^/]+)/);
+    return id && VIDEO_ID.test(id) ? `https://www.loom.com/embed/${id}` : null;
   }
   if (host === "vimeo.com" || host === "www.vimeo.com") {
     const id = matchPath(parsed.pathname, /^\/(\d+)/);
-    return id ? `https://player.vimeo.com/video/${id}` : null;
+    return id && VIMEO_ID.test(id)
+      ? `https://player.vimeo.com/video/${id}`
+      : null;
   }
   if (host === "player.vimeo.com") {
     const id = matchPath(parsed.pathname, /^\/video\/(\d+)/);
-    return id ? `https://player.vimeo.com/video/${id}` : null;
+    return id && VIMEO_ID.test(id)
+      ? `https://player.vimeo.com/video/${id}`
+      : null;
   }
   if (host === "drive.google.com") {
     const id = matchPath(parsed.pathname, /^\/file\/d\/([^/]+)/);
-    return id ? `https://drive.google.com/file/d/${id}/preview` : null;
+    return id && VIDEO_ID.test(id)
+      ? `https://drive.google.com/file/d/${id}/preview`
+      : null;
   }
   return null;
 }

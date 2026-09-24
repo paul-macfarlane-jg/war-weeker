@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { videoUrlSchema } from "@/lib/announcements";
+import { announcementTitleSchema, videoUrlSchema } from "@/lib/announcements";
 import {
   pointsSchema as points,
   pointsEntryNoteSchema,
@@ -143,7 +143,7 @@ export type AwardSeed = z.infer<typeof awardSeedSchema>;
 
 export const announcementSeedSchema = z.object({
   key: seedKey,
-  title: z.string().min(1).max(200),
+  title: announcementTitleSchema,
   body: contentInputSchema,
   videoUrls: z.array(videoUrlSchema).default([]),
   pinned: z.boolean().default(false),

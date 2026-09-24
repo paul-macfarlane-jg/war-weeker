@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
 import {
@@ -16,7 +16,8 @@ async function loadSorted(
   const rows = await dbOrTx
     .select()
     .from(announcement)
-    .where(eq(announcement.warWeekId, warWeekId));
+    .where(eq(announcement.warWeekId, warWeekId))
+    .orderBy(desc(announcement.publishedAt), desc(announcement.id));
   return sortAnnouncements(rows);
 }
 

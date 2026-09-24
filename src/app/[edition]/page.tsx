@@ -72,7 +72,10 @@ export default async function EditionHomePage({
                 All news
               </Link>
             </div>
-            <AnnouncementCard announcement={pinnedAnnouncement} />
+            <AnnouncementCard
+              announcement={pinnedAnnouncement}
+              headingLevel="h3"
+            />
           </section>
         ) : null}
 

@@ -1342,12 +1342,12 @@ async function assertAnnouncementFeed() {
     const positions = {
       welcome: body.indexOf("Welcome to War Week XI"),
       wellness: body.indexOf("Wellness Wednesday is here"),
-      tournament: body.indexOf("Tournament Night recap"),
+      recap: body.indexOf("Tournament Night recap"),
     };
     const ordered =
       positions.welcome >= 0 &&
       positions.wellness > positions.welcome &&
-      positions.tournament > positions.wellness;
+      positions.recap > positions.wellness;
     if (res.status === 200 && ordered) {
       ok(check);
     } else {
@@ -1394,13 +1394,14 @@ async function assertAnnouncementHomePinned() {
   }
 
   const badgeCheck = "GET /xi/news and /xi both show the Pinned badge";
+  const pinnedBadge = /<span[^>]*>Pinned<\/span>/;
   try {
     const news = await (await signedInFetch(`${BASE_URL}/xi/news`)).text();
     const home = await (await signedInFetch(`${BASE_URL}/xi`)).text();
-    if (news.includes("Pinned") && home.includes("Pinned")) {
+    if (pinnedBadge.test(news) && pinnedBadge.test(home)) {
       ok(badgeCheck);
     } else {
-      fail(badgeCheck, "Pinned badge text missing on one of the pages");
+      fail(badgeCheck, "Pinned badge markup missing on one of the pages");
     }
   } catch (error) {
     fail(badgeCheck, String(error));
@@ -1526,86 +1527,142 @@ async function assertAnnouncementActions(sessions: {
 
     const [created] = await smokeAnnouncements();
 
-    await run(
-      "updateAnnouncement changes the title and keeps author-email and published-at",
-      async () => {
-        const result = await callAction(
-          ids.updateAnnouncement,
-          [
-            created.id,
-            {
-              title: editedTitle,
-              body: validBody,
-              videoUrls: ["https://youtu.be/dQw4w9WgXcQ"],
-              pinned: false,
-            },
-          ],
-          sessions.organizer,
-        );
-        const [row] = await smokeAnnouncements();
-        return result.ok &&
-          row?.title === editedTitle &&
-          row.author_email === created.author_email &&
-          new Date(row.published_at).getTime() ===
-            new Date(created.published_at).getTime()
-          ? null
-          : `result=${JSON.stringify(result)} row=${JSON.stringify(row)}`;
-      },
-    );
-
-    await run(
-      "pinAnnouncement pins it, and it now sorts first on /xi/news",
-      async () => {
-        const result = await callAction(
-          ids.pinAnnouncement,
-          [created.id],
-          sessions.organizer,
-        );
-        const [row] = await smokeAnnouncements();
-        const body = await (await signedInFetch(`${BASE_URL}/xi/news`)).text();
-        const welcomePos = body.indexOf("Welcome to War Week XI");
-        const editedPos = body.indexOf(editedTitle);
-        return result.ok &&
-          row?.pinned === true &&
-          editedPos >= 0 &&
-          editedPos < welcomePos
-          ? null
-          : `result=${JSON.stringify(result)} pinned=${row?.pinned} welcomePos=${welcomePos} editedPos=${editedPos}`;
-      },
-    );
-
-    await run(
-      "unpinAnnouncement unpins it, and the welcome Announcement sorts first again",
-      async () => {
-        const result = await callAction(
-          ids.unpinAnnouncement,
-          [created.id],
-          sessions.organizer,
-        );
-        const [row] = await smokeAnnouncements();
-        const body = await (await signedInFetch(`${BASE_URL}/xi/news`)).text();
-        const welcomePos = body.indexOf("Welcome to War Week XI");
-        const editedPos = body.indexOf(editedTitle);
-        return result.ok &&
-          row?.pinned === false &&
-          welcomePos >= 0 &&
-          welcomePos < editedPos
-          ? null
-          : `result=${JSON.stringify(result)} pinned=${row?.pinned} welcomePos=${welcomePos} editedPos=${editedPos}`;
-      },
-    );
-
-    await run("deleteAnnouncement as an Organizer removes it", async () => {
-      const result = await callAction(
-        ids.deleteAnnouncement,
-        [created.id],
-        sessions.organizer,
+    if (!created) {
+      fail(
+        "look up the just-created smoke Announcement",
+        "smokeAnnouncements() returned no rows",
       );
-      const rows = await smokeAnnouncements();
-      return result.ok && rows.length === 0
-        ? null
-        : `result=${JSON.stringify(result)} rows=${rows.length}`;
-    });
+    } else {
+      await run(
+        "updateAnnouncement, pinAnnouncement, unpinAnnouncement and deleteAnnouncement each reject a non-Organizer and leave the row unchanged",
+        async () => {
+          const update = await callAction(
+            ids.updateAnnouncement,
+            [
+              created.id,
+              {
+                title: "should-not-apply",
+                body: validBody,
+                videoUrls: [],
+                pinned: true,
+              },
+            ],
+            sessions.notOrganizer,
+          );
+          const pin = await callAction(
+            ids.pinAnnouncement,
+            [created.id],
+            sessions.notOrganizer,
+          );
+          const unpin = await callAction(
+            ids.unpinAnnouncement,
+            [created.id],
+            sessions.notOrganizer,
+          );
+          const remove = await callAction(
+            ids.deleteAnnouncement,
+            [created.id],
+            sessions.notOrganizer,
+          );
+          const [row] = await smokeAnnouncements();
+          const refused = [update, pin, unpin, remove].every(
+            (result) => !result.ok && /not an Organizer/.test(result.error),
+          );
+          const unchanged =
+            row != null &&
+            row.title === created.title &&
+            row.pinned === created.pinned;
+          return refused && unchanged
+            ? null
+            : `update=${JSON.stringify(update)} pin=${JSON.stringify(pin)} unpin=${JSON.stringify(unpin)} delete=${JSON.stringify(remove)} row=${JSON.stringify(row)}`;
+        },
+      );
+
+      await run(
+        "updateAnnouncement changes the title and keeps author-email and published-at",
+        async () => {
+          const result = await callAction(
+            ids.updateAnnouncement,
+            [
+              created.id,
+              {
+                title: editedTitle,
+                body: validBody,
+                videoUrls: ["https://youtu.be/dQw4w9WgXcQ"],
+                pinned: false,
+              },
+            ],
+            sessions.organizer,
+          );
+          const [row] = await smokeAnnouncements();
+          return result.ok &&
+            row?.title === editedTitle &&
+            row.author_email === created.author_email &&
+            new Date(row.published_at).getTime() ===
+              new Date(created.published_at).getTime()
+            ? null
+            : `result=${JSON.stringify(result)} row=${JSON.stringify(row)}`;
+        },
+      );
+
+      await run(
+        "pinAnnouncement pins it, and it now sorts first on /xi/news",
+        async () => {
+          const result = await callAction(
+            ids.pinAnnouncement,
+            [created.id],
+            sessions.organizer,
+          );
+          const [row] = await smokeAnnouncements();
+          const body = await (
+            await signedInFetch(`${BASE_URL}/xi/news`)
+          ).text();
+          const welcomePos = body.indexOf("Welcome to War Week XI");
+          const editedPos = body.indexOf(editedTitle);
+          return result.ok &&
+            row?.pinned === true &&
+            editedPos >= 0 &&
+            editedPos < welcomePos
+            ? null
+            : `result=${JSON.stringify(result)} pinned=${row?.pinned} welcomePos=${welcomePos} editedPos=${editedPos}`;
+        },
+      );
+
+      await run(
+        "unpinAnnouncement unpins it, and the welcome Announcement sorts first again",
+        async () => {
+          const result = await callAction(
+            ids.unpinAnnouncement,
+            [created.id],
+            sessions.organizer,
+          );
+          const [row] = await smokeAnnouncements();
+          const body = await (
+            await signedInFetch(`${BASE_URL}/xi/news`)
+          ).text();
+          const welcomePos = body.indexOf("Welcome to War Week XI");
+          const editedPos = body.indexOf(editedTitle);
+          return result.ok &&
+            row?.pinned === false &&
+            welcomePos >= 0 &&
+            welcomePos < editedPos
+            ? null
+            : `result=${JSON.stringify(result)} pinned=${row?.pinned} welcomePos=${welcomePos} editedPos=${editedPos}`;
+        },
+      );
+
+      await run("deleteAnnouncement as an Organizer removes it", async () => {
+        const result = await callAction(
+          ids.deleteAnnouncement,
+          [created.id],
+          sessions.organizer,
+        );
+        const rows = await smokeAnnouncements();
+        return result.ok && rows.length === 0
+          ? null
+          : `result=${JSON.stringify(result)} rows=${rows.length}`;
+      });
+    }
 
     await run(
       "deleteAnnouncement of an id that no longer exists says so",

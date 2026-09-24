@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   type AnnouncementInput,
+  MAX_VIDEO_LINKS,
   isAnnouncementId,
   parseAnnouncementInput,
   sortAnnouncements,
@@ -57,14 +58,38 @@ describe("parseAnnouncementInput", () => {
     });
   });
 
-  it.each([
-    "https://evil.example.com/watch?v=x",
-    "http://youtube.com/watch?v=x",
-    "not-a-url",
-  ])("rejects a disallowed video URL: %s", (url) => {
-    expect(parseAnnouncementInput(baseInput({ videoUrls: [url] }))).toEqual({
+  it("rejects a malformed or wrong-protocol video URL", () => {
+    for (const url of ["http://youtube.com/watch?v=x", "not-a-url"]) {
+      expect(parseAnnouncementInput(baseInput({ videoUrls: [url] }))).toEqual({
+        ok: false,
+        error: "Video link 1 Invalid URL.",
+      });
+    }
+  });
+
+  it("rejects a well-formed https link on a disallowed host", () => {
+    expect(
+      parseAnnouncementInput(
+        baseInput({ videoUrls: ["https://evil.example.com/watch?v=x"] }),
+      ),
+    ).toEqual({
       ok: false,
-      error: "Video link 1 must be a YouTube, Loom, Vimeo or Google Drive URL.",
+      error:
+        "Video link 1 must be a YouTube, Loom, Vimeo or Google Drive video link.",
+    });
+  });
+
+  it("rejects an allow-listed host with an unrecognized path", () => {
+    expect(
+      parseAnnouncementInput(
+        baseInput({
+          videoUrls: ["https://www.youtube.com/playlist?list=x"],
+        }),
+      ),
+    ).toEqual({
+      ok: false,
+      error:
+        "Video link 1 must be a YouTube, Loom, Vimeo or Google Drive video link.",
     });
   });
 
@@ -80,7 +105,29 @@ describe("parseAnnouncementInput", () => {
       ),
     ).toEqual({
       ok: false,
-      error: "Video link 2 must be a YouTube, Loom, Vimeo or Google Drive URL.",
+      error:
+        "Video link 2 must be a YouTube, Loom, Vimeo or Google Drive video link.",
+    });
+  });
+
+  it("rejects a video link over 500 characters", () => {
+    const overlong = `https://www.youtube.com/watch?v=abc&pad=${"x".repeat(500)}`;
+    expect(
+      parseAnnouncementInput(baseInput({ videoUrls: [overlong] })),
+    ).toEqual({
+      ok: false,
+      error: "Video link 1 must be at most 500 characters.",
+    });
+  });
+
+  it("rejects more than the maximum number of video links", () => {
+    const urls = Array.from(
+      { length: MAX_VIDEO_LINKS + 1 },
+      () => "https://www.youtube.com/watch?v=abc",
+    );
+    expect(parseAnnouncementInput(baseInput({ videoUrls: urls }))).toEqual({
+      ok: false,
+      error: `Add at most ${MAX_VIDEO_LINKS} video links.`,
     });
   });
 
@@ -146,7 +193,12 @@ describe("videoEmbedUrl", () => {
       "https://www.youtube.com/embed/abc123",
       "https://www.youtube-nocookie.com/embed/abc123",
     ],
+    [
+      "https://www.youtube.com/live/abc123",
+      "https://www.youtube-nocookie.com/embed/abc123",
+    ],
     ["https://loom.com/share/abc123", "https://www.loom.com/embed/abc123"],
+    ["https://loom.com/embed/abc123", "https://www.loom.com/embed/abc123"],
     ["https://vimeo.com/123456", "https://player.vimeo.com/video/123456"],
     [
       "https://player.vimeo.com/video/123456",
@@ -156,6 +208,8 @@ describe("videoEmbedUrl", () => {
       "https://drive.google.com/file/d/abc123/view?usp=sharing",
       "https://drive.google.com/file/d/abc123/preview",
     ],
+    // Only the first youtu.be path segment names the video.
+    ["https://youtu.be/abc/def", "https://www.youtube-nocookie.com/embed/abc"],
   ])("embeds %s", (url, expected) => {
     expect(videoEmbedUrl(url)).toBe(expected);
   });
@@ -163,10 +217,15 @@ describe("videoEmbedUrl", () => {
   it.each([
     "https://evil.example.com/watch?v=abc123",
     "https://www.youtube.com/",
-    "https://loom.com/embed/abc123",
+    "https://www.youtube.com/playlist?list=x",
     "https://vimeo.com/not-a-number",
     "https://drive.google.com/drive/folders/abc123",
+    "https://drive.google.com/file/d/../x",
     "not-a-url",
+    // A `v` param carrying an encoded `/` is not a bare id.
+    "https://www.youtube.com/watch?v=..%2F..%2Fx",
+    // An encoded `/` inside a youtu.be path segment is not a bare id either.
+    "https://youtu.be/a%2Fb",
   ])("returns null for %s", (url) => {
     expect(videoEmbedUrl(url)).toBeNull();
   });
