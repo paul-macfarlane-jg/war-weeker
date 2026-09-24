@@ -1,11 +1,18 @@
+import { Avatar } from "@/components/avatar";
 import type { RosterParticipant, RosterTeam } from "@/lib/roster";
 
 export function RosterList({
   participants,
   leaderTitle,
+  teamColor,
+  primaryColor,
 }: {
   participants: RosterParticipant[];
   leaderTitle: string;
+  /** The Team's color for their Avatars, or null with no Team. */
+  teamColor: string | null;
+  /** The Appearance Theme primary color, for Avatars with no Team. */
+  primaryColor: string;
 }) {
   if (participants.length === 0) {
     return <p className="text-foreground/70 text-sm">No Participants yet.</p>;
@@ -18,6 +25,11 @@ export function RosterList({
           key={p.id}
           className="border-border flex flex-wrap items-center gap-2 border-b px-2 py-2 last:border-b-0"
         >
+          <Avatar
+            name={p.displayName}
+            teamColor={teamColor}
+            primaryColor={primaryColor}
+          />
           <span className={p.isLeader ? "font-semibold" : undefined}>
             {p.displayName}
           </span>
@@ -41,10 +53,12 @@ export function TeamRoster({
   team,
   teamLabel,
   leaderTitle,
+  primaryColor,
 }: {
   team: RosterTeam;
   teamLabel: string;
   leaderTitle: string;
+  primaryColor: string;
 }) {
   return (
     <section
@@ -75,7 +89,12 @@ export function TeamRoster({
           {team.participants.length}
         </span>
       </div>
-      <RosterList participants={team.participants} leaderTitle={leaderTitle} />
+      <RosterList
+        participants={team.participants}
+        leaderTitle={leaderTitle}
+        teamColor={team.color}
+        primaryColor={primaryColor}
+      />
     </section>
   );
 }

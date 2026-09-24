@@ -40,12 +40,14 @@ export async function getAwards(
             awardId: awardParticipant.awardId,
             id: participant.id,
             displayName: participant.displayName,
+            teamColor: team.color,
           })
           .from(awardParticipant)
           .innerJoin(
             participant,
             eq(awardParticipant.participantId, participant.id),
           )
+          .leftJoin(team, eq(team.id, participant.teamId))
           .where(
             inArray(
               awardParticipant.awardId,
@@ -64,7 +66,11 @@ export async function getAwards(
         : null,
     participants: recipients
       .filter((r) => r.awardId === row.id)
-      .map(({ id, displayName }) => ({ id, displayName })),
+      .map(({ id, displayName, teamColor }) => ({
+        id,
+        displayName,
+        teamColor,
+      })),
   }));
 }
 

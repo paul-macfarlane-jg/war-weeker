@@ -79,10 +79,13 @@ const ranksOf = (rows: { rank: number }[]) => rows.map((row) => row.rank);
 export function HomeStandings({
   standings,
   individualLimit,
+  primaryColor,
 }: {
   standings: Standings;
   /** How many individual rows the home page shows. */
   individualLimit: number;
+  /** The Appearance Theme primary color, for Avatars with no Team. */
+  primaryColor: string;
 }) {
   const team =
     !standings.hidden && standings.main === "team" ? standings.team : [];
@@ -102,7 +105,11 @@ export function HomeStandings({
       ) : standings.main === "team" ? (
         <TeamStandingsList rows={team} reveal={reveal?.[0]} />
       ) : (
-        <IndividualStandingsList rows={individual} reveal={reveal?.[1]} />
+        <IndividualStandingsList
+          rows={individual}
+          reveal={reveal?.[1]}
+          primaryColor={primaryColor}
+        />
       )}
     </div>
   );
@@ -112,9 +119,12 @@ export function HomeStandings({
 export function LeaderboardStandings({
   standings,
   teamLabel,
+  primaryColor,
 }: {
   standings: Standings;
   teamLabel: string;
+  /** The Appearance Theme primary color, for Avatars with no Team. */
+  primaryColor: string;
 }) {
   const team = standings.hidden ? [] : standings.team;
   const individual = standings.hidden ? [] : standings.individual;
@@ -138,7 +148,11 @@ export function LeaderboardStandings({
   );
   const individualSection = (
     <Section key="individual" title="Individual leaderboard">
-      <IndividualStandingsList rows={individual} reveal={reveal?.[1]} />
+      <IndividualStandingsList
+        rows={individual}
+        reveal={reveal?.[1]}
+        primaryColor={primaryColor}
+      />
     </Section>
   );
   // A free-for-all War Week has no Teams, so it shows no team section.

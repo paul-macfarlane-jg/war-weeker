@@ -1,3 +1,4 @@
+import { Avatar } from "@/components/avatar";
 import { formatPoints } from "@/lib/points";
 import { type RowReveal, countUpTotal } from "@/lib/reveal";
 import type { IndividualStanding, TeamStanding } from "@/lib/standings";
@@ -70,10 +71,16 @@ export function TeamStandingsList({
 export function IndividualStandingsList({
   rows,
   reveal,
+  primaryColor,
 }: {
   rows: IndividualStanding[];
   /** Each row's Reveal state, in row order, while the Reveal plays. */
   reveal?: RowReveal[];
+  /**
+   * The Appearance Theme primary color. When given, each row shows the
+   * Participant's Avatar (admin omits it).
+   */
+  primaryColor?: string;
 }) {
   if (rows.length === 0) return <NoPointsYet />;
 
@@ -90,6 +97,13 @@ export function IndividualStandingsList({
             <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
               {row.rank}
             </span>
+            {primaryColor ? (
+              <Avatar
+                name={row.name}
+                teamColor={team?.color ?? null}
+                primaryColor={primaryColor}
+              />
+            ) : null}
             <span className="flex-1">
               {row.name}
               {team ? (

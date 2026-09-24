@@ -1,12 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  type CompetitionInput,
+  type ParticipantInput,
   type WarWeekSettingsInput,
+  competitionGuardError,
   dayDeleteGuardError,
   dayGuardError,
+  inUseError,
+  parseCompetitionInput,
   parseDayInput,
+  parseParticipantInput,
+  parseTeamInput,
   parseWarWeekSettingsInput,
+  participantGuardError,
   settingsGuardError,
+  teamGuardError,
 } from "@/lib/setup";
 
 const input: WarWeekSettingsInput = {
@@ -214,6 +223,282 @@ describe("dayDeleteGuardError", () => {
     );
     expect(dayDeleteGuardError(3)).toBe(
       "This Day has 3 Schedule Items. Delete or move them first.",
+    );
+  });
+});
+
+describe("parseTeamInput", () => {
+  it("trims the name and color and blanks the logo URL to null", () => {
+    expect(
+      parseTeamInput({ name: " Zion ", color: " #0f0 ", logoUrl: " " }),
+    ).toEqual({
+      ok: true,
+      value: { name: "Zion", color: "#0f0", logoUrl: null },
+    });
+  });
+
+  it.each([
+    [{ name: "", color: "#0f0", logoUrl: "" }, "Name must not be empty."],
+    [
+      { name: "Zion", color: "green", logoUrl: "" },
+      "Color must be a hex color.",
+    ],
+    [
+      { name: "Zion", color: "#0f0", logoUrl: "http://x.test/a.png" },
+      "Logo URL must be a root-relative path or an https URL.",
+    ],
+  ])("refuses %o", (input, error) => {
+    expect(parseTeamInput(input)).toEqual({ ok: false, error });
+  });
+});
+
+describe("parseParticipantInput", () => {
+  const teamId = "00000000-0000-4000-8000-000000000001";
+  const participant: ParticipantInput = {
+    displayName: " Neo ",
+    companyTag: " ",
+    email: " Neo@JahnelGroup.com ",
+    teamId,
+    isLeader: true,
+  };
+
+  it("trims, lowercases the email and blanks optional fields to null", () => {
+    expect(parseParticipantInput(participant)).toEqual({
+      ok: true,
+      value: {
+        displayName: "Neo",
+        companyTag: null,
+        email: "neo@jahnelgroup.com",
+        teamId,
+        isLeader: true,
+      },
+    });
+    expect(
+      parseParticipantInput({
+        ...participant,
+        email: "",
+        teamId: "",
+        isLeader: false,
+      }),
+    ).toMatchObject({ ok: true, value: { email: null, teamId: null } });
+  });
+
+  it.each([
+    [{ displayName: "  " }, "Display name must not be empty."],
+    [{ email: "neo" }, "Email must be a valid email."],
+    [{ teamId: "nope" }, "Choose a Team."],
+    [{ teamId: "" }, "A Leader needs a Team."],
+  ])("refuses %o", (overrides, error) => {
+    expect(parseParticipantInput({ ...participant, ...overrides })).toEqual({
+      ok: false,
+      error,
+    });
+  });
+});
+
+describe("parseCompetitionInput", () => {
+  const competition: CompetitionInput = {
+    name: " Catan ",
+    description: " ",
+    scoring: "individual",
+    maxPoints: " 10 ",
+    placementPoints: "5, 3 1",
+    countsTowardTeam: true,
+    group: " Board games ",
+  };
+
+  it("parses numbers, the Placement Points list and blank fields", () => {
+    expect(parseCompetitionInput(competition)).toEqual({
+      ok: true,
+      value: {
+        name: "Catan",
+        description: null,
+        scoring: "individual",
+        maxPoints: 10,
+        placementPoints: [5, 3, 1],
+        countsTowardTeam: true,
+        competitionGroup: "Board games",
+      },
+    });
+    expect(
+      parseCompetitionInput({
+        ...competition,
+        maxPoints: "",
+        placementPoints: " ",
+        group: "",
+      }),
+    ).toMatchObject({
+      ok: true,
+      value: { maxPoints: null, placementPoints: null, competitionGroup: null },
+    });
+  });
+
+  it.each([
+    [{ name: "" }, "Name must not be empty."],
+    [{ scoring: "both" }, "Scoring must be one of team, individual."],
+    [{ maxPoints: "ten" }, "Max points must be a number."],
+    [{ maxPoints: "0" }, "Max points must be more than 0."],
+    [
+      { placementPoints: "5, three" },
+      "Placement Points must be numbers separated by commas, 1st place first.",
+    ],
+    [{ placementPoints: "5, -1" }, "Placement Points must be at least 0."],
+    [
+      { placementPoints: "3, 5" },
+      "Each place's Placement Points must be no more than the place above it.",
+    ],
+    [
+      { placementPoints: "6, 5, 4, 3, 2, 1" },
+      "Placement Points cover at most 5 places.",
+    ],
+    [
+      { placementPoints: "12, 3" },
+      "1st place's Placement Points can't be more than Max points.",
+    ],
+    [
+      { scoring: "team" },
+      "Only an individual Competition can count toward the Team.",
+    ],
+  ])("refuses %o", (overrides, error) => {
+    expect(parseCompetitionInput({ ...competition, ...overrides })).toEqual({
+      ok: false,
+      error,
+    });
+  });
+});
+
+describe("teamGuardError", () => {
+  it("allows a new name in teams mode", () => {
+    expect(
+      teamGuardError({ name: "Zion" }, { mode: "teams", nameTaken: false }),
+    ).toBeNull();
+  });
+
+  it("refuses Teams in a free-for-all and a duplicate name", () => {
+    expect(
+      teamGuardError(
+        { name: "Zion" },
+        { mode: "free-for-all", nameTaken: false },
+      ),
+    ).toBe(
+      "A free-for-all War Week has no Teams. Switch the mode to teams first.",
+    );
+    expect(
+      teamGuardError({ name: "Zion" }, { mode: "teams", nameTaken: true }),
+    ).toBe('There\'s already a Team named "Zion".');
+  });
+});
+
+describe("participantGuardError", () => {
+  const values = {
+    displayName: "Neo",
+    email: "neo@jahnelgroup.com",
+    teamId: "t1",
+  };
+  const ctx = {
+    mode: "teams" as const,
+    teamExists: true,
+    nameTaken: false,
+    emailTakenBy: null,
+  };
+
+  it("allows a unique Participant on a Team of this War Week", () => {
+    expect(participantGuardError(values, ctx)).toBeNull();
+    expect(
+      participantGuardError(
+        { ...values, teamId: null },
+        { ...ctx, teamExists: false },
+      ),
+    ).toBeNull();
+  });
+
+  it.each([
+    [
+      { emailTakenBy: "Trinity" },
+      "neo@jahnelgroup.com is already Trinity's email.",
+    ],
+    [{ nameTaken: true }, 'There\'s already a Participant named "Neo".'],
+    [{ teamExists: false }, "That Team no longer exists."],
+    [
+      { mode: "free-for-all" as const },
+      "A free-for-all War Week has no Teams.",
+    ],
+  ])("refuses %o", (overrides, error) => {
+    expect(participantGuardError(values, { ...ctx, ...overrides })).toBe(error);
+  });
+});
+
+describe("competitionGuardError", () => {
+  const values = { name: "Catan", scoring: "team" as const };
+  const ctx = { mode: "teams" as const, nameTaken: false, existing: null };
+
+  it("allows a new Competition and a scoring change with no Points Entries", () => {
+    expect(competitionGuardError(values, ctx)).toBeNull();
+    expect(
+      competitionGuardError(values, {
+        ...ctx,
+        existing: { scoring: "individual", pointsEntryCount: 0 },
+      }),
+    ).toBeNull();
+  });
+
+  it("refuses a duplicate name, a team Competition in a free-for-all and changing scoring under Points Entries", () => {
+    expect(competitionGuardError(values, { ...ctx, nameTaken: true })).toBe(
+      'There\'s already a Competition named "Catan".',
+    );
+    expect(
+      competitionGuardError(values, { ...ctx, mode: "free-for-all" }),
+    ).toBe(
+      "A free-for-all War Week has no Teams, so its Competitions are individual.",
+    );
+    expect(
+      competitionGuardError(values, {
+        ...ctx,
+        existing: { scoring: "individual", pointsEntryCount: 2 },
+      }),
+    ).toBe(
+      "This Competition has 2 Points Entries, so its scoring can't change. Delete them first.",
+    );
+  });
+});
+
+describe("inUseError", () => {
+  it("is null when nothing refers to the record", () => {
+    expect(
+      inUseError(
+        "Team",
+        [[0, "Points Entry", "Points Entries"]],
+        "Delete them first.",
+      ),
+    ).toBeNull();
+  });
+
+  it("names every count that blocks the delete", () => {
+    expect(
+      inUseError(
+        "Team",
+        [
+          [3, "Participant", "Participants"],
+          [1, "Points Entry", "Points Entries"],
+          [0, "Award", "Awards"],
+        ],
+        "Move or delete them first.",
+      ),
+    ).toBe(
+      "This Team has 3 Participants and 1 Points Entry. Move or delete them first.",
+    );
+    expect(
+      inUseError(
+        "Participant",
+        [
+          [2, "Points Entry", "Points Entries"],
+          [1, "Award", "Awards"],
+          [1, "Thing", "Things"],
+        ],
+        "Delete them first.",
+      ),
+    ).toBe(
+      "This Participant has 2 Points Entries, 1 Award and 1 Thing. Delete them first.",
     );
   });
 });

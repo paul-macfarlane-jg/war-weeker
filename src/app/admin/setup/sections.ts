@@ -1,6 +1,6 @@
 /**
  * The `/admin/setup` sections. A section with no `href` isn't built yet and
- * shows as "Soon"; tickets 26 and 27 add their pages and set it.
+ * shows as "Soon"; ticket 27 adds its pages and sets it.
  */
 export const SETUP_SECTIONS: {
   label: string;
@@ -21,12 +21,12 @@ export const SETUP_SECTIONS: {
   {
     label: "Teams & roster",
     description: "Teams, Participants and Leaders.",
-    href: null,
+    href: "/admin/setup/teams",
   },
   {
     label: "Competitions",
     description: "Competitions, scoring and Placement Points.",
-    href: null,
+    href: "/admin/setup/competitions",
   },
   {
     label: "Schedule",

@@ -4,6 +4,10 @@ War Week: themes, schedule, teams, competitions, points, awards, and
 announcements for Jahnel Group's annual War Week, plus a curated War Week
 history. See `CONTEXT.md` for the domain glossary.
 
+**Changing War Weeker?** Start with the
+[maintainer's guide](./docs/maintainers-guide.md): access, where things
+live, the branch-to-production loop, and prompts to give Claude.
+
 ## Fresh clone setup
 
 Prerequisites: Node 24, `pnpm` via corepack (`corepack enable`), Docker
@@ -27,7 +31,8 @@ Competitions plus fictional mid-week demo data (close race, standings
 hidden). Edit a file and reload it; setup data follows the seed, while keyed
 Points Entries, Awards and Announcements are only inserted once (see
 `CONTEXT.md`, "Seed idempotence rules"). Organizers can also edit War Week
-settings, the Appearance Theme, Days, Schedule Items and FAQ Items in
+settings, the Appearance Theme, Days, Teams, the roster, Competitions,
+Schedule Items and FAQ Items in
 `/admin/setup`; reloading a seed
 overwrites those edits with the seed's values, so update the seed to match
 or stop reloading it once organizers are editing in the app.

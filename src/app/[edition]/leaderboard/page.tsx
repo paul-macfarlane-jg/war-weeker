@@ -21,6 +21,7 @@ export default async function LeaderboardPage({
       <LeaderboardStandings
         standings={standings}
         teamLabel={warWeek.teamLabel}
+        primaryColor={warWeek.primaryColor}
       />
       <AutoRefresh />
     </main>

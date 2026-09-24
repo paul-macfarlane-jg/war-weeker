@@ -182,8 +182,8 @@ same rows with the same values (only `updated_at` moves).
     new keyed record to a seed and reloading adds just that record.
 
 **Setup in the UI.** Organizers can also edit setup in `/admin/setup`
-(War Week settings, the Appearance Theme, Days, Schedule Items and FAQ
-Items so far). The seed stays the
+(War Week settings, the Appearance Theme, Days, Teams, the roster,
+Competitions, Schedule Items and FAQ Items). The seed stays the
 way to bootstrap a War Week, and there's no merge: reloading a seed makes
 its War Week match the seed again, overwriting settings, Days and other
 setup data edited in the UI and deleting setup rows the seed doesn't list.
@@ -191,7 +191,11 @@ Once organizers edit setup in the UI, update the seed file to match or stop
 reloading it. Setup screens refuse edits that would cascade: switching to
 free-for-all while Teams exist, dates that leave a Day outside the War Week,
 deleting a Day with Schedule Items, and an Organizer removing their own
-email.
+email. Deleting a Team, Participant or Competition that Points Entries,
+Awards, Schedule Items or (for a Team) Participants still refer to is
+refused with the counts, and so is changing a Competition's scoring while it
+has Points Entries. A Participant's email is unique within the War Week. A
+Team may have more than one Leader.
 
 **Reset exception.** `pnpm seed:load --reset` (and the Seed workflow's reset
 option) deletes each seeded War Week, with all its setup and organizer-owned

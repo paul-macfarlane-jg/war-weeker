@@ -96,6 +96,7 @@ export default async function EditionHomePage({
           <HomeStandings
             standings={standings}
             individualLimit={HOME_INDIVIDUAL_ROWS}
+            primaryColor={warWeek.primaryColor}
           />
         </section>
       </div>
