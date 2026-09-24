@@ -14,6 +14,27 @@ import type { MutationContext, MutationResult } from "@/mutations/types";
 const WAR_WEEK_NOT_FOUND = "That War Week no longer exists.";
 const DAY_NOT_FOUND = "That Day no longer exists.";
 
+/** Postgres unique_violation: another save took the date in the meantime. */
+function isUniqueViolation(error: unknown): boolean {
+  const cause = (error as { cause?: { code?: string } })?.cause;
+  return (
+    (error as { code?: string })?.code === "23505" || cause?.code === "23505"
+  );
+}
+
+/** Runs a Day write, turning a lost race for its date into a refusal. */
+async function refusingDuplicateDate(
+  date: string,
+  write: () => Promise<MutationResult>,
+): Promise<MutationResult> {
+  try {
+    return await write();
+  } catch (error) {
+    if (!isUniqueViolation(error)) throw error;
+    return { ok: false, error: `There's already a Day on ${date}.` };
+  }
+}
+
 async function dayDates(
   warWeekId: string,
   dbOrTx: DBOrTx,
@@ -85,12 +106,14 @@ export async function createDay(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  return dbOrTx.transaction(async (tx): Promise<MutationResult> => {
-    const refusal = await dayRefusal(values, ctx, tx);
-    if (refusal) return { ok: false, error: refusal };
-    await tx.insert(day).values({ warWeekId: ctx.warWeekId, ...values });
-    return { ok: true };
-  });
+  return refusingDuplicateDate(values.date, () =>
+    dbOrTx.transaction(async (tx): Promise<MutationResult> => {
+      const refusal = await dayRefusal(values, ctx, tx);
+      if (refusal) return { ok: false, error: refusal };
+      await tx.insert(day).values({ warWeekId: ctx.warWeekId, ...values });
+      return { ok: true };
+    }),
+  );
 }
 
 /** Edits a Day of this War Week; its Schedule Items move with it. */
@@ -100,18 +123,20 @@ export async function updateDay(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  return dbOrTx.transaction(async (tx): Promise<MutationResult> => {
-    const refusal = await dayRefusal(values, ctx, tx, id);
-    if (refusal) return { ok: false, error: refusal };
-    const updated = await tx
-      .update(day)
-      .set({ ...values, updatedAt: sql`now()` })
-      .where(and(eq(day.id, id), eq(day.warWeekId, ctx.warWeekId)))
-      .returning({ id: day.id });
-    return updated.length > 0
-      ? { ok: true }
-      : { ok: false, error: DAY_NOT_FOUND };
-  });
+  return refusingDuplicateDate(values.date, () =>
+    dbOrTx.transaction(async (tx): Promise<MutationResult> => {
+      const refusal = await dayRefusal(values, ctx, tx, id);
+      if (refusal) return { ok: false, error: refusal };
+      const updated = await tx
+        .update(day)
+        .set({ ...values, updatedAt: sql`now()` })
+        .where(and(eq(day.id, id), eq(day.warWeekId, ctx.warWeekId)))
+        .returning({ id: day.id });
+      return updated.length > 0
+        ? { ok: true }
+        : { ok: false, error: DAY_NOT_FOUND };
+    }),
+  );
 }
 
 /** Deletes a Day of this War Week, refusing one that has Schedule Items. */

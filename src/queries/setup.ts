@@ -1,13 +1,7 @@
 import { asc, count, eq } from "drizzle-orm";
-import { z } from "zod";
 
 import { DBOrTx, db } from "@/db";
-import {
-  type WarWeek,
-  day,
-  scheduleItem,
-  warWeek as warWeekTable,
-} from "@/db/schema";
+import { type WarWeek, day, scheduleItem } from "@/db/schema";
 
 /** A Day as the setup page lists it. */
 export type SetupDay = {
@@ -34,22 +28,4 @@ export async function getSetupDays(
     .where(eq(day.warWeekId, warWeek.id))
     .groupBy(day.id)
     .orderBy(asc(day.date));
-}
-
-const uuid = z.uuid();
-
-/** The War Week a Day belongs to, for the Organizer check; undefined if none. */
-export async function getDayWarWeek(id: string, dbOrTx: DBOrTx = db) {
-  if (!uuid.safeParse(id).success) return undefined;
-  const [found] = await dbOrTx
-    .select({
-      id: warWeekTable.id,
-      edition: warWeekTable.edition,
-      organizerEmails: warWeekTable.organizerEmails,
-    })
-    .from(day)
-    .innerJoin(warWeekTable, eq(warWeekTable.id, day.warWeekId))
-    .where(eq(day.id, id))
-    .limit(1);
-  return found;
 }

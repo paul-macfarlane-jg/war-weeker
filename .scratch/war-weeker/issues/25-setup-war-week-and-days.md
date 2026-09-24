@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Decisions
 
@@ -18,11 +18,13 @@ Proposed by Claude on 2026-09-24. Paul put "setup screens" in the hackathon scop
 
 ## Acceptance criteria
 
-- [ ] Server actions for War Week settings and Day create/edit/delete with unit tests on the validation mapping, including the guards above.
-- [ ] An Organizer changes the primary color and a Day Theme, and the public `/xi` reflects it. Smoke covers one settings save.
-- [ ] A non-Organizer gets the existing refusal.
-- [ ] Screenshots at 390px and desktop of the setup landing, the settings form and Days under `test-results/25-setup-war-week/`.
-- [ ] The spec's "Admin screens for setup" Out of Scope line and CONTEXT.md are updated.
-- [ ] `pnpm gate` passes.
+- [x] Server actions for War Week settings and Day create/edit/delete with unit tests on the validation mapping, including the guards above.
+- [x] An Organizer changes the primary color and a Day Theme, and the public `/xi` reflects it. Smoke covers one settings save.
+- [x] A non-Organizer gets the existing refusal.
+- [x] Screenshots at 390px and desktop of the setup landing, the settings form and Days under `test-results/25-setup-war-week/`.
+- [x] The spec's "Admin screens for setup" Out of Scope line and CONTEXT.md are updated.
+- [x] `pnpm gate` passes.
 
 ## Comments
+
+- 2026-09-24 (Claude): Implemented on `feat/25-setup-war-week-and-days` with the decisions above as written. Added guards beyond the two listed, in the same "no cascading surprises" spirit: dates that leave a Day outside the War Week, a duplicate Day date or a Day outside the dates, and an Organizer removing their own email. Day edits are limited to the current War Week. The admin shell is now responsive (a scrolling nav row at phone width) so the 390px screenshots are usable. `pnpm gate` passed: typecheck, lint, 395 tests, build, and smoke with 120 checks. The smoke ran with `DATABASE_URL` from `.env.example` because the worktree has no `.env.local`.

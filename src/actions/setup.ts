@@ -12,13 +12,11 @@ import {
 } from "@/lib/setup";
 import * as mutations from "@/mutations/setup";
 import type { MutationResult } from "@/mutations/types";
-import { getDayWarWeek } from "@/queries/setup";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type SetupActionResult = MutationResult;
 
 const NO_WAR_WEEK = "There's no current War Week.";
-const DAY_NOT_FOUND = "That Day no longer exists.";
 
 /** The mutation context when the caller is an Organizer of `warWeek`. */
 async function organizerContext(
@@ -75,8 +73,9 @@ export async function updateDay(
   id: string,
   input: DayInput,
 ): Promise<SetupActionResult> {
-  const warWeek = await getDayWarWeek(id);
-  if (!warWeek) return { ok: false, error: DAY_NOT_FOUND };
+  // Only the current War Week's Days: the mutation refuses any other Day.
+  const warWeek = await getCurrentWarWeek();
+  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
   const organizer = await organizerContext(warWeek);
   if (!organizer.ok) return organizer;
 
@@ -89,8 +88,9 @@ export async function updateDay(
 }
 
 export async function deleteDay(id: string): Promise<SetupActionResult> {
-  const warWeek = await getDayWarWeek(id);
-  if (!warWeek) return { ok: false, error: DAY_NOT_FOUND };
+  // Only the current War Week's Days: the mutation refuses any other Day.
+  const warWeek = await getCurrentWarWeek();
+  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
   const organizer = await organizerContext(warWeek);
   if (!organizer.ok) return organizer;
 

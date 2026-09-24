@@ -161,7 +161,8 @@ function mustPhrase(issue: z.core.$ZodIssue): string | null {
       if (issue.message.startsWith("must ")) return issue.message;
       if (issue.format === "url") return "must be an https URL";
       if (issue.format === "email") return "must be a valid email";
-      return "must be a date";
+      if (issue.format === "date") return "must be a date";
+      return null;
     case "invalid_type":
       return "must be filled in";
     default:
