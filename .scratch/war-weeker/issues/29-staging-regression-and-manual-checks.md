@@ -10,7 +10,7 @@
 
 - [ ] **Reset the seed on staging and production.** Run the Seed workflow with reset (`confirm_reset` = the environment name) once all seed-changing tickets (04 leftovers, 20's demo email, 22's Placement Points) have merged. The old keyed Awards (`mvp`, `spirit`) survive a plain reload. Warning: after ticket 25 lands, a reseed wipes any UI setup edits.
 - [ ] **Check the guessed links.** Open a few past editions on staging and click the wiki link (`https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-<year>` is an unverified pattern). Past years' Slack links go to the workspace root, so decide whether that's acceptable. Record broken years in Comments. The fix is a seed edit plus a reseed.
-- [ ] **Set `MCP_TOKEN`** (ticket 21) in Vercel for staging and production and redeploy.
+- [x] **Set `MCP_TOKEN`** (ticket 21) in Vercel for staging and production and redeploy.
 - [ ] Sign in inside the browser pane when the regression thread asks. The agent never enters credentials.
 
 ## Regression walk (agent, in the browser pane)
