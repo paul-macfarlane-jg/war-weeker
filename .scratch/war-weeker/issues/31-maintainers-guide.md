@@ -33,3 +33,5 @@ Proposed by Claude on 2026-09-24. Confirm at the start of `/implement`.
 - [ ] `pnpm format:check` passes.
 
 ## Comments
+
+- 2026-09-24 (Claude): Implemented in `docs/maintainers-guide.md`; proposed Decisions taken as written. Slack omitted from the access checklist because ticket 15 is still `ready-for-agent`. Spot-check: a fresh read-only agent given only "Jason wants to add an MCP tool that returns the Competitions" found the guide via `CLAUDE.md`, followed the "Add an MCP tool" recipe, and confirmed every path and command in it; its two notes (name `src/app/api/mcp/route.ts`, stress no points while Standings are hidden) were folded into the recipe. `pnpm format:check` passes.

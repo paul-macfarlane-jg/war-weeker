@@ -51,7 +51,9 @@ Restart Claude Code, open it in the repo folder, and it reads `CLAUDE.md`
 automatically. [`docs/atlas-operators-guide.md`](./atlas-operators-guide.md)
 explains, in plain language, what Atlas does here.
 
-Pick the lightest route that fits:
+Pick the lightest route that fits (the full route, including optional
+`/atlas-red-team` and `/atlas-plan` steps, is in `CLAUDE.md` under "Atlas
+repository workflow"):
 
 | Change                                  | Run                                                                        |
 | --------------------------------------- | -------------------------------------------------------------------------- |
@@ -86,7 +88,7 @@ before it says it's done.
 | MCP server (Claude connector)              | `src/app/api/mcp/route.ts`, tools in `src/mcp/`, list in `src/mcp/tools.ts` |
 | Who can do what                            | `src/lib/access.ts`, `src/auth/organizer.ts`                           |
 | Smoke test                                 | `scripts/smoke.ts`                                                     |
-| Past wiki text for history                 | `old-wikis/2016.txt` … `old-wikis/2025.txt`                            |
+| Past wiki text for history                 | `old-wikis/2016.txt` … `old-wikis/2026.txt`                            |
 | CI, deployed migrations, seeding           | `.github/workflows/` (`ci.yml`, `migrate.yml`, `seed.yml`)             |
 
 The words in code come from [`CONTEXT.md`](../CONTEXT.md). The ones you'll
