@@ -51,3 +51,5 @@ No `blocks-promotion` findings. No app console errors, no axe violations on the 
 Not exercised: the "Which one is you?" picker (Paul's email matches the roster, so the highlight path was taken instead), the Claude Code bearer-token MCP connection (`MCP_TOKEN` is Paul's Vercel step), the guessed wiki links (they redirect to a Google login; Paul checks them signed in).
 
 Round 2 runs after the round 1 fixes (32, 33) merge to `staging`.
+
+**2026-09-24 17:10 ET, Claude (implement):** Round 1 PR: https://github.com/paul-macfarlane/war-weeker/pull/46 (base `staging`). Ticket stays `in-progress` until round 2 and Paul's manual steps.
