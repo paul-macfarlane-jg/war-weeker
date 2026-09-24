@@ -25,6 +25,13 @@ export type ThemeColors = Pick<
  * no DOM, no I/O.
  */
 export function warWeekThemeStyle(warWeek: ThemeColors): CSSProperties {
+  const bg = warWeek.backgroundColor;
+  const fg = warWeek.foregroundColor;
+  // Muted surfaces lean from the background toward the text, and muted text
+  // leans back toward the background: symmetric, so light and dark themes
+  // both keep hover, popover and input states readable.
+  const mutedSurface = `color-mix(in oklch, ${bg}, ${fg} 12%)`;
+  const mutedText = `color-mix(in oklch, ${fg}, ${bg} 35%)`;
   return {
     "--primary": warWeek.primaryColor,
     "--primary-foreground": warWeek.primaryForegroundColor,
@@ -36,6 +43,13 @@ export function warWeekThemeStyle(warWeek: ThemeColors): CSSProperties {
     "--card-foreground": warWeek.foregroundColor,
     "--border": warWeek.accentColor,
     "--ring": warWeek.primaryColor,
+    "--muted": mutedSurface,
+    "--muted-foreground": mutedText,
+    "--secondary": mutedSurface,
+    "--secondary-foreground": mutedText,
+    "--popover": bg,
+    "--popover-foreground": fg,
+    "--input": `color-mix(in oklch, ${bg}, ${fg} 20%)`,
     "--font-sans": FONT_PRESET_VAR[warWeek.fontPreset],
     "--ww-primary": warWeek.primaryColor,
   } as CSSProperties;
