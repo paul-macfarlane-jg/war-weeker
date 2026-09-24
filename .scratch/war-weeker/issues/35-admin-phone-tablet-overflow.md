@@ -37,6 +37,7 @@ Causes:
 
 **[CLOSEOUT]** (2026-09-24, branch `fix/35-admin-overflow`)
 
+- PR: https://github.com/paul-macfarlane/war-weeker/pull/49
 - Found during the production smoke test; see the smoke notes in ticket 34's comments for everything else checked.
 - Verification: the same classes were applied to the live production DOM in same-origin iframes at 375, 768, 812, 900, 1024 and 1280px. All four pages measured 0px overflow (before: see the table above). Re-check on production after deploy.
 - `pnpm gate` PASS (typecheck, lint, 498 tests, build, smoke 139 ok).
