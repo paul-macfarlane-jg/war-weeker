@@ -57,7 +57,7 @@ function TeamRow({ team, teamLabel }: { team?: SetupTeam; teamLabel: string }) {
         aria-label={team ? `${teamLabel} ${team.name}` : `New ${teamLabel}`}
         className="flex flex-col gap-2 sm:flex-row sm:items-end"
       >
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
+        <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm font-medium">
           Name
           <input
             name="name"
@@ -181,7 +181,7 @@ function ParticipantRow({
       <form
         onSubmit={submit}
         aria-label={participant ? participant.displayName : "New Participant"}
-        className="grid gap-2 sm:grid-cols-[1.4fr_0.7fr_1.4fr_1fr_auto_auto] sm:items-end"
+        className="grid gap-2 sm:grid-cols-3 sm:items-end xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto_auto]"
       >
         <label className="flex flex-col gap-1 text-sm font-medium">
           Display name
