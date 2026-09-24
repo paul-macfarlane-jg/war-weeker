@@ -34,7 +34,7 @@ export default async function AdminAwardsPage() {
         {awards.length === 0 ? (
           <p className="text-foreground/70 text-sm">No Awards yet.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-foreground/60 border-border border-b">
                 <tr>
