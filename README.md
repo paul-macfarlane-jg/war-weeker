@@ -78,6 +78,10 @@ Participant sees: hidden Standings stay hidden, and no tool returns an email
 or the Organizer allowlist (Announcement authors come back as the handle
 before the `@`).
 
+`/llms.txt` (public, static copy, no War Week data) describes the site, its
+pages and these tools for AI agents. Its tool list comes from
+`src/mcp/tools.ts`, the same metadata the MCP route registers.
+
 `/api/mcp` lets a request in when any of these holds; otherwise it answers
 401:
 

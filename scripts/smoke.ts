@@ -6,6 +6,8 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
+import { MCP_TOOLS } from "@/mcp/tools";
+
 loadEnvConfig(process.cwd());
 
 const PORT = 3100;
@@ -408,6 +410,33 @@ async function assertInstallable() {
       ok(check);
     } else {
       fail(check, JSON.stringify(checks));
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertLlmsTxt() {
+  const check =
+    "GET /llms.txt returns 200 text/plain without a session and names every MCP tool";
+  try {
+    const res = await fetch(`${BASE_URL}/llms.txt`, { redirect: "manual" });
+    const body = await res.text();
+    const checks = {
+      status: res.status === 200,
+      contentType: (res.headers.get("content-type") ?? "").startsWith(
+        "text/plain",
+      ),
+      title: body.startsWith("# War Weeker\n"),
+      tools: Object.keys(MCP_TOOLS).every((name) =>
+        body.includes(`\`${name}\``),
+      ),
+      endpoint: body.includes(`${BASE_URL}/api/mcp`),
+    };
+    if (Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
     }
   } catch (error) {
     fail(check, String(error));
@@ -3142,6 +3171,7 @@ async function main() {
       await assertHomeNowNext();
       await assertMoreLinks();
       await assertInstallable();
+      await assertLlmsTxt();
       await assertHistory();
       await assertArchiveDetail();
       await assertCompetitions();

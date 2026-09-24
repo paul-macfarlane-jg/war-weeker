@@ -1,7 +1,5 @@
+import { REPO_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
-
-/** The public source repository credited in the footer. */
-export const REPO_URL = "https://github.com/paul-macfarlane/war-weeker";
 
 /**
  * Quiet credit line shown on every page. Colors come from the surrounding
