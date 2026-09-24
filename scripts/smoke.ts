@@ -313,7 +313,7 @@ async function runQuery<T extends Record<string, unknown>>(
 
 async function assertMoreLinks() {
   const check =
-    "GET /xi/more links to Competitions, Teams, Awards, FAQ and history";
+    "GET /xi/more links to Competitions, Teams, Awards, FAQ, history and Install app";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/more`);
     const body = await res.text();
@@ -323,11 +323,62 @@ async function assertMoreLinks() {
       awards: body.includes('href="/xi/awards"'),
       faq: body.includes('href="/xi/faq"'),
       history: body.includes('href="/history"'),
+      install: body.includes('href="/install"'),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(check);
     } else {
       fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertInstallable() {
+  const check =
+    "PWA: manifest, icons and service worker load without a session, pages link them, and /install renders";
+  try {
+    const manifestRes = await fetch(`${BASE_URL}/manifest.webmanifest`);
+    const manifest = manifestRes.ok
+      ? ((await manifestRes.json()) as {
+          display?: string;
+          start_url?: string;
+          icons?: { src: string; sizes: string; purpose?: string }[];
+        })
+      : {};
+    const icons = manifest.icons ?? [];
+    const iconPaths = [
+      ...icons.map((icon) => icon.src),
+      "/icons/apple-touch-icon.png",
+    ];
+    const iconStatuses = await Promise.all(
+      iconPaths.map(async (src) => (await fetch(`${BASE_URL}${src}`)).status),
+    );
+    const sw = await fetch(`${BASE_URL}/sw.js`);
+    const home = await (await signedInFetch(`${BASE_URL}/xi`)).text();
+    const install = await signedInFetch(`${BASE_URL}/install`);
+    const installBody = await install.text();
+    const checks = {
+      manifest: manifestRes.status === 200,
+      standalone: manifest.display === "standalone",
+      startUrl: manifest.start_url === "/",
+      sizes: ["192x192", "512x512"].every((size) =>
+        icons.some((icon) => icon.sizes === size),
+      ),
+      maskable: icons.some((icon) => icon.purpose === "maskable"),
+      icons: iconStatuses.every((status) => status === 200),
+      serviceWorker: sw.status === 200,
+      manifestLink: home.includes('rel="manifest"'),
+      appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
+      install:
+        install.status === 200 && installBody.includes("Install War Weeker"),
+      installFooter: installBody.includes("Jahnel Group"),
+    };
+    if (Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, JSON.stringify(checks));
     }
   } catch (error) {
     fail(check, String(error));
@@ -2810,6 +2861,7 @@ async function main() {
       await assertSchedule();
       await assertHomeNowNext();
       await assertMoreLinks();
+      await assertInstallable();
       await assertHistory();
       await assertArchiveDetail();
       await assertCompetitions();
