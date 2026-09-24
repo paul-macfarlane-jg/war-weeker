@@ -4,6 +4,7 @@ import type { WarWeek } from "@/db/schema";
 import {
   type ArchiveDetail,
   awardRecipients,
+  isArchived,
   isLinkOnly,
   selectArchive,
 } from "@/lib/archive";
@@ -67,6 +68,14 @@ describe("selectArchive", () => {
 
   it("returns an empty list when nothing is complete", () => {
     expect(selectArchive([warWeekFixture({ status: "live" })])).toEqual([]);
+  });
+});
+
+describe("isArchived", () => {
+  it("archives complete War Weeks only", () => {
+    expect(isArchived({ status: "complete" })).toBe(true);
+    expect(isArchived({ status: "live" })).toBe(false);
+    expect(isArchived({ status: "upcoming" })).toBe(false);
   });
 });
 

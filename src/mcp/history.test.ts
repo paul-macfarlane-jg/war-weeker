@@ -130,7 +130,7 @@ describe("toHistoryResult", () => {
       found: false,
       year: 2030,
       message:
-        "No past War Week found for 2030. Call list_history for the years in the Archive.",
+        "No past War Week found for 2030. The Archive holds complete War Weeks only: call list_history for its years, or get_current_war_week for the live or upcoming one.",
     });
   });
 });

@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
 import {
@@ -9,15 +9,11 @@ import {
   team,
   warWeek,
 } from "@/db/schema";
-import { type ArchiveDetail, selectArchive } from "@/lib/archive";
+import { type ArchiveDetail, isArchived, selectArchive } from "@/lib/archive";
 
-/** The Archive list: every `complete` War Week, newest first. */
+/** The Archive list: every archived War Week, newest first. */
 export async function listArchive(dbOrTx: DBOrTx = db): Promise<WarWeek[]> {
-  const rows = await dbOrTx
-    .select()
-    .from(warWeek)
-    .where(eq(warWeek.status, "complete"));
-  return selectArchive(rows);
+  return selectArchive(await dbOrTx.select().from(warWeek));
 }
 
 /** A past War Week's Teams and Awards (with recipient names). */
@@ -85,7 +81,7 @@ export async function getArchiveDetailByYear(
   const [row] = await dbOrTx
     .select()
     .from(warWeek)
-    .where(and(eq(warWeek.year, year), eq(warWeek.status, "complete")))
+    .where(eq(warWeek.year, year))
     .limit(1);
-  return row ? getArchiveDetail(row, dbOrTx) : undefined;
+  return row && isArchived(row) ? getArchiveDetail(row, dbOrTx) : undefined;
 }

@@ -7,6 +7,7 @@ import { NowNextSection } from "@/components/now-next";
 import { HomeStandings } from "@/components/reveal-standings";
 import { Button } from "@/components/ui/button";
 import { WarWeekHero } from "@/components/war-week-hero";
+import { isArchived } from "@/lib/archive";
 import { computeNowNext, resolveClock } from "@/lib/schedule";
 import { getArchiveDetail } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
@@ -25,7 +26,7 @@ export default async function EditionHomePage({
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
 
-  if (warWeek.status === "complete") {
+  if (isArchived(warWeek)) {
     return <ArchiveDetailView detail={await getArchiveDetail(warWeek)} />;
   }
 

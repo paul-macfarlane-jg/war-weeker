@@ -30,8 +30,8 @@ function Highlights({ highlights }: { highlights: string[] }) {
     <section className="flex flex-col gap-2">
       <h2 className="text-lg font-semibold">Highlights</h2>
       <ul className="flex list-disc flex-col gap-1 pl-5 text-sm">
-        {highlights.map((highlight) => (
-          <li key={highlight}>{highlight}</li>
+        {highlights.map((highlight, index) => (
+          <li key={index}>{highlight}</li>
         ))}
       </ul>
     </section>
@@ -63,8 +63,8 @@ export function ArchiveDetailView({ detail }: { detail: ArchiveDetail }) {
         {linkOnly ? (
           <section className="border-border flex flex-col gap-4 rounded-lg border px-4 py-4">
             <p className="text-foreground/80 text-sm">
-              The story of War Week {warWeek.edition.toUpperCase()} lives on the
-              original wiki page.
+              Most of War Week {warWeek.edition.toUpperCase()}&apos;s story
+              lives on the original wiki page.
             </p>
             <Highlights highlights={warWeek.highlights} />
             <WikiLink wikiUrl={warWeek.wikiUrl} />
@@ -172,9 +172,7 @@ export function ArchiveCard({ warWeek }: { warWeek: WarWeek }) {
               <span className="font-medium">{warWeek.winner}</span>
             </>
           ) : (
-            <span className="text-foreground/60">
-              Details on the original wiki page
-            </span>
+            <span className="text-foreground/60">No winner recorded</span>
           )}
         </span>
       </Link>

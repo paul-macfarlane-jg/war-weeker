@@ -16,11 +16,14 @@ export type ArchiveDetail = {
   awards: ArchiveAward[];
 };
 
-/** The Archive: `complete` War Weeks only, newest year first. */
+/** A War Week belongs in the Archive once it's `complete`. */
+export function isArchived(warWeek: Pick<WarWeek, "status">): boolean {
+  return warWeek.status === "complete";
+}
+
+/** The Archive: archived War Weeks only, newest year first. */
 export function selectArchive(warWeeks: WarWeek[]): WarWeek[] {
-  return warWeeks
-    .filter((w) => w.status === "complete")
-    .sort((a, b) => b.year - a.year);
+  return warWeeks.filter(isArchived).sort((a, b) => b.year - a.year);
 }
 
 /**
