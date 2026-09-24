@@ -43,14 +43,22 @@ export function adminAccess(
 }
 
 const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];
+/**
+ * Exact public paths. `/about` is exact, not a prefix: the top-level
+ * `[edition]` route would otherwise turn `/about/leaderboard` into a public
+ * edition page.
+ */
+const PUBLIC_PATHS = ["/about"];
 
 /**
- * The only paths reachable without a session: the sign-in page and
- * better-auth's own routes. Everything else needs a Jahnel Group sign-in,
- * except that `/api/mcp` also takes `canUseMcp` (see CONTEXT.md, "Access
- * rules").
+ * The only paths reachable without a session: the sign-in page,
+ * better-auth's own routes and the About page (static copy and media, no
+ * War Week data). Everything else needs a Jahnel Group sign-in, except that
+ * `/api/mcp` also takes `canUseMcp` (see CONTEXT.md, "Access rules").
+ * A prefix matches itself or a `/`-separated subpath, never `/sign-inx`.
  */
 export function isPublicPath(pathname: string): boolean {
+  if (PUBLIC_PATHS.includes(pathname)) return true;
   return PUBLIC_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );

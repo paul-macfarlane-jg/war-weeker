@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { REPO_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +16,12 @@ export function SiteFooter({ className }: { className?: string }) {
       )}
     >
       <span>© {new Date().getFullYear()} Jahnel Group</span>
+      <Link
+        href="/about"
+        className="hover:text-foreground underline underline-offset-4"
+      >
+        About
+      </Link>
       <a
         href={REPO_URL}
         target="_blank"

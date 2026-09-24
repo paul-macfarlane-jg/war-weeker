@@ -347,7 +347,7 @@ async function assertPlacementPointsSeeded() {
 
 async function assertMoreLinks() {
   const check =
-    "GET /xi/more links to Competitions, Teams, Awards, FAQ, history and Install app";
+    "GET /xi/more links to Competitions, Teams, Awards, FAQ, history, Install app and About";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/more`);
     const body = await res.text();
@@ -358,6 +358,7 @@ async function assertMoreLinks() {
       faq: body.includes('href="/xi/faq"'),
       history: body.includes('href="/history"'),
       install: body.includes('href="/install"'),
+      about: body.includes('href="/about"'),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(check);
@@ -385,6 +386,7 @@ async function assertInstallable() {
     const iconPaths = [
       ...icons.map((icon) => icon.src),
       "/icons/apple-touch-icon.png",
+      "/favicon.ico",
     ];
     const iconStatuses = await Promise.all(
       iconPaths.map(async (src) => (await fetch(`${BASE_URL}${src}`)).status),
@@ -405,6 +407,7 @@ async function assertInstallable() {
       serviceWorker: sw.status === 200,
       manifestLink: home.includes('rel="manifest"'),
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
+      favicon: home.includes('rel="icon" href="/favicon.ico'),
       install:
         install.status === 200 && installBody.includes("Install War Weeker"),
       installFooter: installBody.includes("Jahnel Group"),
@@ -854,6 +857,46 @@ async function setSmokeOrganizer(on: boolean) {
   );
 }
 
+async function assertAboutPage() {
+  const check =
+    "anonymous GET /about is 200 with the Reveal video, six feature cards, the XI link and no sign-in redirect";
+  try {
+    const res = await fetch(`${BASE_URL}/about`, { redirect: "manual" });
+    const body = await res.text();
+    const checks = {
+      video: body.includes('src="/about/reveal.mp4"'),
+      poster: body.includes('poster="/about/reveal-poster.png"'),
+      cards: (body.match(/data-feature="/g) ?? []).length === 6,
+      xi: body.includes('href="/xi"'),
+      noTooling: !/claude code|atlas/i.test(body),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+
+  // /about is an exact match: the [edition] route would otherwise make
+  // /about/leaderboard a public edition page.
+  for (const pathname of ["/about/leaderboard", "/aboutx"]) {
+    const privateCheck = `anonymous GET ${pathname} redirects to sign-in`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const location = res.headers.get("location") ?? "";
+      if (res.status === 307 && location.includes("/sign-in")) {
+        ok(privateCheck);
+      } else {
+        fail(privateCheck, `status=${res.status} location=${location}`);
+      }
+    } catch (error) {
+      fail(privateCheck, String(error));
+    }
+  }
+}
+
 async function assertSignInPage() {
   const check =
     "GET /sign-in renders without OAuth credentials and says Google isn't configured";
@@ -864,6 +907,7 @@ async function assertSignInPage() {
       heading: body.includes("Sign in to War Weeker"),
       domain: body.includes("Use your @jahnelgroup.com Google account."),
       notConfigured: body.includes("configured on this server"),
+      about: body.includes('href="/about"'),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(check);
@@ -3677,6 +3721,7 @@ async function main() {
       await assertFreeForAllRoster();
       await assertYouHighlight(sessions);
       await assertMcp();
+      await assertAboutPage();
       await assertSignInPage();
       await assertAdminGate(sessions);
       await assertSignInRequired();
