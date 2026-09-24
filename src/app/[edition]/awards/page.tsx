@@ -1,6 +1,7 @@
 import { Medal } from "lucide-react";
 import { notFound } from "next/navigation";
 
+import { Avatar } from "@/components/avatar";
 import { getAwards } from "@/queries/awards";
 
 import { getWarWeekForEdition } from "../war-week";
@@ -47,9 +48,21 @@ export default async function AwardsPage({
                 </p>
               ) : null}
               {award.participants.length > 0 ? (
-                <p className="text-primary text-sm font-medium">
-                  {award.participants.map((p) => p.displayName).join(", ")}
-                </p>
+                <ul className="flex flex-col gap-1">
+                  {award.participants.map((p) => (
+                    <li
+                      key={p.id}
+                      className="text-primary flex items-center gap-2 text-sm font-medium"
+                    >
+                      <Avatar
+                        name={p.displayName}
+                        teamColor={p.teamColor}
+                        primaryColor={warWeek.primaryColor}
+                      />
+                      {p.displayName}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
               {award.description ? (
                 <p className="text-foreground/70 text-sm">

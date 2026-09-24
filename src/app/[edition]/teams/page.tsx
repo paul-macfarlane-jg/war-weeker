@@ -14,7 +14,7 @@ export default async function TeamsPage({
   if (!warWeek) notFound();
 
   const roster = await getRoster(warWeek);
-  const { teamLabel, leaderTitle } = warWeek;
+  const { teamLabel, leaderTitle, primaryColor } = warWeek;
   const heading = rosterHeading(warWeek.mode, teamLabel);
 
   if (roster.kind === "free-for-all") {
@@ -27,6 +27,8 @@ export default async function TeamsPage({
         <RosterList
           participants={roster.participants}
           leaderTitle={leaderTitle}
+          teamColor={null}
+          primaryColor={primaryColor}
         />
       </main>
     );
@@ -44,6 +46,7 @@ export default async function TeamsPage({
           team={team}
           teamLabel={teamLabel}
           leaderTitle={leaderTitle}
+          primaryColor={primaryColor}
         />
       ))}
       {roster.unassigned.length > 0 ? (
@@ -52,6 +55,8 @@ export default async function TeamsPage({
           <RosterList
             participants={roster.unassigned}
             leaderTitle={leaderTitle}
+            teamColor={null}
+            primaryColor={primaryColor}
           />
         </section>
       ) : null}
