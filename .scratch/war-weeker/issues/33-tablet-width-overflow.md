@@ -7,7 +7,7 @@
 
 **Blocked by:** none
 
-**Status:** in-progress
+**Status:** done
 
 **Severity:** fix-tonight (a judge on a half-width window or an iPad lands on a sideways-scrolling page)
 
@@ -18,8 +18,23 @@
 
 ## Acceptance criteria
 
-- [ ] `/xi/schedule` and `/admin/setup/teams` have zero horizontal overflow at 768, 812, 900, 1024 and 1280px, and still at 375px.
-- [ ] Screenshots at 812px of both pages under `test-results/33-tablet-width-overflow/`.
-- [ ] `pnpm gate` passes.
+- [x] `/xi/schedule` and `/admin/setup/teams` have zero horizontal overflow at 768, 812, 900, 1024 and 1280px, and still at 375px.
+- [x] Screenshots at 812px of both pages under `test-results/33-tablet-width-overflow/`.
+- [x] `pnpm gate` passes.
 
 ## Comments
+
+**[CLOSEOUT]** (2026-09-24, branch `fix/32-33-hover-and-overflow`, one PR with ticket 32)
+
+- Delivered in the main session (Opus 5.5), no workers.
+- `pnpm gate` PASS (typecheck, lint, 498 tests, build, smoke 139 ok).
+- Evidence: `pnpm tsx scripts/fix-32-33-evidence.ts` against a local build and seeded Postgres.
+- Nav: bottom tab bar kept up to `lg` (`primary-nav.tsx`, `[edition]/layout.tsx` padding); Admin and Sign out stay reachable from More below `lg`.
+- Setup teams: roster rows are three columns (two rows) from `sm` and one row from `xl` with `minmax(0,…)` columns; the Team row's name label got `min-w-0` (its input was the remaining overflow once the roster was fixed).
+- Overflow (`scrollWidth - clientWidth`) is 0px for `/xi/schedule` and `/admin/setup/teams` at 375, 768, 812, 900, 1024 and 1280. Screenshots: `test-results/33-tablet-width-overflow/01-xi-schedule-812.png`, `02-setup-teams-812.png`. PASS.
+- Deviation: the roster's single-row layout starts at `xl`, not `lg`, since the admin sidebar leaves only ~736px of content at 1024.
+
+**[AI CODE REVIEW]** (2026-09-24, `/code-review` since `staging`, two axes)
+
+- Standards: one hard finding, `docs/agents/testing.md` requires clearing `test-results/` per work package; fixed by removing ticket 29's evidence (still at `73a8588`). Judgement call: `scripts/fix-32-33-evidence.ts` duplicates the CDP harness of `scripts/regression-29-evidence.ts`; kept, matching the per-ticket evidence-script pattern.
+- Spec: no missing requirements, no scope creep, nothing wrong; only the Status/AC boxes were still open, closed in this commit.

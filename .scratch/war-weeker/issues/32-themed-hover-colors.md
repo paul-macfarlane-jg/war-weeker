@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** in-progress
+**Status:** done
 
 **Severity:** fix-tonight (visible on every hover during the demo)
 
@@ -19,8 +19,22 @@
 
 ## Acceptance criteria
 
-- [ ] `themeStyle()` emits the tokens above; `src/lib/theme.test.ts` covers a dark and a light theme and asserts every token that `button.tsx` variants reference is set.
-- [ ] Hovering "Sign out" in the XI top nav, a rich-text toolbar button, and an outline button on `/x` keeps the label readable (screenshot of each under `test-results/32-themed-hover-colors/`).
-- [ ] `pnpm gate` passes.
+- [x] `themeStyle()` emits the tokens above; `src/lib/theme.test.ts` covers a dark and a light theme and asserts every token that `button.tsx` variants reference is set.
+- [x] Hovering "Sign out" in the XI top nav, a rich-text toolbar button, and an outline button on `/x` keeps the label readable (screenshot of each under `test-results/32-themed-hover-colors/`).
+- [x] `pnpm gate` passes.
 
 ## Comments
+
+**[CLOSEOUT]** (2026-09-24, branch `fix/32-33-hover-and-overflow`, one PR with ticket 33)
+
+- Delivered in the main session (Opus 5.5), no workers.
+- `pnpm gate` PASS (typecheck, lint, 498 tests, build, smoke 139 ok).
+- Evidence: `pnpm tsx scripts/fix-32-33-evidence.ts` against a local build and seeded Postgres.
+- `themeStyle` is `warWeekThemeStyle` in `src/lib/theme.ts`; it now sets `--muted`, `--muted-foreground`, `--secondary`, `--secondary-foreground`, `--popover`, `--popover-foreground`, `--input` with the decided mixes. `src/lib/theme.test.ts` covers a dark (XI) and a light theme and every color token `button.tsx` draws (destructive stays the fixed app red). PASS.
+- Hovered label colors: XI Sign out, open Video toolbar button and Bold toolbar button all `rgb(209,255,214)` on `oklch(0.115 0.009 148)`; `/x` outline button `rgb(28,25,23)` on `oklch(0.88 0.024 90)`. Screenshots: `test-results/32-themed-hover-colors/01-xi-sign-out-hover.png`, `02-toolbar-video-open-hover.png`, `03-toolbar-bold-hover.png`, `04-x-outline-button-hover.png`. PASS.
+- Deviation: none.
+
+**[AI CODE REVIEW]** (2026-09-24, `/code-review` since `staging`, two axes)
+
+- Standards: one hard finding, `docs/agents/testing.md` requires clearing `test-results/` per work package; fixed by removing ticket 29's evidence (still at `73a8588`). Judgement call: `scripts/fix-32-33-evidence.ts` duplicates the CDP harness of `scripts/regression-29-evidence.ts`; kept, matching the per-ticket evidence-script pattern.
+- Spec: no missing requirements, no scope creep, nothing wrong; only the Status/AC boxes were still open, closed in this commit.
