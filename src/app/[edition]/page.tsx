@@ -1,12 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { ArchiveDetailView } from "@/components/archive";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { NowNextSection } from "@/components/now-next";
 import { HomeStandings } from "@/components/reveal-standings";
 import { Button } from "@/components/ui/button";
+import { WarWeekHero } from "@/components/war-week-hero";
+import { isArchived } from "@/lib/archive";
 import { computeNowNext, resolveClock } from "@/lib/schedule";
-import { WAR_WEEK_STATUS_LABEL, formatDateRange } from "@/lib/war-week-display";
+import { getArchiveDetail } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 
@@ -23,8 +26,10 @@ export default async function EditionHomePage({
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
 
-  const editionLabel = warWeek.edition.toUpperCase();
-  const statusLabel = WAR_WEEK_STATUS_LABEL[warWeek.status];
+  if (isArchived(warWeek)) {
+    return <ArchiveDetailView detail={await getArchiveDetail(warWeek)} />;
+  }
+
   const [standings, schedule] = await Promise.all([
     getStandings(warWeek),
     getSchedule(warWeek.id),
@@ -33,50 +38,9 @@ export default async function EditionHomePage({
 
   return (
     <main className="mx-auto flex max-w-md flex-col md:max-w-3xl md:py-8">
-      {warWeek.bannerUrl ? (
-        <img
-          src={warWeek.bannerUrl}
-          alt={`War Week ${editionLabel} banner`}
-          className="h-48 w-full object-cover md:h-72 md:rounded-lg"
-        />
-      ) : (
-        <div className="bg-accent text-accent-foreground flex h-48 w-full items-center justify-center text-2xl font-bold">
-          War Week {editionLabel}
-        </div>
-      )}
+      <WarWeekHero warWeek={warWeek} />
 
-      <div className="flex flex-col gap-4 px-4 py-6">
-        <div className="flex items-start gap-3">
-          {warWeek.logoUrl ? (
-            <img
-              src={warWeek.logoUrl}
-              alt={`War Week ${editionLabel} logo`}
-              className="size-14 shrink-0 rounded-md"
-            />
-          ) : null}
-          <div className="flex flex-col gap-1">
-            <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
-              War Week
-            </span>
-            <h1 className="text-3xl font-bold">
-              War Week {editionLabel}{" "}
-              <span className="text-foreground/60">{warWeek.year}</span>
-            </h1>
-            <p className="text-primary text-xl font-semibold">
-              {warWeek.storyTheme}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="border-border rounded-full border px-3 py-1 font-medium">
-            {statusLabel}
-          </span>
-          <span className="text-foreground/70">
-            {formatDateRange(warWeek.startDate, warWeek.endDate)}
-          </span>
-        </div>
-
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
         <Button
           size="lg"
           className="w-full md:w-auto md:self-start"

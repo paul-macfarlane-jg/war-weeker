@@ -1,4 +1,4 @@
-import { ChevronRight, Shield, Trophy, Users } from "lucide-react";
+import { ChevronRight, History, Shield, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -26,6 +26,7 @@ export default async function MorePage({
       href: `/${warWeek.edition}/teams`,
       icon: Users,
     },
+    { label: "War Week history", href: "/history", icon: History },
     ...(account.isOrganizer
       ? [{ label: "Admin", href: "/admin", icon: Shield }]
       : []),

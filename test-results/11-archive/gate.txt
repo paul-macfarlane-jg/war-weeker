@@ -13,16 +13,16 @@ Generating route types...
 > eslint .
 
 
-/Users/pmacfarlane/jg-code/war-weeker/src/app/[edition]/page.tsx
-  37:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-  51:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-
 /Users/pmacfarlane/jg-code/war-weeker/src/app/sign-in/page.tsx
   46:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
   57:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 /Users/pmacfarlane/jg-code/war-weeker/src/components/roster.tsx
   56:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/pmacfarlane/jg-code/war-weeker/src/components/war-week-hero.tsx
+  14:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  28:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 ✖ 5 problems (0 errors, 5 warnings)
 
@@ -36,13 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
-(node:45060) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:58451) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
- Test Files  19 passed (19)
-      Tests  232 passed (232)
-   Start at  20:55:27
-   Duration  2.39s (transform 859ms, setup 0ms, import 10.30s, tests 3.04s, environment 1ms)
+ Test Files  21 passed (21)
+      Tests  245 passed (245)
+   Start at  22:13:16
+   Duration  2.51s (transform 1.05s, setup 0ms, import 11.64s, tests 3.15s, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -50,15 +50,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 20ms
+✓ Running next.config.ts took 17ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.3s
+✓ Compiled successfully in 2.7s
   Running TypeScript ...
-  Finished TypeScript in 3.4s ...
+  Finished TypeScript in 3.7s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 110ms
+✓ Generating static pages using 9 workers (3/3) in 163ms
   Finalizing page optimization ...
 
 Route (app)
@@ -78,6 +78,7 @@ Route (app)
 ├ ƒ /admin/standings
 ├ ƒ /api/auth/[...all]
 ├ ƒ /api/mcp
+├ ƒ /history
 └ ƒ /sign-in
 
 
@@ -147,9 +148,9 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
-- Network:       http://172.19.6.25:3100
-✓ Ready in 128ms
-✓ Running next.config.ts took 41ms
+- Network:       http://192.168.1.120:3100
+✓ Ready in 148ms
+✓ Running next.config.ts took 46ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -157,7 +158,10 @@ ok - GET /zz returns 404
 ok - GET /xi/leaderboard responds and shows Standings hidden for the demo seed
 ok - GET /xi/schedule groups by Day with Day Themes, ET times and Competition links
 ok - GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next
-ok - GET /xi/more links to Competitions and Teams
+ok - GET /xi/more links to Competitions, Teams and history
+ok - GET /history lists every complete War Week, newest first, each in its own theme
+ok - GET /viii renders 2023 in its Harry Potter theme with stored winner, Houses, Awards, highlights and wiki link
+ok - GET /i, /ii, /iii render as link-only cards with the wiki link
 ok - GET /xi/competitions groups Competitions with max points and scoring
 ok - GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden
 ok - GET /xi/competitions/[id] lists Points Entries (target, points, note) once standings are revealed
@@ -168,11 +172,17 @@ ok - GET /iv/teams shows one roster of all Participants for a free-for-all War W
 ok - MCP tools/list includes get_current_war_week
 ok - MCP tools/list includes get_leaderboard
 ok - MCP tools/list includes get_schedule
+ok - MCP tools/list includes list_history
+ok - MCP tools/list includes get_history
 ok - MCP tools/call get_current_war_week returns edition xi
 ok - MCP get_leaderboard(team) returns the hidden result with no numbers
 ok - MCP get_leaderboard(individual) returns the hidden result with no numbers
 ok - MCP get_schedule(2026-02-24) returns only that Day
 ok - MCP get_schedule() returns all six XI Days
+ok - MCP list_history returns 2025 down to 2016
+ok - MCP get_history(2023) returns the stored winner, Houses, Awards and wiki link
+ok - MCP get_history(2030) returns a clear not-found result
+ok - MCP get_history(2026) returns a clear not-found result
 ok - GET /sign-in renders without OAuth credentials and says Google isn't configured
 ok - GET /api/auth/get-session answers null with no session
 ok - anonymous GET /admin redirects to sign-in
@@ -201,4 +211,3 @@ ok - revealStandings as an Organizer shows Standings on /xi, /xi/leaderboard and
 ok - hideStandings rejects a signed-in JG user off the allowlist
 ok - hideStandings as an Organizer returns /xi, /xi/leaderboard and MCP get_leaderboard to hidden
  ELIFECYCLE  Command failed with exit code 143.
-gate exit status: 0
