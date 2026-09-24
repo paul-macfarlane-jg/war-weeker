@@ -29,14 +29,21 @@ export default async function AdminPage() {
           >
             Enter points
           </Link>{" "}
-          and see the current standings, or{" "}
+          and see the current standings,{" "}
           <Link
             href="/admin/standings"
             className="text-primary underline underline-offset-4"
           >
             hide or reveal them
           </Link>
-          . Announcements and Awards are coming in later slices.
+          , or{" "}
+          <Link
+            href="/admin/announcements"
+            className="text-primary underline underline-offset-4"
+          >
+            post Announcements
+          </Link>
+          . Awards are coming in a later slice.
         </p>
       </div>
     </AdminShell>

@@ -15,7 +15,7 @@ const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
   { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
-  { label: "Announcements", icon: Megaphone, href: null },
+  { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
   { label: "Awards", icon: Medal, href: null },
 ] as const;
 
