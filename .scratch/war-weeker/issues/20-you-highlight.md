@@ -73,3 +73,5 @@ The seed gives XI's "Paul Macfarlane" `pmacfarlane@jahnelgroup.com`, so the live
   - `pnpm gate`: PASS (479 unit tests, 136 smoke `ok`, 0 FAIL).
 - Verified run commands: `pnpm gate`, then `pnpm tsx scripts/you-evidence.ts`.
 - No deployed smoke: this slice has no deploy.
+
+- PR: https://github.com/paul-macfarlane/war-weeker/pull/42
