@@ -90,6 +90,17 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   page go to `/sign-in` and come back afterwards; API routes, `/api/mcp`
   included, answer 401. Only `/sign-in` and `/api/auth/*` are public.
 
+## Points Entry rules
+
+- Organizers add, edit and delete Points Entries in `/admin/points`. A team
+  Competition takes only Teams, an individual one only Participants of the
+  same War Week; the server actions refuse anything else.
+- Going over a Competition's max points shows a warning and still saves.
+  Ties are just equal entries for each target.
+- An edit keeps the entry's entered-by email and entered-at time; the admin
+  ledger marks it as edited.
+- `/admin/points` shows the real Standings even while they're hidden.
+
 ## Seed idempotence rules
 
 A seed file loads in one transaction. Loading the same file twice leaves the
