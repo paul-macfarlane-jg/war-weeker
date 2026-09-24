@@ -1,12 +1,12 @@
 import { z } from "zod";
 
+import { announcementTitleSchema, videoUrlSchema } from "@/lib/announcements";
 import {
   pointsSchema as points,
   pointsEntryNoteSchema,
   pointsEntryTargetError,
 } from "@/lib/points-entry";
 import { contentInputSchema } from "@/lib/rich-text/content";
-import { isAllowedVideoUrl } from "@/lib/video";
 
 const hexColor = z
   .string()
@@ -143,15 +143,9 @@ export type AwardSeed = z.infer<typeof awardSeedSchema>;
 
 export const announcementSeedSchema = z.object({
   key: seedKey,
-  title: z.string().min(1).max(200),
+  title: announcementTitleSchema,
   body: contentInputSchema,
-  videoUrls: z
-    .array(
-      httpsUrl.refine(isAllowedVideoUrl, {
-        message: "must be a YouTube, Loom, Vimeo or Google Drive URL",
-      }),
-    )
-    .default([]),
+  videoUrls: z.array(videoUrlSchema).default([]),
   pinned: z.boolean().default(false),
   authorEmail: email,
   publishedAt: z.iso.datetime({ offset: true }),

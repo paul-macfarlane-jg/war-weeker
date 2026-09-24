@@ -179,7 +179,7 @@ describe("warWeekSeedSchema", () => {
     const fixture = loadFixture();
     fixture.announcements[0].videoUrls = ["https://evil.example.com/watch?v=1"];
     expect(rejectionOf(fixture)).toContain(
-      "announcements.0.videoUrls.0: must be a YouTube, Loom, Vimeo or Google Drive URL",
+      "announcements.0.videoUrls.0: must be a YouTube, Loom, Vimeo or Google Drive video link",
     );
   });
 

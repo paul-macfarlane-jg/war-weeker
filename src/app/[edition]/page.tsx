@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AnnouncementCard } from "@/components/announcement-card";
 import { ArchiveDetailView } from "@/components/archive";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { NowNextSection } from "@/components/now-next";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { WarWeekHero } from "@/components/war-week-hero";
 import { isArchived } from "@/lib/archive";
 import { computeNowNext, resolveClock } from "@/lib/schedule";
+import { getPinnedAnnouncement } from "@/queries/announcements";
 import { getArchiveDetail } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
@@ -30,9 +32,10 @@ export default async function EditionHomePage({
     return <ArchiveDetailView detail={await getArchiveDetail(warWeek)} />;
   }
 
-  const [standings, schedule] = await Promise.all([
+  const [standings, schedule, pinnedAnnouncement] = await Promise.all([
     getStandings(warWeek),
     getSchedule(warWeek.id),
+    getPinnedAnnouncement(warWeek),
   ]);
   const nowNext = computeNowNext(schedule, resolveClock(at));
 
@@ -57,6 +60,24 @@ export default async function EditionHomePage({
         </Button>
 
         <NowNextSection nowNext={nowNext} edition={warWeek.edition} />
+
+        {pinnedAnnouncement ? (
+          <section className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold">Pinned</h2>
+              <Link
+                href={`/${warWeek.edition}/news`}
+                className="text-primary text-sm font-medium"
+              >
+                All news
+              </Link>
+            </div>
+            <AnnouncementCard
+              announcement={pinnedAnnouncement}
+              headingLevel="h3"
+            />
+          </section>
+        ) : null}
 
         <section className="flex flex-col gap-3">
           <div className="flex items-baseline justify-between">

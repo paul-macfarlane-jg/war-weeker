@@ -1,10 +1,12 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
+import { toAnnouncementsResult } from "@/mcp/announcements";
 import { toHistoryListResult, toHistoryResult } from "@/mcp/history";
 import { toLeaderboardResult } from "@/mcp/leaderboard";
 import { toScheduleResult } from "@/mcp/schedule";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
+import { getAnnouncements } from "@/queries/announcements";
 import { getArchiveDetailByYear, listArchive } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
@@ -83,6 +85,39 @@ const handler = createMcpHandler(
               warWeek.edition,
               await getSchedule(warWeek.id, { date }),
               date,
+            )
+          : { warWeek: null };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_announcements",
+      {
+        title: "Get Announcements",
+        description:
+          "Returns the current War Week's recent Announcements as readable text, pinned first then newest first, with title, author, published time, plain-text body and any video links.",
+        inputSchema: z.object({
+          limit: z
+            .number()
+            .int()
+            .min(1)
+            .max(50)
+            .optional()
+            .describe(
+              "How many Announcements to return, 1-50. Defaults to 10.",
+            ),
+        }),
+      },
+      async ({ limit }) => {
+        const warWeek = await getCurrentWarWeek();
+        const result = warWeek
+          ? toAnnouncementsResult(
+              warWeek.edition,
+              await getAnnouncements(warWeek, { limit: limit ?? 10 }),
             )
           : { warWeek: null };
 
