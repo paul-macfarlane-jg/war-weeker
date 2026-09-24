@@ -66,9 +66,11 @@ lint, vitest, production build, then the smoke test —
 ### Connecting an MCP client
 
 The app exposes a read-only Model Context Protocol server over Streamable
-HTTP at `http://localhost:3000/api/mcp` (no authentication). It currently
+HTTP at `http://localhost:3000/api/mcp`. It needs a signed-in
+`@jahnelgroup.com` session like every other route (anonymous requests get
+401), so MCP clients can't connect yet; see "Organizer sign-in". It currently
 exposes one tool, `get_current_war_week`, which returns the current War
-Week (live, else the most recent upcoming, else the most recent complete).
+Week (live, else the next upcoming, else the most recent complete).
 Point any Streamable HTTP MCP client at that URL, e.g.:
 
 ```json
@@ -78,6 +80,32 @@ Point any Streamable HTTP MCP client at that URL, e.g.:
   }
 }
 ```
+
+## Organizer sign-in
+
+Every page needs a `@jahnelgroup.com` Google sign-in: anonymous visitors
+are sent to `/sign-in` and come back afterwards. Organizers also manage the
+current War Week at `/admin` (linked from the header, and from More on
+mobile). A War Week's Organizers are the `organizerEmails` in its seed file.
+
+Local setup (needed to use the app in a browser; `pnpm smoke` runs without
+it by signing its own test sessions):
+
+1. In Google Cloud Console, create an OAuth client (Web application) with an
+   **Internal** consent screen, and add the redirect URI
+   `http://localhost:3000/api/auth/callback/google`.
+2. In `.env.local`, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+   `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and
+   `BETTER_AUTH_URL=http://localhost:3000`.
+3. `pnpm db:migrate`, then `pnpm dev` and open `/admin`.
+
+Any Google account outside `@jahnelgroup.com` is refused at sign-in, even if
+the consent screen were misconfigured. A JG employee who isn't on the
+allowlist can sign in but `/admin` refuses them.
+
+`/api/mcp` is locked too: without a session it answers 401. MCP clients
+such as Claude can't complete a Google sign-in, so connecting them needs MCP
+auth that isn't built yet.
 
 ## Deployment (Vercel + Neon)
 
@@ -92,8 +120,15 @@ Production: **https://war-weeker.vercel.app** (MCP at
   Preview deployments (including `staging`) use the staging database.
 - **Vercel env vars** (Project Settings → Environment Variables, per
   environment): `DATABASE_URL` (that environment's Neon connection string)
-  and `DATABASE_DRIVER=neon`. Later tickets add the auth variables listed in
-  `.env.example`.
+  and `DATABASE_DRIVER=neon`, plus the auth variables from `.env.example`
+  (`BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` set to that deployment's URL,
+  `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
+  Staging and production each need their own `BETTER_AUTH_URL`, and the
+  OAuth client needs each deployment's
+  `<deployment URL>/api/auth/callback/google` as a redirect URI. A build with
+  no `BETTER_AUTH_SECRET` (e.g. CI) logs a "default secret" error while
+  collecting page data; it is harmless there, but a deployment without the
+  secret answers 500 on any page that checks the session.
 - **GitHub repo secrets:** `PROD_DATABASE_URL` and `STAGING_DATABASE_URL`,
   used by the Migrate and Seed workflows below.
 

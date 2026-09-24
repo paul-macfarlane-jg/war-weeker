@@ -25,7 +25,7 @@ export default async function SchedulePage({
   const todayInWeek = days.some((day) => day.date === today);
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-bold">Schedule</h1>
         <span className="text-foreground/60 text-xs">All times ET</span>

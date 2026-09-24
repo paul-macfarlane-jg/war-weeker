@@ -19,7 +19,7 @@ export default async function TeamsPage({
 
   if (roster.kind === "free-for-all") {
     return (
-      <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6">
+      <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl">
         <h1 className="text-2xl font-bold">{heading}</h1>
         <p className="text-foreground/70 text-sm">
           Free-for-all: everyone competes on their own.
@@ -33,7 +33,7 @@ export default async function TeamsPage({
   }
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
       <h1 className="text-2xl font-bold">{heading}</h1>
       {roster.teams.length === 0 ? (
         <p className="text-foreground/70 text-sm">No {heading} yet.</p>

@@ -24,7 +24,7 @@ export default async function CompetitionPage({
   const { competition, ledger } = found;
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+    <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
       <Link
         href={`/${warWeek.edition}/competitions`}
         className="text-primary inline-flex items-center gap-1 text-sm font-medium"

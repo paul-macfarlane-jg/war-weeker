@@ -75,6 +75,21 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   with the Leader Title), then Participants by name. A free-for-all War Week
   shows one list of all Participants.
 
+## Access rules
+
+- Sign-in is Google only. Any email whose domain isn't exactly
+  `jahnelgroup.com` is refused: better-auth never creates a user for it,
+  and a session with such an email counts as anonymous.
+- An **Organizer** is a signed-in JG email on that War Week's
+  `organizerEmails` (case-insensitive). `isOrganizer` in `src/lib/access.ts`
+  is the one check; admin pages use `getAdminAccess` and server actions use
+  `requireOrganizer` (both in `src/auth/organizer.ts`).
+- `/admin` manages the current War Week. Anonymous visitors are sent to
+  sign-in; signed-in non-Organizers see "Organizers only".
+- Every page and API route needs a JG sign-in. Anonymous visitors to a
+  page go to `/sign-in` and come back afterwards; API routes, `/api/mcp`
+  included, answer 401. Only `/sign-in` and `/api/auth/*` are public.
+
 ## Seed idempotence rules
 
 A seed file loads in one transaction. Loading the same file twice leaves the

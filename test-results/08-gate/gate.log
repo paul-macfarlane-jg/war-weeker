@@ -14,13 +14,17 @@ Generating route types...
 
 
 /Users/pmacfarlane/jg-code/war-weeker/src/app/[edition]/page.tsx
-  54:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-  68:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  41:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  55:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+/Users/pmacfarlane/jg-code/war-weeker/src/app/sign-in/page.tsx
+  46:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  57:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 /Users/pmacfarlane/jg-code/war-weeker/src/components/roster.tsx
   56:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-✖ 3 problems (0 errors, 3 warnings)
+✖ 5 problems (0 errors, 5 warnings)
 
 
 > war-weeker@0.1.0 test /Users/pmacfarlane/jg-code/war-weeker
@@ -33,10 +37,10 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
 
- Test Files  13 passed (13)
-      Tests  149 passed (149)
-   Start at  19:08:02
-   Duration  1.14s (transform 482ms, setup 0ms, import 2.92s, tests 142ms, environment 1ms)
+ Test Files  15 passed (15)
+      Tests  194 passed (194)
+   Start at  20:02:18
+   Duration  1.26s (transform 481ms, setup 0ms, import 4.05s, tests 161ms, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -47,12 +51,12 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 ✓ Running next.config.ts took 16ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 854ms
+✓ Compiled successfully in 1365ms
   Running TypeScript ...
-  Finished TypeScript in 2.2s ...
+  Finished TypeScript in 2.4s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 111ms
+✓ Generating static pages using 9 workers (3/3) in 106ms
   Finalizing page optimization ...
 
 Route (app)
@@ -66,8 +70,13 @@ Route (app)
 ├ ƒ /[edition]/news
 ├ ƒ /[edition]/schedule
 ├ ƒ /[edition]/teams
-└ ƒ /api/mcp
+├ ƒ /admin
+├ ƒ /api/auth/[...all]
+├ ƒ /api/mcp
+└ ƒ /sign-in
 
+
+ƒ Proxy (Middleware)
 
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
@@ -134,10 +143,10 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 136ms
-✓ Running next.config.ts took 98ms
+✓ Ready in 132ms
+✓ Running next.config.ts took 31ms
 ok - server ready
-ok - GET / redirects to /xi
+ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
 ok - GET /zz returns 404
 ok - GET /xi/leaderboard responds and shows Standings hidden for the demo seed
@@ -159,5 +168,17 @@ ok - MCP get_leaderboard(team) returns the hidden result with no numbers
 ok - MCP get_leaderboard(individual) returns the hidden result with no numbers
 ok - MCP get_schedule(2026-02-24) returns only that Day
 ok - MCP get_schedule() returns all six XI Days
+ok - GET /sign-in renders without OAuth credentials and says Google isn't configured
+ok - GET /api/auth/get-session answers null with no session
+ok - anonymous GET /admin redirects to sign-in
+ok - GET /admin as an allowlisted Organizer shows the admin shell
+ok - GET /admin as a signed-in JG user off the allowlist shows the refusal
+ok - GET /admin as a session with a non-JG email shows sign-in
+ok - anonymous GET / redirects to sign-in
+ok - anonymous GET /xi redirects to sign-in
+ok - anonymous GET /xi/leaderboard redirects to sign-in
+ok - anonymous POST /api/mcp answers 401
+ok - GET /xi/more as an Organizer shows the Admin link and shows the account
+ok - GET /xi/more as a non-Organizer hides the Admin link and shows the account
  ELIFECYCLE  Command failed with exit code 143.
 gate exit status: 0

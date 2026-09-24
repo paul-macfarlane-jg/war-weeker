@@ -35,13 +35,13 @@ Organizers need one place to run the week. Participants need one place to follow
   - hide the standings, then play a dramatic **Reveal** at closing ceremonies
 - Each War Week has its own **Appearance Theme**, **Team Label** (House / Tribe / Team) and **Mode** (teams or free-for-all). This covers every past format: 4 houses, 3 genres, tribes with individual immunity, Red vs. Blue, and a possible free-for-all next year.
 - An **Archive** shows every past War Week (2016–2025) in its own theme. Claude extracts it at dev time from the old wiki pages.
-- A read-only **MCP server** lets anyone ask Claude "who's winning War Week XI?". Claude refuses to spoil the standings while they're hidden.
+- A read-only **MCP server** lets JG employees ask Claude "who's winning War Week XI?". Claude refuses to spoil the standings while they're hidden.
 
 For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live** War Week at mid-week, with fictional points and the standings hidden.
 
 ## User Stories
 
-### Viewing the current War Week (anyone, no sign-in)
+### Viewing the current War Week (any signed-in JG employee)
 
 1. As a participant, I want to open the app from a QR code or link without signing in, so that I can check it instantly on my phone.
 2. As a participant, I want the home page to show the current War Week's edition, story theme and banner, so that I immediately know what this year is about.
@@ -52,7 +52,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 7. As a participant, I want the pinned Announcement on the home page, so that I see the most important news first.
 8. As a participant, I want one prominent Slack channel button, so that I always join the right channel.
 9. As a participant, I want the app to look like this year's Appearance Theme (colors, logo, banner, font), so that it feels part of the story.
-10. As a participant, I want a bottom tab bar on mobile (Home · Schedule · Leaderboard · News · More), so that I can move around with one thumb.
+10. As a participant, I want a bottom tab bar on mobile (Home · Schedule · Leaderboard · News · More), so that I can move around with one thumb; on a desktop screen I want a top navigation bar with the same destinations instead, so that navigation feels natural with a mouse.
 11. As a participant, I want `/` to always show the current War Week, so that I never have to know its edition number.
 12. As a participant, I want each War Week to have its own URL by edition (e.g. `/xi`), so that I can share links to a specific year.
 
@@ -160,7 +160,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 77. As a future integrator, I want each Participant to have an optional email, so that accounts, Stairs App data and the same person across years can be linked later.
 78. As a future integrator, I want a written note on how a Stairs integration would work, so that it can be built after the hackathon without starting research over.
-79. As an Organizer, I want an env flag that requires sign-in to read anything, so that the app can be locked down later without code changes.
+79. ~~As an Organizer, I want an env flag that requires sign-in to read anything.~~ Superseded (ticket 08 scope change, 2026-09-23): sign-in is always required, with no flag.
 
 ## Implementation Decisions
 
@@ -179,7 +179,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Standings module.** One pure function. It takes the War Week's mode, the Competitions, the Participants with their Team memberships, the Points Entries and the hidden flag. It returns either `hidden`, or team standings plus individual standings, with the main leaderboard marked according to the mode. Every page and MCP tool gets standings through this function, and none of them does its own math.
 - **Read model / queries.** A small set of query functions: the current War Week, a War Week by edition, the schedule (optionally for one date), standings, the Competition ledger, Announcements, Awards, the FAQ, and the Archive list and detail. Pages and the MCP server both call these, so there's one read path.
 - **Organizer actions.** Server actions for creating, editing and deleting Points Entries, creating, editing, deleting and pinning Announcements, creating, editing and deleting Awards, and setting standings hidden or revealed. Each action checks that the signed-in user's email is on that War Week's organizer allowlist.
-- **MCP server.** Remote Streamable HTTP at `/api/mcp` on the same deployment. It is read-only and needs no auth. Tools:
+- **MCP server.** Remote Streamable HTTP at `/api/mcp` on the same deployment. It is read-only and, since the ticket 08 scope change, requires a signed-in JG session like every other route; MCP-client auth is not built yet. Tools:
   - `get_current_war_week`
   - `get_leaderboard(kind: team | individual)`
   - `get_schedule(date?)`
@@ -201,7 +201,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - team label, leader title, Slack channel URL, `standingsHidden`
   - Appearance Theme fields, wiki URL, organizer emails (a list)
   - for past years: winner (text) and highlights (a list of text)
-  - The **current** War Week is the one with status `live`, or failing that the most recent `upcoming`, or failing that the most recent `complete`. It is never derived from the clock.
+  - The **current** War Week is the one with status `live`, or failing that the next `upcoming` (earliest start date), or failing that the most recent `complete`. It is never derived from the clock.
 - **Day:** War Week, date, day theme.
 - **Schedule Item:** Day, start time, end time (optional), title, host (optional), location (optional), virtual link (optional), description (rich, optional), category (`competition` / `education` / `social` / `meal` / `work`), Competition (optional). All times are ET. Items don't repeat.
 - **Team:** War Week, name, color, logo (optional). A free-for-all War Week has no Teams.
@@ -224,7 +224,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ### Auth and access
 - better-auth with Google only. The OAuth consent screen is Internal, and the app also rejects any email outside `@jahnelgroup.com`.
-- Reading is public by default. An env flag switches the app to requiring sign-in for all reads.
+- Every page and API route requires a `@jahnelgroup.com` sign-in (ticket 08 scope change, 2026-09-23; previously reads were public behind an env flag).
 - Organizer = a signed-in user whose email is on the War Week's organizer allowlist from the seed. There are no other roles. Leaders are labels only.
 
 ### Live updates and Reveal
@@ -236,7 +236,12 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - `/[edition]` is the War Week home, with `/[edition]/schedule`, `/[edition]/leaderboard`, `/[edition]/news`, `/[edition]/teams`, `/[edition]/awards`, `/[edition]/faq` and `/[edition]/competitions/[id]`.
 - `/history` is the Archive.
 - `/admin` is organizer-only and needs to work on desktop only.
-- On mobile, a bottom tab bar: Home · Schedule · Leaderboard · News · More.
+- Primary navigation (Home · Schedule · Leaderboard · News · More) is responsive, switching at Tailwind's `md` breakpoint (768px):
+  - below `md` (phones, small tablets): a fixed bottom tab bar, with page content padded so it isn't covered.
+  - `md` and wider: a sticky top header with the War Week name and the same destinations as horizontal links; no bottom tab bar.
+  - Both come from one shared destination list (`src/components/primary-nav.tsx`), so a new public page is added once and appears in both.
+- Every public page is laid out mobile-first and must also use desktop width sensibly: single column below `md`; at `md`+ content widens (up to about `max-w-3xl`–`max-w-5xl`) and may use multiple columns (e.g. schedule Days side by side, leaderboard next to Competitions). Full-width mobile controls (such as the Slack button) become auto-width on desktop.
+- The Reveal must work on a projector-sized desktop screen as well as on phones.
 
 ### Demo seed
 - War Week XI (2026, The Matrix, Red vs. Blue): status `live`, real Days, Schedule, Teams, roster and Competitions from the wiki.
