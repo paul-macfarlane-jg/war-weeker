@@ -52,7 +52,8 @@ migrations, loads every seed (once with `--reset`, then again to prove
 idempotence; this wipes those War Weeks in your local database), starts the app with `pnpm start -p 3100`,
 and asserts `/` redirects to `/xi`, `/xi` and `/xi/leaderboard` respond, and
 `/api/mcp` answers `initialize`, `tools/list`, and a `tools/call` of
-`get_current_war_week` with War Week XI's data. It prints one `ok - <check>`
+`get_current_war_week` with War Week XI's data, both with a session and with
+a smoke-only `MCP_TOKEN` bearer token (anonymous still gets 401). It prints one `ok - <check>`
 or `FAIL - <check>: <detail>` line per assertion and exits 0 only if every
 check passed.
 
@@ -63,23 +64,38 @@ production build (`pnpm build`) before running `pnpm smoke`.
 lint, vitest, production build, then the smoke test —
 `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke`.
 
-### Connecting an MCP client
+## Connect Claude to War Weeker
 
 The app exposes a read-only Model Context Protocol server over Streamable
-HTTP at `http://localhost:3000/api/mcp`. It needs a signed-in
-`@jahnelgroup.com` session like every other route (anonymous requests get
-401), so MCP clients can't connect yet; see "Organizer sign-in". It currently
-exposes one tool, `get_current_war_week`, which returns the current War
-Week (live, else the next upcoming, else the most recent complete).
-Point any Streamable HTTP MCP client at that URL, e.g.:
+HTTP at `/api/mcp` (production: `https://war-weeker.vercel.app/api/mcp`).
+Its tools are `get_current_war_week`, `get_leaderboard`, `get_schedule`,
+`get_announcements`, `get_awards`, `get_faq`, `list_history` and
+`get_history`. Every tool is read-only and returns only what a signed-in
+Participant sees: hidden Standings stay hidden, and no tool returns an email
+or the Organizer allowlist (Announcement authors come back as the handle
+before the `@`).
 
-```json
-{
-  "war-weeker": {
-    "url": "http://localhost:3000/api/mcp"
-  }
-}
+`/api/mcp` lets a request in when any of these holds; otherwise it answers
+401:
+
+- a signed-in `@jahnelgroup.com` browser session;
+- `Authorization: Bearer <MCP_TOKEN>`, where `MCP_TOKEN` is a server-only
+  env var (unset or blank turns token auth off);
+- `MCP_PUBLIC=true`, which drops auth entirely (off by default).
+
+**Claude Code (or any client that can send headers).** Set `MCP_TOKEN`
+(`openssl rand -base64 32`) in the environment, redeploy, then:
+
+```bash
+claude mcp add --transport http war-weeker https://war-weeker.vercel.app/api/mcp --header "Authorization: Bearer <token>"
 ```
+
+**claude.ai / Claude Desktop custom connector.** Those connectors support
+only OAuth or no auth, so for a demo set `MCP_PUBLIC=true`, redeploy, and add
+`https://war-weeker.vercel.app/api/mcp` as a custom connector with no auth.
+While it's on, anyone with the URL can read the current War Week, Standings
+(only once revealed), schedule, Announcements, Awards, FAQ and history.
+Unset it after the demo. MCP OAuth is post-hackathon.
 
 ## Organizer sign-in
 
@@ -103,9 +119,9 @@ Any Google account outside `@jahnelgroup.com` is refused at sign-in, even if
 the consent screen were misconfigured. A JG employee who isn't on the
 allowlist can sign in but `/admin` refuses them.
 
-`/api/mcp` is locked too: without a session it answers 401. MCP clients
-such as Claude can't complete a Google sign-in, so connecting them needs MCP
-auth that isn't built yet.
+`/api/mcp` is locked too: without a session it answers 401 unless the
+request carries the `MCP_TOKEN` bearer token or `MCP_PUBLIC=true` is set; see
+"Connect Claude to War Weeker".
 
 ## Deployment (Vercel + Neon)
 

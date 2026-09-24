@@ -101,8 +101,14 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - `/admin` manages the current War Week. Anonymous visitors are sent to
   sign-in; signed-in non-Organizers see "Organizers only".
 - Every page and API route needs a JG sign-in. Anonymous visitors to a
-  page go to `/sign-in` and come back afterwards; API routes, `/api/mcp`
-  included, answer 401. Only `/sign-in` and `/api/auth/*` are public.
+  page go to `/sign-in` and come back afterwards; API routes answer 401.
+  Only `/sign-in` and `/api/auth/*` are public.
+- `/api/mcp` also lets in `Authorization: Bearer <MCP_TOKEN>` (off when
+  `MCP_TOKEN` is unset or blank), and anyone while `MCP_PUBLIC=true` (off by
+  default; for a claude.ai connector demo). `canUseMcp` in
+  `src/lib/access.ts` is the one check. Every MCP tool is read-only and
+  returns only what a signed-in Participant sees: never hidden Standings, an
+  email or the Organizer allowlist.
 
 ## Points Entry rules
 

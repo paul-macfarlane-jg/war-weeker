@@ -14,7 +14,7 @@ const welcomeBody: Content = {
 };
 
 describe("toAnnouncementsResult", () => {
-  it("serializes title, author, published-at, plain-text body and video links", () => {
+  it("serializes title, author handle (never the email), published-at, plain-text body and video links", () => {
     const rows = [
       {
         title: "Welcome",
@@ -40,7 +40,7 @@ describe("toAnnouncementsResult", () => {
         {
           title: "Welcome",
           pinned: true,
-          author: "organizer@jahnelgroup.com",
+          author: "organizer",
           publishedAt: "2026-02-23T18:00:00.000Z",
           body: "Let's go.",
           videoUrls: ["https://www.youtube.com/watch?v=abc123"],
@@ -48,7 +48,7 @@ describe("toAnnouncementsResult", () => {
         {
           title: "Reminder",
           pinned: false,
-          author: "b@jahnelgroup.com",
+          author: "b",
           publishedAt: "2026-02-24T12:00:00.000Z",
           body: null,
           videoUrls: [] as string[],

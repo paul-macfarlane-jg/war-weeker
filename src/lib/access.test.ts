@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   adminAccess,
+  canUseMcp,
   isJahnelGroupEmail,
   isOrganizer,
   isPublicPath,
@@ -129,4 +130,64 @@ describe("safeCallbackPath", () => {
   ])("falls back to / for %j", (value) => {
     expect(safeCallbackPath(value)).toBe("/");
   });
+});
+
+describe("canUseMcp", () => {
+  const token = "s3cret-token-value";
+  const base = {
+    hasSession: false,
+    authorization: null,
+    mcpToken: token,
+    mcpPublic: undefined,
+  };
+
+  it("lets a Jahnel Group session in without a token", () => {
+    expect(canUseMcp({ ...base, hasSession: true })).toBe(true);
+    expect(canUseMcp({ ...base, hasSession: true, mcpToken: "" })).toBe(true);
+  });
+
+  it("lets a correct bearer token in", () => {
+    expect(canUseMcp({ ...base, authorization: `Bearer ${token}` })).toBe(true);
+    expect(canUseMcp({ ...base, authorization: `bearer  ${token} ` })).toBe(
+      true,
+    );
+  });
+
+  it.each([
+    ["a wrong token", "Bearer nope"],
+    ["a token prefix", `Bearer ${token.slice(0, -1)}`],
+    ["a longer token", `Bearer ${token}x`],
+    ["a non-bearer scheme", `Basic ${token}`],
+    ["the bare token", token],
+    ["an empty bearer", "Bearer "],
+    ["no header", null],
+  ])("refuses %s", (_, authorization) => {
+    expect(canUseMcp({ ...base, authorization })).toBe(false);
+  });
+
+  it.each([undefined, "", "   "])(
+    "turns token auth off when MCP_TOKEN is %j",
+    (mcpToken) => {
+      expect(canUseMcp({ ...base, mcpToken, authorization: "Bearer " })).toBe(
+        false,
+      );
+      expect(
+        canUseMcp({ ...base, mcpToken, authorization: `Bearer ${token}` }),
+      ).toBe(false);
+    },
+  );
+
+  it.each(["true", "TRUE", " true "])(
+    "lets anyone in when MCP_PUBLIC is %j",
+    (mcpPublic) => {
+      expect(canUseMcp({ ...base, mcpPublic })).toBe(true);
+    },
+  );
+
+  it.each([undefined, "", "false", "1", "yes"])(
+    "stays closed when MCP_PUBLIC is %j",
+    (mcpPublic) => {
+      expect(canUseMcp({ ...base, mcpPublic })).toBe(false);
+    },
+  );
 });
