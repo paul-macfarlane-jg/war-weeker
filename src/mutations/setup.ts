@@ -34,8 +34,8 @@ const TEAM_NOT_FOUND = "That Team no longer exists.";
 const PARTICIPANT_NOT_FOUND = "That Participant no longer exists.";
 const COMPETITION_NOT_FOUND = "That Competition no longer exists.";
 
-/** Postgres unique_violation: another save took the date in the meantime. */
-function isUniqueViolation(error: unknown): boolean {
+/** Postgres unique_violation: another save took the natural key meanwhile. */
+export function isUniqueViolation(error: unknown): boolean {
   const cause = (error as { cause?: { code?: string } })?.cause;
   return (
     (error as { code?: string })?.code === "23505" || cause?.code === "23505"

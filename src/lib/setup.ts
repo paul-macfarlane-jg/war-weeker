@@ -83,12 +83,12 @@ const trim = (value: unknown) =>
   typeof value === "string" ? value.trim() : value;
 
 /** Trims, then applies the seed's rule for the field. */
-function trimmed<T extends ZodType>(schema: T) {
+export function trimmed<T extends ZodType>(schema: T) {
   return z.preprocess(trim, schema);
 }
 
 /** Trims, turns blank into null, then applies the seed's (nullish) rule. */
-function optional<T extends ZodType>(schema: T) {
+export function optional<T extends ZodType>(schema: T) {
   return z
     .preprocess((value) => trim(value) || null, schema)
     .transform((value) => value ?? null);
@@ -250,12 +250,17 @@ function mustPhrase(issue: z.core.$ZodIssue): string | null {
   }
 }
 
-type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
+export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
-function parseWith<T>(
+/**
+ * Parses a setup form, worded as "<Field label> must …" from `labels`
+ * (on top of the War Week and Day labels) unless `describe` words it.
+ */
+export function parseWith<T>(
   schema: ZodType<T>,
   input: unknown,
   describe: (issue: z.core.$ZodIssue) => string | null = () => null,
+  labels: Record<string, string> = {},
 ): Parsed<T> {
   const result = schema.safeParse(input);
   if (result.success) return { ok: true, value: result.data };
@@ -263,7 +268,8 @@ function parseWith<T>(
   const issue = result.error.issues[0];
   const special = describe(issue);
   if (special) return { ok: false, error: special };
-  const label = FIELD_LABELS[String(issue.path[0])];
+  const field = String(issue.path[0]);
+  const label = labels[field] ?? FIELD_LABELS[field];
   const phrase = mustPhrase(issue);
   return {
     ok: false,

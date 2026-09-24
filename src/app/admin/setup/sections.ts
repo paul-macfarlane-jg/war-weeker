@@ -31,7 +31,11 @@ export const SETUP_SECTIONS: {
   {
     label: "Schedule",
     description: "Schedule Items for each Day.",
-    href: null,
+    href: "/admin/setup/schedule",
   },
-  { label: "FAQ", description: "FAQ Items and their order.", href: null },
+  {
+    label: "FAQ",
+    description: "FAQ Items and their order.",
+    href: "/admin/setup/faq",
+  },
 ];
