@@ -4,7 +4,7 @@
 
 **Blocked by:** 16 (it touches the same roster and leaderboard rows; branch from `staging` after 16 merges)
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 ## Decisions
 

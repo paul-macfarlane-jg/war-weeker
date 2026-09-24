@@ -18,6 +18,8 @@ domain concepts in code, tests, tickets, or specs.
 | **Leader** / **Leader Title** | A participant flagged as a team leader, displayed with the year's title (Captain, Head of House). A label only, not a permission. |
 | **Participant**               | A person in a War Week. A record, not a user.                                                                                     |
 | **Avatar**                    | A Participant's visual marker: their initials in their Team's color for now, a portrait later.                                    |
+| **You**                       | The Participant the signed-in person is, in the War Week being viewed. Found by **account linking** or the "Which one is you?" pick. |
+| **Account linking**           | Matching the session email to a Participant email, ignoring case. Read-time only; nothing is stored.                             |
 | **Company Tag**               | An optional affiliation label on a participant (LTI, IL, …).                                                                      |
 | **Organizer**                 | A signed-in `@jahnelgroup.com` user on the War Week's allowlist. The only role that can write.                                    |
 | **Competition**               | Anything that awards points. Scored as team or individual.                                                                        |
@@ -81,6 +83,15 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   of the Backend" → SB). Its fill is the Team color, or the Appearance
   Theme's primary color when there's no Team. It appears on the Teams page,
   the individual leaderboard and Award winners.
+- **You** is highlighted with a "You" tag and an accent ring on the Teams
+  roster, the individual leaderboard (home, `/leaderboard`, the Reveal) and
+  Award recipients. Account linking wins: when the session email matches a
+  Participant, that Participant is You and the picker isn't shown. Otherwise
+  the Teams page offers "Which one is you?", stored per War Week in
+  `localStorage` under `ww:you:<edition>` (a Participant id; an id not in the
+  War Week is ignored) with "Not me / clear" to undo. Participant emails
+  never reach the client, only the matched id. Hidden Standings show no
+  highlight because they show no rows. Past editions use their own roster.
 
 ## Slack rules
 

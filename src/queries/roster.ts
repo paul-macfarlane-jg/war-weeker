@@ -33,3 +33,17 @@ export async function getRoster(
 
   return buildRoster({ mode: warWeek.mode, teams, participants });
 }
+
+/**
+ * A War Week's Participants with their emails, for account linking. Stays
+ * on the server: only the matched id reaches the client.
+ */
+export async function getYouCandidates(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<{ id: string; email: string | null }[]> {
+  return dbOrTx
+    .select({ id: participant.id, email: participant.email })
+    .from(participant)
+    .where(eq(participant.warWeekId, warWeek.id));
+}

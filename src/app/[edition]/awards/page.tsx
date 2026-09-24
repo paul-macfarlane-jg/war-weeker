@@ -2,6 +2,8 @@ import { Medal } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Avatar } from "@/components/avatar";
+import { YouTag } from "@/components/you";
+import { YOU_ROW_CLASS } from "@/lib/you";
 import { getAwards } from "@/queries/awards";
 
 import { getWarWeekForEdition } from "../war-week";
@@ -52,7 +54,7 @@ export default async function AwardsPage({
                   {award.participants.map((p) => (
                     <li
                       key={p.id}
-                      className="text-primary flex items-center gap-2 text-sm font-medium"
+                      className={`text-primary flex items-center gap-2 text-sm font-medium ${YOU_ROW_CLASS}`}
                     >
                       <Avatar
                         name={p.displayName}
@@ -60,6 +62,7 @@ export default async function AwardsPage({
                         primaryColor={warWeek.primaryColor}
                       />
                       {p.displayName}
+                      <YouTag participantId={p.id} />
                     </li>
                   ))}
                 </ul>
