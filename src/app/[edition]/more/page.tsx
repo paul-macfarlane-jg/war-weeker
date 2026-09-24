@@ -1,6 +1,7 @@
 import {
   ChevronRight,
   CircleHelp,
+  Download,
   History,
   Medal,
   Shield,
@@ -37,6 +38,7 @@ export default async function MorePage({
     { label: "Awards", href: `/${warWeek.edition}/awards`, icon: Medal },
     { label: "FAQ", href: `/${warWeek.edition}/faq`, icon: CircleHelp },
     { label: "War Week history", href: "/history", icon: History },
+    { label: "Install app", href: "/install", icon: Download },
     ...(account.isOrganizer
       ? [{ label: "Admin", href: "/admin", icon: Shield }]
       : []),
