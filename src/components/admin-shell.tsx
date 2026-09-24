@@ -12,21 +12,29 @@ import type { WarWeek } from "@/db/schema";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [
-  { label: "Overview", icon: LayoutDashboard, ready: true },
-  { label: "Points Entries", icon: PlusCircle, ready: false },
-  { label: "Standings visibility", icon: EyeOff, ready: false },
-  { label: "Announcements", icon: Megaphone, ready: false },
-  { label: "Awards", icon: Medal, ready: false },
-];
+  { label: "Overview", icon: LayoutDashboard, href: "/admin" },
+  { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
+  { label: "Standings visibility", icon: EyeOff, href: null },
+  { label: "Announcements", icon: Megaphone, href: null },
+  { label: "Awards", icon: Medal, href: null },
+] as const;
+
+/** A section an admin page can be: only sections that have a page. */
+export type AdminSection = Extract<
+  (typeof SECTIONS)[number],
+  { href: string }
+>["label"];
 
 /** Desktop frame for every Organizer page: header, side nav, content. */
 export function AdminShell({
   warWeek,
   email,
+  current,
   children,
 }: {
   warWeek: WarWeek;
   email: string;
+  current: AdminSection;
   children: React.ReactNode;
 }) {
   return (
@@ -56,21 +64,38 @@ export function AdminShell({
           className="border-border w-56 shrink-0 border-r p-3"
         >
           <ul className="flex flex-col gap-1">
-            {SECTIONS.map(({ label, icon: Icon, ready }) => (
-              <li
-                key={label}
-                aria-current={label === "Overview" ? "page" : undefined}
-                className={
-                  label === "Overview"
-                    ? "bg-primary/10 text-primary flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium"
-                    : "text-foreground/50 flex items-center gap-2 rounded-md px-3 py-2 text-sm"
-                }
-              >
-                <Icon aria-hidden className="size-4" />
-                <span className="flex-1">{label}</span>
-                {!ready && <span className="text-xs">Soon</span>}
-              </li>
-            ))}
+            {SECTIONS.map(({ label, icon: Icon, href }) => {
+              const content = (
+                <>
+                  <Icon aria-hidden className="size-4" />
+                  <span className="flex-1">{label}</span>
+                  {!href && <span className="text-xs">Soon</span>}
+                </>
+              );
+              const base =
+                "flex items-center gap-2 rounded-md px-3 py-2 text-sm";
+              return (
+                <li key={label}>
+                  {href && label === current ? (
+                    <Link
+                      href={href}
+                      aria-current="page"
+                      className={`${base} bg-primary/10 text-primary font-medium`}
+                    >
+                      {content}
+                    </Link>
+                  ) : href ? (
+                    <Link href={href} className={`${base} hover:bg-muted`}>
+                      {content}
+                    </Link>
+                  ) : (
+                    <span className={`${base} text-foreground/50`}>
+                      {content}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </nav>
         <main className="flex-1 p-8">{children}</main>

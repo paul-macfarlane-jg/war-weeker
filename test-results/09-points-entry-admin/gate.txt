@@ -36,11 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
+(node:34083) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
 
- Test Files  15 passed (15)
-      Tests  194 passed (194)
-   Start at  20:02:18
-   Duration  1.26s (transform 481ms, setup 0ms, import 4.05s, tests 161ms, environment 1ms)
+ Test Files  17 passed (17)
+      Tests  209 passed (209)
+   Start at  20:32:02
+   Duration  2.32s (transform 774ms, setup 0ms, import 10.90s, tests 2.06s, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -48,15 +50,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 16ms
+✓ Running next.config.ts took 21ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 1365ms
+✓ Compiled successfully in 2.9s
   Running TypeScript ...
-  Finished TypeScript in 2.4s ...
+  Finished TypeScript in 3.6s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 106ms
+✓ Generating static pages using 9 workers (3/3) in 327ms
   Finalizing page optimization ...
 
 Route (app)
@@ -71,6 +73,8 @@ Route (app)
 ├ ƒ /[edition]/schedule
 ├ ƒ /[edition]/teams
 ├ ƒ /admin
+├ ƒ /admin/points
+├ ƒ /admin/points/[id]
 ├ ƒ /api/auth/[...all]
 ├ ƒ /api/mcp
 └ ƒ /sign-in
@@ -143,8 +147,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 132ms
-✓ Running next.config.ts took 31ms
+✓ Ready in 124ms
+✓ Running next.config.ts took 77ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -180,5 +184,14 @@ ok - anonymous GET /xi/leaderboard redirects to sign-in
 ok - anonymous POST /api/mcp answers 401
 ok - GET /xi/more as an Organizer shows the Admin link and shows the account
 ok - GET /xi/more as a non-Organizer hides the Admin link and shows the account
+ok - GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and standings while hidden (16 unscheduled Competitions offered)
+ok - GET /admin/points as a non-Organizer shows the refusal
+ok - createPointsEntry rejects a signed-in JG user off the allowlist
+ok - createPointsEntry rejects a Participant in a team Competition and a Team in an individual one
+ok - createPointsEntry as an Organizer saves an over-max decimal entry with entered-by
+ok - an entry saved in admin shows up on /xi/leaderboard (un-hidden) on the next refresh
+ok - updatePointsEntry and deletePointsEntry reject a non-Organizer
+ok - updatePointsEntry as an Organizer edits points and keeps entered-by
+ok - deletePointsEntry as an Organizer removes it
  ELIFECYCLE  Command failed with exit code 143.
 gate exit status: 0

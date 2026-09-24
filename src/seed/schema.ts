@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  pointsSchema as points,
+  pointsEntryNoteSchema,
+  pointsEntryTargetError,
+} from "@/lib/points-entry";
 import { contentInputSchema } from "@/lib/rich-text/content";
 import { isAllowedVideoUrl } from "@/lib/video";
 
@@ -23,15 +28,6 @@ const httpsUrl = z.url({ protocol: /^https$/ }).max(500);
 const clockTime = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "must be a 24-hour HH:MM time");
-
-// Matches the database's numeric(8, 2).
-const points = z
-  .number()
-  .min(-999999.99)
-  .max(999999.99)
-  .refine((value) => Math.round(value * 100) / 100 === value, {
-    message: "must have at most two decimal places",
-  });
 
 /**
  * A stable id for a seeded organizer-owned record (Points Entry, Award,
@@ -117,7 +113,7 @@ export const pointsEntrySeedSchema = z
     /** A Participant display name from this seed. */
     participant: z.string().min(1).max(120).nullish(),
     points,
-    note: z.string().max(500).nullish(),
+    note: pointsEntryNoteSchema.nullish(),
     enteredByEmail: email,
     enteredAt: z.iso.datetime({ offset: true }),
   })
@@ -347,12 +343,8 @@ export const warWeekSeedSchema = z
         if (!teams.has(entry.team)) {
           issue([...path, "team"], `unknown Team "${entry.team}"`);
         }
-        if (comp && comp.scoring !== "team") {
-          issue(
-            [...path, "team"],
-            `"${comp.name}" is an individual Competition, so its Points Entries must target a participant`,
-          );
-        }
+        const refusal = comp && pointsEntryTargetError(comp, "team");
+        if (refusal) issue([...path, "team"], refusal);
       }
       if (entry.participant != null) {
         if (!participants.has(entry.participant)) {
@@ -361,12 +353,8 @@ export const warWeekSeedSchema = z
             `unknown Participant "${entry.participant}"`,
           );
         }
-        if (comp && comp.scoring !== "individual") {
-          issue(
-            [...path, "participant"],
-            `"${comp.name}" is a team Competition, so its Points Entries must target a team`,
-          );
-        }
+        const refusal = comp && pointsEntryTargetError(comp, "participant");
+        if (refusal) issue([...path, "participant"], refusal);
       }
     });
 
