@@ -17,7 +17,10 @@ const PAGES: [path: string, purpose: string][] = [
   ["/<edition>/more", "Links to the rest of the War Week's pages."],
   ["/history", "The Archive of past War Weeks, 2016 onward."],
   ["/install", "How to install War Weeker as an app."],
-  ["/admin", "Organizer-only: Points Entry, Standings, Announcements, Awards."],
+  [
+    "/admin",
+    "Organizer-only: Points Entry, Standings, Announcements, Awards, and Setup (War Week settings, Appearance Theme, Days).",
+  ],
   ["/sign-in", "Google sign-in with a @jahnelgroup.com account."],
 ];
 

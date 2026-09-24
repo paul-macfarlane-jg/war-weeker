@@ -181,6 +181,31 @@ export const faqItemSeedSchema = z.object({
 
 export type FaqItemSeed = z.infer<typeof faqItemSeedSchema>;
 
+/**
+ * The War Week fields an Organizer can also edit in `/admin/setup`, so the
+ * seed and the setup form share one set of field rules.
+ */
+export const warWeekSettingsSeedShape = {
+  storyTheme: z.string().min(1).max(120),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
+  status: z.enum(["upcoming", "live", "complete"]),
+  mode: z.enum(["teams", "free-for-all"]),
+  teamLabel: z.string().min(1).max(40),
+  leaderTitle: z.string().min(1).max(40),
+  slackChannelUrl: z.url({ protocol: /^https$/ }).max(500),
+  primary: hexColor,
+  primaryForeground: hexColor,
+  accent: hexColor,
+  background: hexColor,
+  foreground: hexColor,
+  fontPreset: z.enum(["sans", "serif", "mono"]),
+  logoUrl: themeUrl.nullish(),
+  bannerUrl: themeUrl.nullish(),
+  wikiUrl: themeUrl.nullish(),
+  organizerEmails: z.array(z.email().max(254).toLowerCase()),
+};
+
 export const warWeekSeedSchema = z
   .object({
     edition: z
@@ -190,25 +215,8 @@ export const warWeekSeedSchema = z
       .regex(/^[a-z]+$/, "must be a lowercase roman numeral"),
     editionNumber: z.number().int().positive(),
     year: z.number().int(),
-    startDate: z.iso.date(),
-    endDate: z.iso.date(),
-    storyTheme: z.string().min(1).max(120),
-    status: z.enum(["upcoming", "live", "complete"]),
-    mode: z.enum(["teams", "free-for-all"]),
-    teamLabel: z.string().min(1).max(40),
-    leaderTitle: z.string().min(1).max(40),
-    slackChannelUrl: z.url({ protocol: /^https$/ }).max(500),
+    ...warWeekSettingsSeedShape,
     standingsHidden: z.boolean(),
-    primary: hexColor,
-    primaryForeground: hexColor,
-    accent: hexColor,
-    background: hexColor,
-    foreground: hexColor,
-    fontPreset: z.enum(["sans", "serif", "mono"]),
-    logoUrl: themeUrl.nullish(),
-    bannerUrl: themeUrl.nullish(),
-    wikiUrl: themeUrl.nullish(),
-    organizerEmails: z.array(z.email().max(254).toLowerCase()),
     winner: z.string().max(200).nullish(),
     highlights: z.array(z.string().max(500)).default([]),
     days: z.array(daySeedSchema),
