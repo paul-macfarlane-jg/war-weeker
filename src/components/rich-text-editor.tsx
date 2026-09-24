@@ -10,6 +10,7 @@ import {
   sanitizeContent,
 } from "@/lib/rich-text/content";
 import { editorExtensions } from "@/lib/rich-text/extensions";
+import { videoEmbedUrl } from "@/lib/video";
 
 /**
  * A document with no blocks is one ProseMirror can render but not edit into,
@@ -24,6 +25,19 @@ function withTextBlock(content: Content): Content {
 /** Both URL fields take the same absolute addresses the sanitizer keeps. */
 const URL_HINT = "Start the address with http:// or https://";
 const MISSING_ALT = "Every image needs alt text";
+/** Video URLs follow the Announcement video link rule (`videoEmbedUrl`). */
+const VIDEO_HINT = "Use a YouTube, Loom, Vimeo or Google Drive video link";
+
+const PANEL_LABEL = {
+  link: "Add link",
+  image: "Add image",
+  video: "Add video",
+} as const;
+const PANEL_ACTION = {
+  link: "Apply link",
+  image: "Insert image",
+  video: "Insert video",
+} as const;
 
 const EDITOR_CLASS =
   "min-h-48 px-4 py-3 outline-none [&>*+*]:mt-3 break-words [&_a]:underline [&_a]:underline-offset-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h2]:text-xl [&_h2]:font-semibold [&_h3]:text-lg [&_h3]:font-semibold [&_img]:h-auto [&_img]:max-w-full [&_img]:rounded-lg [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:list-disc [&_ul]:pl-6 [&_.ProseMirror-selectednode]:ring-2 [&_.ProseMirror-selectednode]:ring-ring";
@@ -65,7 +79,8 @@ function ToolbarButton({
 /**
  * The Organizer's rich-text editor (Announcement bodies), ported from
  * journeys and narrowed to this repo's closed content set: headings, bold,
- * italic, the two lists, links, and images by URL with alt text.
+ * italic, the two lists, links, images by URL with alt text, and videos
+ * on an allow-listed host.
  *
  * Every update goes through `sanitizeContent` before it leaves this
  * component, so form state already holds the stored shape; the server action
@@ -89,10 +104,11 @@ export function RichTextEditor({
     onChangeRef.current = onChange;
   }, [onChange]);
 
-  const [panel, setPanel] = useState<"link" | "image" | null>(null);
+  const [panel, setPanel] = useState<keyof typeof PANEL_LABEL | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [imageAlt, setImageAlt] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [panelError, setPanelError] = useState<string | null>(null);
 
   const editor = useEditor({
@@ -122,6 +138,7 @@ export function RichTextEditor({
       orderedList: instance?.isActive("orderedList") ?? false,
       link: instance?.isActive("link") ?? false,
       image: instance?.isActive("image") ?? false,
+      video: instance?.isActive("video") ?? false,
     }),
   });
 
@@ -172,6 +189,29 @@ export function RichTextEditor({
     editor.chain().focus().setImage({ src, alt }).run();
     setPanel(null);
   }
+
+  function openVideo() {
+    setVideoUrl("");
+    setPanelError(null);
+    setPanel("video");
+  }
+
+  function applyVideo() {
+    if (!editor) return;
+    const src = videoUrl.trim();
+    if (videoEmbedUrl(src) === null) {
+      setPanelError(VIDEO_HINT);
+      return;
+    }
+    editor
+      .chain()
+      .focus()
+      .insertContent({ type: "video", attrs: { src } })
+      .run();
+    setPanel(null);
+  }
+
+  const applyPanel = { link: applyLink, image: applyImage, video: applyVideo };
 
   function cancelPanel() {
     setPanel(null);
@@ -245,12 +285,18 @@ export function RichTextEditor({
           pressed={active?.image ?? false}
           onClick={openImage}
         />
+        <ToolbarButton
+          label="Video"
+          text="Video"
+          pressed={active?.video ?? false}
+          onClick={openVideo}
+        />
       </div>
 
       {panel && (
         <div
           role="group"
-          aria-label={panel === "link" ? "Add link" : "Add image"}
+          aria-label={PANEL_LABEL[panel]}
           className="border-foreground/10 bg-muted/40 flex flex-col gap-2 border-b px-3 py-3"
         >
           {panel === "link" ? (
@@ -262,6 +308,19 @@ export function RichTextEditor({
                 value={linkUrl}
                 onChange={(event) => setLinkUrl(event.target.value)}
               />
+            </label>
+          ) : panel === "video" ? (
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Video URL
+              <input
+                autoComplete="off"
+                className={fieldClass}
+                value={videoUrl}
+                onChange={(event) => setVideoUrl(event.target.value)}
+              />
+              <span className="text-foreground/60 text-xs font-normal">
+                {VIDEO_HINT}
+              </span>
             </label>
           ) : (
             <>
@@ -294,12 +353,8 @@ export function RichTextEditor({
             </p>
           )}
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              onClick={panel === "link" ? applyLink : applyImage}
-            >
-              {panel === "link" ? "Apply link" : "Insert image"}
+            <Button type="button" size="sm" onClick={applyPanel[panel]}>
+              {PANEL_ACTION[panel]}
             </Button>
             <Button
               type="button"

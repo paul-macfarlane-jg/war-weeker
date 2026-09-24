@@ -10,12 +10,9 @@ import {
 } from "@/actions/announcements";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
-import {
-  ANNOUNCEMENT_TITLE_MAX,
-  MAX_VIDEO_LINKS,
-  videoEmbedUrl,
-} from "@/lib/announcements";
+import { ANNOUNCEMENT_TITLE_MAX, MAX_VIDEO_LINKS } from "@/lib/announcements";
 import type { Content } from "@/lib/rich-text/content";
+import { videoEmbedUrl } from "@/lib/video";
 
 const fieldClass =
   "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
