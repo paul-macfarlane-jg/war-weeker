@@ -35,13 +35,13 @@ Organizers need one place to run the week. Participants need one place to follow
   - hide the standings, then play a dramatic **Reveal** at closing ceremonies
 - Each War Week has its own **Appearance Theme**, **Team Label** (House / Tribe / Team) and **Mode** (teams or free-for-all). This covers every past format: 4 houses, 3 genres, tribes with individual immunity, Red vs. Blue, and a possible free-for-all next year.
 - An **Archive** shows every past War Week (2016–2025) in its own theme. Claude extracts it at dev time from the old wiki pages.
-- A read-only **MCP server** lets anyone ask Claude "who's winning War Week XI?". Claude refuses to spoil the standings while they're hidden.
+- A read-only **MCP server** lets JG employees ask Claude "who's winning War Week XI?". Claude refuses to spoil the standings while they're hidden.
 
 For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live** War Week at mid-week, with fictional points and the standings hidden.
 
 ## User Stories
 
-### Viewing the current War Week (anyone, no sign-in)
+### Viewing the current War Week (any signed-in JG employee)
 
 1. As a participant, I want to open the app from a QR code or link without signing in, so that I can check it instantly on my phone.
 2. As a participant, I want the home page to show the current War Week's edition, story theme and banner, so that I immediately know what this year is about.
@@ -152,7 +152,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ### History extraction (developer)
 
-74. As the developer, I want a script that sends each old wiki page to Claude and gets back structured seed JSON that passes the seed schema, so that ten years of history don't have to be typed in by hand.
+74. As the developer, I want Claude to read each old wiki page and write structured seed JSON that passes the seed schema, so that ten years of history don't have to be typed in by hand.
 75. As the developer, I want the extracted JSON committed and editable by hand, so that I can fix what the extraction gets wrong and the app never calls Claude at runtime.
 76. As the developer, I want the same extraction to produce War Week XI's schedule, Teams, roster and Competitions, so that the live demo War Week uses real data.
 
@@ -160,7 +160,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 77. As a future integrator, I want each Participant to have an optional email, so that accounts, Stairs App data and the same person across years can be linked later.
 78. As a future integrator, I want a written note on how a Stairs integration would work, so that it can be built after the hackathon without starting research over.
-79. As an Organizer, I want an env flag that requires sign-in to read anything, so that the app can be locked down later without code changes.
+79. ~~As an Organizer, I want an env flag that requires sign-in to read anything.~~ Superseded (ticket 08 scope change, 2026-09-23): sign-in is always required, with no flag.
 
 ## Implementation Decisions
 
@@ -179,7 +179,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Standings module.** One pure function. It takes the War Week's mode, the Competitions, the Participants with their Team memberships, the Points Entries and the hidden flag. It returns either `hidden`, or team standings plus individual standings, with the main leaderboard marked according to the mode. Every page and MCP tool gets standings through this function, and none of them does its own math.
 - **Read model / queries.** A small set of query functions: the current War Week, a War Week by edition, the schedule (optionally for one date), standings, the Competition ledger, Announcements, Awards, the FAQ, and the Archive list and detail. Pages and the MCP server both call these, so there's one read path.
 - **Organizer actions.** Server actions for creating, editing and deleting Points Entries, creating, editing, deleting and pinning Announcements, creating, editing and deleting Awards, and setting standings hidden or revealed. Each action checks that the signed-in user's email is on that War Week's organizer allowlist.
-- **MCP server.** Remote Streamable HTTP at `/api/mcp` on the same deployment. It is read-only and needs no auth. Tools:
+- **MCP server.** Remote Streamable HTTP at `/api/mcp` on the same deployment. It is read-only. It accepts a signed-in JG session, or `Authorization: Bearer <MCP_TOKEN>` for MCP clients like Claude Code (ticket 21); `MCP_PUBLIC=true` opens it with no auth for a claude.ai connector demo. No tool returns an email or the Organizer allowlist, so public mode shows only what a signed-in Participant sees. MCP OAuth is out of scope. Tools:
   - `get_current_war_week`
   - `get_leaderboard(kind: team | individual)`
   - `get_schedule(date?)`
@@ -190,7 +190,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - `get_history(year)`
 
   While standings are hidden, `get_leaderboard` returns an explicit "hidden until closing ceremonies" result and no numbers.
-- **Extraction script.** Run by hand at dev time. It sends each old wiki text file to Claude through the Vercel AI Gateway (AI SDK, model `anthropic/claude-sonnet-5`, structured output against the seed schemas) and writes one seed JSON file per year. The output is fixed by hand and committed. It uses `AI_GATEWAY_API_KEY` and is never called at runtime.
+- **History extraction.** Done once at dev time by Claude Code reading each old wiki text file and writing one seed JSON file per year (`seeds/<edition>.json`), validated by the seed schema. The output is fixed by hand and committed; the app never calls Claude. (An AI Gateway script was dropped: the gateway free tier doesn't serve the model, and Claude Code does the same job.)
 - **Theming.** The War Week's Appearance Theme (primary and accent colors, logo, banner, one of 2–3 font presets) is applied as CSS variables at the War Week layout. Archived War Weeks render in their own theme.
 
 ### Schema (entities and key rules)
@@ -201,7 +201,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - team label, leader title, Slack channel URL, `standingsHidden`
   - Appearance Theme fields, wiki URL, organizer emails (a list)
   - for past years: winner (text) and highlights (a list of text)
-  - The **current** War Week is the one with status `live`, or failing that the most recent `upcoming`, or failing that the most recent `complete`. It is never derived from the clock.
+  - The **current** War Week is the one with status `live`, or failing that the next `upcoming` (earliest start date), or failing that the most recent `complete`. It is never derived from the clock.
 - **Day:** War Week, date, day theme.
 - **Schedule Item:** Day, start time, end time (optional), title, host (optional), location (optional), virtual link (optional), description (rich, optional), category (`competition` / `education` / `social` / `meal` / `work`), Competition (optional). All times are ET. Items don't repeat.
 - **Team:** War Week, name, color, logo (optional). A free-for-all War Week has no Teams.
@@ -224,7 +224,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ### Auth and access
 - better-auth with Google only. The OAuth consent screen is Internal, and the app also rejects any email outside `@jahnelgroup.com`.
-- Reading is public by default. An env flag switches the app to requiring sign-in for all reads.
+- Every page and API route requires a `@jahnelgroup.com` sign-in (ticket 08 scope change, 2026-09-23; previously reads were public behind an env flag).
 - Organizer = a signed-in user whose email is on the War Week's organizer allowlist from the seed. There are no other roles. Leaders are labels only.
 
 ### Live updates and Reveal
@@ -272,21 +272,21 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ## Out of Scope
 
-- **Cut completely:** Leagues, ELO, match and bracket tracking, multi-tenancy, video hosting and uploads, image uploads, Slack cross-posting, hours tracking and hours-based honors (computed Four Score or Centurion), the War Week projects board, sign-ups and interest forms, an AI chat inside the app, per-person history across years.
+- **Cut completely:** Leagues, ELO, match and bracket tracking, multi-tenancy, video hosting and uploads, image uploads, Slack cross-posting (except new Announcements via webhook, ticket 15), hours tracking and hours-based honors (computed Four Score or Centurion), the War Week projects board, sign-ups and interest forms, an AI chat inside the app, per-person history across years.
 - **The Stairs App integration.** HQ Attendance is scored with Points Entries entered by hand. A doc stub records how the integration could work:
   - The Stairs App logs self-reported stair climbs, keyed by `@jahnelgroup.com` email.
   - Its API needs a Firebase ID token.
   - The recommended future route is an API-key-protected date-range report endpoint added to the Stairs backend, about 5–8 hours.
   - The blocker is that no one is documented as owning the Stairs deploy.
-- **Admin screens for setup** (theme, Days, Schedule, Teams, roster, Competitions, FAQ). Setup is seed-only.
+- **Admin screens for setup** (theme, Days, Schedule, Teams, roster, Competitions, FAQ). Moved into scope as the setup CRUD stretch item: ticket 25 delivers War Week settings, the Appearance Theme and Days in `/admin/setup`; tickets 26 and 27 add Teams, roster, Competitions, Schedule and FAQ. The seed stays the way to bootstrap a War Week, and reloading it overwrites setup edited in the UI.
 - **Roles other than Organizer**, including captains entering points.
 - **Stretch items, only if time allows, in this order:**
-  1. account linking (a Google sign-in matched to a Participant by email)
-  2. a "Which one is you?" picker (localStorage) that highlights you on the leaderboard and roster
-  3. placement presets (1st/2nd/3rd turned into points)
-  4. a video node inside the rich-text editor
-  5. `llms.txt`
-  6. setup CRUD screens
+  1. account linking (a Google sign-in matched to a Participant by email) (delivered: ticket 20)
+  2. a "Which one is you?" picker (localStorage) that highlights you on the leaderboard and roster (delivered: ticket 20)
+  3. placement presets (1st/2nd/3rd turned into points) (delivered: ticket 22)
+  4. a video node inside the rich-text editor (delivered: ticket 23)
+  5. `llms.txt` (delivered: ticket 24)
+  6. setup CRUD screens (delivered: ticket 25 War Week settings and Days, 26 Teams, roster and Competitions, 27 Schedule and FAQ)
 
 ## Further Notes
 
@@ -318,7 +318,6 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Prerequisites the developer handles:**
   - Google OAuth client (Internal consent screen; redirect `/api/auth/callback/google` on localhost and on the Vercel domain)
   - `BETTER_AUTH_SECRET`
-  - `AI_GATEWAY_API_KEY` (Vercel AI Gateway)
   - the Vercel project and Neon database (later)
   - the organizer allowlist (in the XI seed)
 

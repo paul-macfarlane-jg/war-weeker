@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BottomTabBar, TopNav } from "@/components/primary-nav";
+import { SiteFooter } from "@/components/site-footer";
+import { YouProvider } from "@/components/you";
 import { warWeekThemeStyle } from "@/lib/theme";
+import { resolveYou } from "@/lib/you";
+import { getYouCandidates } from "@/queries/roster";
 
-import { getWarWeekForEdition } from "./war-week";
+import { getNavAccount, getWarWeekForEdition } from "./war-week";
 
 export const dynamic = "force-dynamic";
 
@@ -27,14 +31,36 @@ export default async function EditionLayout({
   const { edition } = await params;
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
+  const [account, candidates] = await Promise.all([
+    getNavAccount(),
+    getYouCandidates(warWeek),
+  ]);
+  // Account linking happens here, on the server, so Participant emails
+  // never reach the client: only the matched id does.
+  const linked = resolveYou({
+    sessionEmail: account.email,
+    participants: candidates,
+    storedId: null,
+  });
 
   return (
     <div
       style={warWeekThemeStyle(warWeek)}
       className="bg-background text-foreground min-h-dvh pb-20 font-sans md:pb-0"
     >
-      <TopNav edition={warWeek.edition} storyTheme={warWeek.storyTheme} />
-      {children}
+      <TopNav
+        edition={warWeek.edition}
+        storyTheme={warWeek.storyTheme}
+        account={account}
+      />
+      <YouProvider
+        edition={warWeek.edition}
+        linkedId={linked?.participantId ?? null}
+        participantIds={candidates.map((c) => c.id)}
+      >
+        {children}
+      </YouProvider>
+      <SiteFooter />
       <BottomTabBar edition={warWeek.edition} />
     </div>
   );

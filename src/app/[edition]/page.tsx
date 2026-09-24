@@ -1,88 +1,49 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { AnnouncementCard } from "@/components/announcement-card";
+import { ArchiveDetailView } from "@/components/archive";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { NowNextSection } from "@/components/now-next";
+import { HomeStandings } from "@/components/reveal-standings";
 import { Button } from "@/components/ui/button";
-import type { WarWeek } from "@/db/schema";
+import { WarWeekHero } from "@/components/war-week-hero";
+import { isArchived } from "@/lib/archive";
+import { computeNowNext, resolveClock } from "@/lib/schedule";
+import { getPinnedAnnouncement } from "@/queries/announcements";
+import { getArchiveDetail } from "@/queries/archive";
+import { getSchedule } from "@/queries/schedule";
+import { getStandings } from "@/queries/standings";
 
 import { getWarWeekForEdition } from "./war-week";
 
-const STATUS_LABEL: Record<WarWeek["status"], string> = {
-  live: "Live now",
-  upcoming: "Upcoming",
-  complete: "Complete",
-};
-
-function formatDateRange(startDate: string, endDate: string): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-  const yearFormatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  const start = formatter.format(new Date(startDate));
-  const end = formatter.format(new Date(endDate));
-  const year = yearFormatter.format(new Date(endDate));
-  return `${start} – ${end}, ${year}`;
-}
+const HOME_INDIVIDUAL_ROWS = 5;
 
 export default async function EditionHomePage({
   params,
+  searchParams,
 }: PageProps<"/[edition]">) {
   const { edition } = await params;
+  const { at } = await searchParams;
   const warWeek = await getWarWeekForEdition(edition);
   if (!warWeek) notFound();
 
-  const editionLabel = warWeek.edition.toUpperCase();
-  const statusLabel = STATUS_LABEL[warWeek.status];
+  if (isArchived(warWeek)) {
+    return <ArchiveDetailView detail={await getArchiveDetail(warWeek)} />;
+  }
+
+  const [standings, schedule, pinnedAnnouncement] = await Promise.all([
+    getStandings(warWeek),
+    getSchedule(warWeek.id),
+    getPinnedAnnouncement(warWeek),
+  ]);
+  const nowNext = computeNowNext(schedule, resolveClock(at));
 
   return (
     <main className="mx-auto flex max-w-md flex-col md:max-w-3xl md:py-8">
-      {warWeek.bannerUrl ? (
-        <img
-          src={warWeek.bannerUrl}
-          alt={`War Week ${editionLabel} banner`}
-          className="h-48 w-full object-cover md:h-72 md:rounded-lg"
-        />
-      ) : (
-        <div className="bg-accent text-accent-foreground flex h-48 w-full items-center justify-center text-2xl font-bold">
-          War Week {editionLabel}
-        </div>
-      )}
+      <WarWeekHero warWeek={warWeek} />
 
-      <div className="flex flex-col gap-4 px-4 py-6">
-        <div className="flex items-start gap-3">
-          {warWeek.logoUrl ? (
-            <img
-              src={warWeek.logoUrl}
-              alt={`War Week ${editionLabel} logo`}
-              className="size-14 shrink-0 rounded-md"
-            />
-          ) : null}
-          <div className="flex flex-col gap-1">
-            <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
-              War Week
-            </span>
-            <h1 className="text-3xl font-bold">
-              War Week {editionLabel}{" "}
-              <span className="text-foreground/60">{warWeek.year}</span>
-            </h1>
-            <p className="text-primary text-xl font-semibold">
-              {warWeek.storyTheme}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="border-border rounded-full border px-3 py-1 font-medium">
-            {statusLabel}
-          </span>
-          <span className="text-foreground/70">
-            {formatDateRange(warWeek.startDate, warWeek.endDate)}
-          </span>
-        </div>
-
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-6">
         <Button
           size="lg"
           className="w-full md:w-auto md:self-start"
@@ -97,7 +58,49 @@ export default async function EditionHomePage({
         >
           Join the Slack channel
         </Button>
+
+        <NowNextSection nowNext={nowNext} edition={warWeek.edition} />
+
+        {pinnedAnnouncement ? (
+          <section className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-lg font-semibold">Pinned</h2>
+              <Link
+                href={`/${warWeek.edition}/news`}
+                className="text-primary text-sm font-medium"
+              >
+                All news
+              </Link>
+            </div>
+            <AnnouncementCard
+              announcement={pinnedAnnouncement}
+              headingLevel="h3"
+            />
+          </section>
+        ) : null}
+
+        <section className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-lg font-semibold">
+              {warWeek.mode === "teams"
+                ? `${warWeek.teamLabel} standings`
+                : "Individual leaderboard"}
+            </h2>
+            <Link
+              href={`/${warWeek.edition}/leaderboard`}
+              className="text-primary text-sm font-medium"
+            >
+              Full leaderboard
+            </Link>
+          </div>
+          <HomeStandings
+            standings={standings}
+            individualLimit={HOME_INDIVIDUAL_ROWS}
+            primaryColor={warWeek.primaryColor}
+          />
+        </section>
       </div>
+      <AutoRefresh />
     </main>
   );
 }

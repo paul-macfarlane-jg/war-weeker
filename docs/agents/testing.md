@@ -16,13 +16,14 @@ rereading this guide.
 
 | Check | Command | Coverage | When | Status |
 |---|---|---|---|---|
-| typecheck | `unavailable (no code yet)` | Type correctness across the app | Per slice gate, before PR | unavailable |
-| lint | `unavailable (no code yet)` | Static code issues | Per slice gate, before PR | unavailable |
-| format | `unavailable (no code yet)` | Consistent formatting | Before lint | unavailable |
-| unit | `unavailable (no code yet); vitest planned` | Pure modules and services through public interfaces; no DB for pure-module tests | During implementation and per slice gate | unavailable |
-| build | `unavailable (no code yet)` | Next.js production build | Per slice gate, before PR | unavailable |
-| e2e | `unavailable (no code yet); smoke planned` | Seeded local Postgres + app start; /xi, /xi/leaderboard, /api/mcp respond; hidden leaderboard via MCP. Only coverage for UI and admin forms | Per slice gate, before PR | unavailable |
-| run | `unavailable (no code yet)` | Local dev server | Manual verification and smoke | unavailable |
+| typecheck | `pnpm typecheck` | Type correctness across the app | Per slice gate, before PR | verified |
+| lint | `pnpm lint` | Static code issues | Per slice gate, before PR | verified |
+| format | `pnpm format` (check: `pnpm format:check`) | Consistent formatting | Before lint | verified |
+| unit | `pnpm test` (vitest) | Pure modules and services through public interfaces; no DB for pure-module tests | During implementation and per slice gate | verified |
+| build | `pnpm build` | Next.js production build | Per slice gate, before PR | verified |
+| e2e | `pnpm smoke` (needs `pnpm build` and local Postgres via `docker compose up -d`) | Migrates, loads every seed twice (first with `--reset`, which wipes those War Weeks in the local DB, then plain to prove idempotence), starts the app; /, /xi, /xi/leaderboard, /api/mcp respond; seed row counts and DB constraints. Only coverage for UI and admin forms | Per slice gate, before PR | verified |
+| run | `pnpm dev` | Local dev server | Manual verification and smoke | verified |
+| gate | `pnpm gate` | typecheck, lint, test, build and smoke in order | Per slice gate, before PR | verified |
 
 `verified` means the command ran successfully here. `inferred` means configuration names it but setup did not execute it. `unavailable` is an explicit gap.
 

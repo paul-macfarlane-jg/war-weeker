@@ -1,0 +1,70 @@
+{
+  "edition": "v",
+  "editionNumber": 5,
+  "year": 2020,
+  "status": "complete",
+  "mode": "free-for-all",
+  "teamLabel": "Team",
+  "leaderTitle": "Captain",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2020",
+  "organizerEmails": [],
+  "winner": "Anthony Conway (MVP 1st Place)",
+  "highlights": [
+    "Anthony Conway was MVP, ahead of Dylan Mann and Dani Milliken."
+  ],
+  "days": [],
+  "teams": [],
+  "participants": [
+    {
+      "displayName": "Anthony Conway"
+    },
+    {
+      "displayName": "Dylan Mann"
+    },
+    {
+      "displayName": "Dani Milliken"
+    },
+    {
+      "displayName": "Akshay Palekar"
+    }
+  ],
+  "competitions": [],
+  "pointsEntries": [],
+  "awards": [
+    {
+      "key": "mvp-1st-place",
+      "name": "MVP 1st Place",
+      "participants": ["Anthony Conway"]
+    },
+    {
+      "key": "mvp-2nd-place",
+      "name": "MVP 2nd Place",
+      "participants": ["Dylan Mann"]
+    },
+    {
+      "key": "mvp-3rd-place",
+      "name": "MVP 3rd Place",
+      "participants": ["Dani Milliken"]
+    },
+    {
+      "key": "billing-hours-champ",
+      "name": "Billing Hours Champ",
+      "participants": ["Akshay Palekar"]
+    }
+  ],
+  "announcements": [],
+  "faqItems": [],
+  "startDate": "2020-02-23",
+  "endDate": "2020-02-29",
+  "storyTheme": "War Week 2020",
+  "primary": "#7c3aed",
+  "primaryForeground": "#ffffff",
+  "accent": "#22d3ee",
+  "background": "#111827",
+  "foreground": "#f3f4f6",
+  "fontPreset": "sans"
+}

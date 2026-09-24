@@ -1,0 +1,380 @@
+{
+  "edition": "vii",
+  "editionNumber": 7,
+  "year": 2022,
+  "startDate": "2022-02-27",
+  "endDate": "2022-03-04",
+  "storyTheme": "Karate Kid: Cobra Kai vs. Miyagi-Do",
+  "status": "complete",
+  "mode": "teams",
+  "teamLabel": "Team",
+  "leaderTitle": "Captain",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "primary": "#b91c1c",
+  "primaryForeground": "#ffffff",
+  "accent": "#d4a017",
+  "background": "#f7f3ea",
+  "foreground": "#1a1a1a",
+  "fontPreset": "serif",
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2022",
+  "organizerEmails": [],
+  "winner": "Miyagi-Do",
+  "highlights": [
+    "Miyagi-Do beat Cobra Kai 65 to 49 in the final team standings.",
+    "First War Week with the company split in half: Cobra Kai vs. Miyagi-Do.",
+    "War Week returned to an in-person format, with 20 True Remotes coming to JGHQ.",
+    "First-ever JG Rookie and Remote Squid Game: Matt Givney beat Eva Trimboli in a winner-take-all Simon match.",
+    "Code Wars became a team event, won by Velominati (Jacob Coleman, Sean Gibbons, Kevin Holmes, Dan Schuldt).",
+    "Tristin Knapp won Battle of the Memes for the 2nd year in a row."
+  ],
+  "days": [],
+  "teams": [
+    {
+      "name": "Cobra Kai",
+      "color": "#d4a017"
+    },
+    {
+      "name": "Miyagi-Do",
+      "color": "#c8102e"
+    }
+  ],
+  "participants": [
+    {
+      "displayName": "Jason Jahnel",
+      "team": "Cobra Kai",
+      "isLeader": true
+    },
+    {
+      "displayName": "Darrin Jahnel",
+      "team": "Cobra Kai",
+      "isLeader": true
+    },
+    {
+      "displayName": "Jon Keller",
+      "team": "Miyagi-Do",
+      "isLeader": true
+    },
+    {
+      "displayName": "Linda Martin",
+      "team": "Miyagi-Do",
+      "isLeader": true
+    },
+    {
+      "displayName": "Steven Zgaljic",
+      "team": "Miyagi-Do",
+      "isLeader": true
+    },
+    {
+      "displayName": "Tristin Knapp",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Matt Salvatore"
+    },
+    {
+      "displayName": "Brian Mallen",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Alex Schnackenberg",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Pooja Manjeshwar",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Bill Cresanti",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Ant Conway",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Solomon Mori",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Joe C"
+    },
+    {
+      "displayName": "Dylan Mann",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Tony Mercadante",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Lucas Culley",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Luke Prescott",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Eva Trimboli",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Jacob Coleman",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Sean Gibbons",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Kevin Holmes",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Dan Schuldt",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Sean Warner",
+      "team": "Miyagi-Do"
+    },
+    {
+      "displayName": "Matt Givney",
+      "team": "Cobra Kai"
+    },
+    {
+      "displayName": "Ian Ballard",
+      "team": "Cobra Kai"
+    }
+  ],
+  "competitions": [
+    {
+      "name": "War Week Crossword",
+      "description": "Karate Kid themed crossword; individual scores tallied as a team.",
+      "maxPoints": 3,
+      "scoring": "team",
+      "group": "Kicking Off Before War Week"
+    },
+    {
+      "name": "Website Easter Egg Hunt",
+      "description": "3 points for the team with the most finalists (best of 11).",
+      "maxPoints": 3,
+      "scoring": "team",
+      "group": "Kicking Off Before War Week"
+    },
+    {
+      "name": "Stairs Challenge",
+      "description": "12 points to the team with the most total trips.",
+      "maxPoints": 12,
+      "scoring": "team",
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Daily Workouts",
+      "description": "1 point for each team member who completes all 5 workouts.",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Daily Trivia",
+      "description": "3 / 2 / 1 points for 1st, 2nd and 3rd.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Wordle",
+      "description": "3 / 2 / 1 points for 1st, 2nd and 3rd.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Chess Tournament",
+      "description": "5 / 3 / 1 points for 1st, 2nd and 3rd.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Team Gear",
+      "description": "Post a pic or video wearing your Cobra Kai or Miyagi-Do gear to earn team points.",
+      "scoring": "team",
+      "group": "Ongoing During the Week"
+    },
+    {
+      "name": "Midnight Club",
+      "description": "1 point for each team member who goes from midnight to noon on Sunday.",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Hours"
+    },
+    {
+      "name": "Billable Hours Champs",
+      "description": "5 / 3 / 1 points for 1st, 2nd and 3rd in billable hours; cutoff Thursday at midnight.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Hours"
+    },
+    {
+      "name": "Settlers of Catan",
+      "description": "5 points to the team of the winner.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Competitions & Events"
+    },
+    {
+      "name": "Magic the Gathering",
+      "description": "3 points for the advanced champ, 1 point for the beginner champ.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Competitions & Events"
+    },
+    {
+      "name": "War Week Beer & Cards",
+      "description": "3 points for the advanced champ, 1 point for the beginner champ.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Competitions & Events"
+    },
+    {
+      "name": "Rookie and Remote Squid Game",
+      "description": "3 points to the team of the winner.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Competitions & Events"
+    }
+  ],
+  "pointsEntries": [],
+  "awards": [
+    {
+      "key": "team-champions",
+      "name": "War Week 2022 Team Champions",
+      "description": "Miyagi-Do won the team competition 65 to 49.",
+      "team": "Miyagi-Do"
+    },
+    {
+      "key": "battle-of-the-memes",
+      "name": "Battle of the Memes Winner",
+      "description": "2nd win in a row.",
+      "participants": ["Tristin Knapp"]
+    },
+    {
+      "key": "battle-of-the-beards",
+      "name": "Battle of the Beards Winner",
+      "description": "Reigning champ until War Week 2023.",
+      "participants": ["Matt Salvatore"]
+    },
+    {
+      "key": "crossword",
+      "name": "War Week Crossword Winner",
+      "description": "Perfect scores from Dan K, Nadia S and Jason J.",
+      "team": "Miyagi-Do"
+    },
+    {
+      "key": "easter-egg-hunt",
+      "name": "Website Easter Egg Hunt Winner",
+      "description": "Majority of finalists.",
+      "team": "Miyagi-Do"
+    },
+    {
+      "key": "stairs-challenge",
+      "name": "Stairs Challenge Winner",
+      "description": "Top finishers: Tristin (320), Dani (305), Ashleigh (258), Keller (216) and Jason (208).",
+      "team": "Miyagi-Do"
+    },
+    {
+      "key": "daily-trivia",
+      "name": "Daily Trivia Winners",
+      "description": "Mallen (1st), Schnack (2nd) and Jason (3rd).",
+      "participants": ["Brian Mallen", "Alex Schnackenberg", "Jason Jahnel"]
+    },
+    {
+      "key": "wordle",
+      "name": "Wordle Winners",
+      "description": "Pooja (1st), Bill C (2nd) and Ant (3rd).",
+      "participants": ["Pooja Manjeshwar", "Bill Cresanti", "Ant Conway"]
+    },
+    {
+      "key": "chess-tournament",
+      "name": "Chess Tournament Winners",
+      "description": "Solomon (1st), Joe C (2nd) and Dylan Mann (3rd).",
+      "participants": ["Solomon Mori", "Joe C", "Dylan Mann"]
+    },
+    {
+      "key": "daily-workouts",
+      "name": "Daily Workouts Winner",
+      "description": "Cobra Kai won 18 to 10.",
+      "team": "Cobra Kai"
+    },
+    {
+      "key": "settlers-of-catan",
+      "name": "Settlers of Catan Champion",
+      "participants": ["Tony Mercadante"]
+    },
+    {
+      "key": "magic-advanced",
+      "name": "Magic the Gathering Advanced Champion",
+      "participants": ["Solomon Mori"]
+    },
+    {
+      "key": "magic-beginner",
+      "name": "Magic the Gathering Beginner Champion",
+      "participants": ["Lucas Culley"]
+    },
+    {
+      "key": "beer-and-cards-advanced",
+      "name": "Beer & Cards Advanced Champion",
+      "participants": ["Luke Prescott"]
+    },
+    {
+      "key": "beer-and-cards-beginner",
+      "name": "Beer & Cards Beginner Champion",
+      "participants": ["Eva Trimboli"]
+    },
+    {
+      "key": "code-wars",
+      "name": "Code Wars Winners",
+      "description": "Team Velominati, with facial recognition on the stairs challenge.",
+      "participants": [
+        "Jacob Coleman",
+        "Sean Gibbons",
+        "Kevin Holmes",
+        "Dan Schuldt"
+      ]
+    },
+    {
+      "key": "scavenger-hunt-finals",
+      "name": "Scavenger Hunt Finals Winner",
+      "participants": ["Sean Warner"]
+    },
+    {
+      "key": "squid-game",
+      "name": "Rookie and Remote Squid Game Winner",
+      "description": "Defeated Eva Trimboli in a winner-take-all Simon match.",
+      "participants": ["Matt Givney"]
+    },
+    {
+      "key": "beer-pong-qualifier",
+      "name": "Beer Pong Qualifier Winners",
+      "description": "Frat Boys took the top slot, earning $1,000 each and a spot in next year's finals.",
+      "participants": ["Ian Ballard", "Tony Mercadante"]
+    }
+  ],
+  "announcements": [],
+  "faqItems": []
+}

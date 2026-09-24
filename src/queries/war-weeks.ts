@@ -5,10 +5,10 @@ import { WarWeek, warWeek } from "@/db/schema";
 
 /**
  * Picks the War Week to show as "current" from a list, never using the
- * clock: a `live` War Week wins outright; otherwise the most recent
- * `upcoming` one (by `startDate`) wins; otherwise the most recent
- * `complete` one (by `startDate`). Ties are broken by the highest
- * `editionNumber`. Returns `undefined` for an empty list or a list with no
+ * clock: a `live` War Week wins outright; otherwise the next `upcoming` one
+ * (earliest `startDate`, ties to the lowest `editionNumber`); otherwise the
+ * most recent `complete` one (latest `startDate`, ties to the highest
+ * `editionNumber`). Returns `undefined` for an empty list or a list with no
  * `live`, `upcoming`, or `complete` War Week.
  */
 export function selectCurrentWarWeek(warWeeks: WarWeek[]): WarWeek | undefined {
@@ -19,7 +19,7 @@ export function selectCurrentWarWeek(warWeeks: WarWeek[]): WarWeek | undefined {
 
   const upcoming = warWeeks.filter((w) => w.status === "upcoming");
   if (upcoming.length > 0) {
-    return latestByStartDate(upcoming);
+    return earliestByStartDate(upcoming);
   }
 
   const complete = warWeeks.filter((w) => w.status === "complete");
@@ -28,6 +28,16 @@ export function selectCurrentWarWeek(warWeeks: WarWeek[]): WarWeek | undefined {
   }
 
   return undefined;
+}
+
+function earliestByStartDate(warWeeks: WarWeek[]): WarWeek {
+  return warWeeks.reduce((earliest, candidate) => {
+    if (candidate.startDate < earliest.startDate) return candidate;
+    if (candidate.startDate > earliest.startDate) return earliest;
+    return candidate.editionNumber < earliest.editionNumber
+      ? candidate
+      : earliest;
+  });
 }
 
 function latestByStartDate(warWeeks: WarWeek[]): WarWeek {

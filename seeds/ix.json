@@ -1,0 +1,254 @@
+{
+  "edition": "ix",
+  "editionNumber": 9,
+  "year": 2024,
+  "startDate": "2024-02-25",
+  "endDate": "2024-03-01",
+  "storyTheme": "Battle of the Bands",
+  "status": "complete",
+  "mode": "teams",
+  "teamLabel": "Genre",
+  "leaderTitle": "Lead Singer",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "primary": "#ff2e88",
+  "primaryForeground": "#120d1f",
+  "accent": "#22d3ee",
+  "background": "#120d1f",
+  "foreground": "#f5f0ff",
+  "fontPreset": "sans",
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2024",
+  "organizerEmails": [],
+  "winner": "Rock & Country",
+  "highlights": [
+    "Rock & Country topped the Battle of the Bands standings posted on the wiki: Rock & Country 75, Pop & EDM 60, Hip Hop & RnB 59.",
+    "Black Tuesday returned, with team totals of Rock & Country 32, Pop & EDM 19 and Hip Hop & RnB 17.",
+    "Midnight Club points: Rock & Country 24, Pop & EDM 21, Hip Hop & RnB 18.",
+    "Brandon and Alec broke the Stairs Challenge record with 171 trips each on Sunday 2/25/24.",
+    "The first-ever War Week Pool Tournament was won by Dan Schuldt of Rock & Country.",
+    "Three teams based on musical genre, with more than two dozen remote JGers traveling to JGHQ."
+  ],
+  "days": [
+    {
+      "date": "2024-02-25",
+      "dayTheme": "Opening Ceremonies",
+      "scheduleItems": []
+    },
+    {
+      "date": "2024-02-26",
+      "dayTheme": "Rock & Country Day",
+      "scheduleItems": []
+    },
+    { "date": "2024-02-27", "dayTheme": "Black Tuesday", "scheduleItems": [] },
+    { "date": "2024-02-28", "dayTheme": "Pop & EDM Day", "scheduleItems": [] },
+    {
+      "date": "2024-02-29",
+      "dayTheme": "Hip Hop & RnB Day",
+      "scheduleItems": []
+    },
+    {
+      "date": "2024-03-01",
+      "dayTheme": "Closing Ceremonies",
+      "scheduleItems": []
+    }
+  ],
+  "teams": [
+    { "name": "Rock & Country", "color": "#c2410c" },
+    { "name": "Pop & EDM", "color": "#ec4899" },
+    { "name": "Hip Hop & RnB", "color": "#8b5cf6" }
+  ],
+  "participants": [
+    { "displayName": "Sam Potter", "team": "Rock & Country", "isLeader": true },
+    { "displayName": "Chelsea Merrill", "team": "Pop & EDM", "isLeader": true },
+    {
+      "displayName": "Jory Hutchins",
+      "team": "Hip Hop & RnB",
+      "isLeader": true
+    },
+    { "displayName": "Brandon Badgett", "team": "Hip Hop & RnB" },
+    { "displayName": "Alec Haring", "team": "Pop & EDM" },
+    { "displayName": "Dan Schuldt", "team": "Rock & Country" },
+    { "displayName": "Casey Snow", "team": "Rock & Country" },
+    { "displayName": "James Murphy", "team": "Rock & Country" },
+    { "displayName": "Michael Shirk", "team": "Hip Hop & RnB" },
+    { "displayName": "Dom Favata", "team": "Pop & EDM" },
+    { "displayName": "Mark Zweigenthal" }
+  ],
+  "competitions": [
+    {
+      "name": "Midnight Club",
+      "description": "Start at 12:00 AM Sunday and go until noon; each finisher earns points for their team.",
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Settlers of Catan",
+      "description": "5 team points to the champion, 1 to others at the final table.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Magic the Gathering",
+      "description": "Round robin sealed draft; 2 team points for the winner.",
+      "maxPoints": 2,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Beer & Cards",
+      "description": "2 team points for the winner.",
+      "maxPoints": 2,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Black Tuesday",
+      "description": "Team points for each member finishing the 12, 15 or 18 hour levels.",
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Rock Band",
+      "description": "3 points to the winning team.",
+      "maxPoints": 3,
+      "scoring": "team",
+      "group": "Gaming Night"
+    },
+    {
+      "name": "Mario Kart",
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Gaming Night"
+    },
+    {
+      "name": "Variety Show",
+      "description": "Team-based events with various points awarded.",
+      "scoring": "team"
+    },
+    {
+      "name": "Chess Tournament",
+      "description": "5 / 3 / 1 team points for 1st, 2nd and 3rd place.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Pool Tournament",
+      "description": "3 team points for the winner, 1 for the runner up.",
+      "maxPoints": 3,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Daily Workouts",
+      "description": "One team point per workout completed by a team member (Beast Mode and Yoga).",
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Billable Hours",
+      "description": "5 / 3 / 1 team points for the top 3 billers of the week.",
+      "maxPoints": 5,
+      "scoring": "individual",
+      "countsTowardTeam": true
+    },
+    {
+      "name": "Mug Shots",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    },
+    {
+      "name": "Memes",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    },
+    {
+      "name": "Collage Wall",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    },
+    {
+      "name": "Beer Cans",
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    },
+    {
+      "name": "Magnets",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    },
+    {
+      "name": "Postcards",
+      "maxPoints": 1,
+      "scoring": "individual",
+      "countsTowardTeam": true,
+      "group": "Spirit"
+    }
+  ],
+  "pointsEntries": [],
+  "awards": [
+    {
+      "key": "battle-of-the-bands",
+      "name": "Battle of the Bands",
+      "description": "Highest total in the final posted standings (75 points).",
+      "team": "Rock & Country"
+    },
+    {
+      "key": "stairs-challenge-record",
+      "name": "Stairs Challenge Winners",
+      "description": "Broke the record with 171 trips each on Sunday 2/25/24.",
+      "participants": ["Brandon Badgett", "Alec Haring"]
+    },
+    {
+      "key": "pool-tournament-champion",
+      "name": "Pool Tournament Champion",
+      "description": "Winner of the first-ever War Week Pool Tournament.",
+      "participants": ["Dan Schuldt"]
+    },
+    {
+      "key": "pool-tournament-runner-up",
+      "name": "Pool Tournament Runner Up",
+      "participants": ["Casey Snow"]
+    },
+    {
+      "key": "catan-champion",
+      "name": "Settlers of Catan Champion",
+      "participants": ["James Murphy"]
+    },
+    {
+      "key": "beer-and-cards-winner",
+      "name": "Beer & Cards Winner",
+      "participants": ["Michael Shirk"]
+    },
+    {
+      "key": "rock-band-winner",
+      "name": "Rock Band Winner",
+      "team": "Pop & EDM"
+    },
+    {
+      "key": "mario-kart-winner",
+      "name": "Mario Kart Winner",
+      "participants": ["Dom Favata"]
+    },
+    {
+      "key": "dmipt-winner",
+      "name": "Dylan Mann Invitational Poker Tournament Winner",
+      "description": "Third annual DMIPT, held the Friday before War Week; not scored for team points.",
+      "participants": ["Mark Zweigenthal"]
+    }
+  ],
+  "announcements": [],
+  "faqItems": []
+}

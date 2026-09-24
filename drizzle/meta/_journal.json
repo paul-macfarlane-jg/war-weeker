@@ -8,6 +8,27 @@
       "when": 1790182445849,
       "tag": "0000_neat_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790193767185,
+      "tag": "0001_thankful_vulcan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790205553194,
+      "tag": "0002_auth_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790259349570,
+      "tag": "0003_placement_points",
+      "breakpoints": true
     }
   ]
 }

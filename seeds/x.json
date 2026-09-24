@@ -1,0 +1,196 @@
+{
+  "edition": "x",
+  "editionNumber": 10,
+  "year": 2025,
+  "startDate": "2025-02-23",
+  "endDate": "2025-02-28",
+  "storyTheme": "Survivor",
+  "status": "complete",
+  "mode": "teams",
+  "teamLabel": "Tribe",
+  "leaderTitle": "Tribal Chief",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "primary": "#c2410c",
+  "primaryForeground": "#ffffff",
+  "accent": "#0f766e",
+  "background": "#fdf6e3",
+  "foreground": "#1c1917",
+  "fontPreset": "serif",
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2025",
+  "organizerEmails": [],
+  "winner": null,
+  "highlights": [
+    "War Week X marked 10 years of War Week, with a Survivor theme.",
+    "Three tribes competed: Red - Steady, Blue - Consistent and Yellow - Pressure.",
+    "The week culminated Friday in Ultimate Survivor, an individual elimination tournament for cash prizes, with immunity earned through daily puzzles, key events and the Tuesday Tribal Immunity Challenge.",
+    "Members of the tribe that won the Tribal Immunity Challenge automatically advanced to the second round of Ultimate Survivor.",
+    "The Centurion and Four Score Clubs were dropped this year to make War Week hours about quality over quantity.",
+    "Hosted the 8th annual Settlers of Catan tournament."
+  ],
+  "days": [
+    {
+      "date": "2025-02-23",
+      "dayTheme": "Welcome to the Island",
+      "scheduleItems": []
+    },
+    {
+      "date": "2025-02-24",
+      "dayTheme": "Tech & Learning Day",
+      "scheduleItems": []
+    },
+    { "date": "2025-02-25", "dayTheme": "Immunity Day", "scheduleItems": [] },
+    {
+      "date": "2025-02-26",
+      "dayTheme": "Wellness Wednesday with Dani Milliken",
+      "scheduleItems": []
+    },
+    {
+      "date": "2025-02-27",
+      "dayTheme": "Tournament Thursday",
+      "scheduleItems": []
+    },
+    {
+      "date": "2025-02-28",
+      "dayTheme": "Closing Ceremonies (Guests Welcome)",
+      "scheduleItems": []
+    }
+  ],
+  "teams": [
+    { "name": "Red - Steady", "color": "#dc2626" },
+    { "name": "Blue - Consistent", "color": "#2563eb" },
+    { "name": "Yellow - Pressure", "color": "#eab308" }
+  ],
+  "participants": [
+    {
+      "displayName": "Jessie Zweigenthal",
+      "team": "Red - Steady",
+      "isLeader": true
+    },
+    {
+      "displayName": "Dani Milliken",
+      "team": "Blue - Consistent",
+      "isLeader": true
+    },
+    {
+      "displayName": "Brandon Badgett",
+      "team": "Yellow - Pressure",
+      "isLeader": true
+    }
+  ],
+  "competitions": [
+    {
+      "name": "Tribal Immunity Challenge",
+      "description": "Tuesday evening team event testing knowledge, skill, speed and eating ability; the major factor in Tribal Immunity.",
+      "scoring": "team",
+      "group": "Tribal Immunity"
+    },
+    {
+      "name": "Stairway to Heaven",
+      "description": "Tuesday morning stairs workout; the only workout that impacts the Tribal Challenge.",
+      "scoring": "team",
+      "group": "Tribal Immunity"
+    },
+    {
+      "name": "Morrette's Wall of Steaks",
+      "description": "Eat two or more king steak sandwiches at Morrette's; each tribe's Chief submits the list.",
+      "scoring": "team",
+      "group": "Tribal Immunity"
+    },
+    {
+      "name": "Subjective Points",
+      "description": "Bonus points awarded at Jason's discretion in pre-determined, unannounced categories.",
+      "scoring": "team",
+      "group": "Tribal Immunity"
+    },
+    {
+      "name": "Daily Puzzle: Fastest Snake",
+      "description": "Sunday puzzle; top performer earns individual immunity.",
+      "scoring": "individual",
+      "group": "Daily Puzzle Immunity"
+    },
+    {
+      "name": "Daily Puzzle: The Paddle",
+      "description": "Monday puzzle; top performer earns individual immunity.",
+      "scoring": "individual",
+      "group": "Daily Puzzle Immunity"
+    },
+    {
+      "name": "Daily Puzzle: Stairway to Heaven",
+      "description": "Tuesday puzzle; top performer earns individual immunity.",
+      "scoring": "individual",
+      "group": "Daily Puzzle Immunity"
+    },
+    {
+      "name": "Daily Puzzle: Snake and Ball",
+      "description": "Wednesday puzzle; top performer earns individual immunity.",
+      "scoring": "individual",
+      "group": "Daily Puzzle Immunity"
+    },
+    {
+      "name": "Daily Puzzle: Cube Insanity",
+      "description": "Thursday puzzle; top performer earns individual immunity.",
+      "scoring": "individual",
+      "group": "Daily Puzzle Immunity"
+    },
+    {
+      "name": "Settlers of Catan Tournament",
+      "description": "8th annual tournament hosted by Tony Mercadante; winner earns individual immunity.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Perfect Day Challenge",
+      "description": "Wellness Wednesday challenge; one immunity winner drawn from those who complete it.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Chess Tournament",
+      "description": "Hosted by Kyle Gancarz on chess.com; finals Thursday night.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Rock, Paper, Scissors Tournament",
+      "description": "Impromptu Thursday night tournament, time permitting.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Beyblade Tournament",
+      "description": "Field narrowed to 8 by Team Room 4; decided on Nemesis Night.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "JG Pool Tournament",
+      "description": "Dom's pool tourney; finals Thursday night.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Potluck Luau",
+      "description": "Best dish earns individual immunity.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Top Biller",
+      "description": "Top biller through Thursday at midnight earns individual immunity.",
+      "scoring": "individual",
+      "group": "Key Event Immunity"
+    },
+    {
+      "name": "Ultimate Survivor",
+      "description": "Friday elimination-style individual tournament for significant cash prizes.",
+      "scoring": "individual"
+    }
+  ],
+  "pointsEntries": [],
+  "awards": [],
+  "announcements": [],
+  "faqItems": []
+}

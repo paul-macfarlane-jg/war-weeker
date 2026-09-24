@@ -1,0 +1,118 @@
+{
+  "edition": "vi",
+  "editionNumber": 6,
+  "year": 2021,
+  "startDate": "2021-02-21",
+  "endDate": "2021-02-26",
+  "storyTheme": "War Week 2021",
+  "status": "complete",
+  "mode": "free-for-all",
+  "teamLabel": "Team",
+  "leaderTitle": "Captain",
+  "slackChannelUrl": "https://jahnelgroup.slack.com",
+  "standingsHidden": false,
+  "primary": "#2563eb",
+  "primaryForeground": "#ffffff",
+  "accent": "#f59e0b",
+  "background": "#0f172a",
+  "foreground": "#f1f5f9",
+  "fontPreset": "sans",
+  "logoUrl": null,
+  "bannerUrl": null,
+  "wikiUrl": "https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2021",
+  "organizerEmails": [],
+  "winner": null,
+  "highlights": [
+    "A largely virtual War Week: COVID meant the whole team could not gather under one roof, with remote and in-person options for events.",
+    "War Week 2021 marked the official roll out of EOS (Entrepreneurial Operating System) at JG, with a mandatory EOS Roll Out on Monday night.",
+    "Closing Ceremonies moved from Saturday morning to Friday evening due to COVID.",
+    "Core Values Awards (Serve, Grind, Grow, Inspire) were presented by the executive team; Grind went to top billable hours.",
+    "Code Wars held its 5th annual War Week event.",
+    "Counter-Strike Captain Clash: SZ vs JK drafted teams for a best-of-one match, with a knife bonus for stabbing the opposing executive."
+  ],
+  "days": [
+    {
+      "date": "2021-02-23",
+      "dayTheme": "Hack Tuesday",
+      "scheduleItems": []
+    }
+  ],
+  "teams": [],
+  "participants": [],
+  "competitions": [
+    {
+      "name": "Code Wars",
+      "description": "5th annual JG Code Wars coding battle to crown this year's champion.",
+      "scoring": "individual",
+      "group": "Champions Club"
+    },
+    {
+      "name": "Settlers of Catan Tournament",
+      "description": "Digital and in-person tournament with digital finals.",
+      "scoring": "individual",
+      "group": "Champions Club"
+    },
+    {
+      "name": "War Week Beer & Cards",
+      "description": "Tarock, a trick-taking card game.",
+      "scoring": "individual",
+      "group": "Champions Club"
+    },
+    {
+      "name": "Chess Tournament",
+      "description": "Swiss-style tournament to find the company's best chess player.",
+      "scoring": "individual",
+      "group": "Champions Club"
+    },
+    {
+      "name": "Magic The Gathering Tournament",
+      "description": "Virtual sealed draft, six packs per player, 40-card decks.",
+      "scoring": "individual",
+      "group": "Champions Club"
+    },
+    {
+      "name": "Daily Trivia",
+      "description": "Themed daily trivia with a daily winner; the week's top three announced Friday.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Stair Challenge",
+      "description": "Group climb of iconic peaks on the 108 State Street stairs, with cash drawings per peak.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Battle of the Memes",
+      "description": "JG-themed memes; finalists voted live at Closing Ceremony.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Website Easter Egg Hunt",
+      "description": "Find the 30 hidden easter eggs on the JG website; most found wins.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Social Media Takeover",
+      "description": "Most liked post, best post, and a social media raffle.",
+      "scoring": "individual"
+    },
+    {
+      "name": "War Week Crossword",
+      "description": "JG-themed crossword; prize for the first perfect submission.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Typing Titan Challenge",
+      "description": "Best 1-minute medium typing test score.",
+      "scoring": "individual"
+    },
+    {
+      "name": "Counter-Strike Captain Clash: SZ vs JK",
+      "description": "SZ and JK draft teams for a best-of-one competitive match.",
+      "scoring": "individual"
+    }
+  ],
+  "pointsEntries": [],
+  "awards": [],
+  "announcements": [],
+  "faqItems": []
+}

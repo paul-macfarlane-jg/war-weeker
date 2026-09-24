@@ -63,7 +63,7 @@ describe("selectCurrentWarWeek", () => {
     expect(selectCurrentWarWeek([complete, upcoming, live])).toEqual(live);
   });
 
-  it("falls back to the most recent upcoming War Week when none is live", () => {
+  it("falls back to the next upcoming War Week (earliest start) when none is live", () => {
     const upcomingSoon = warWeekFixture({
       edition: "xi",
       editionNumber: 11,
@@ -76,8 +76,8 @@ describe("selectCurrentWarWeek", () => {
       status: "upcoming",
       startDate: "2027-02-22",
     });
-    expect(selectCurrentWarWeek([upcomingSoon, upcomingLater])).toEqual(
-      upcomingLater,
+    expect(selectCurrentWarWeek([upcomingLater, upcomingSoon])).toEqual(
+      upcomingSoon,
     );
   });
 
@@ -115,21 +115,39 @@ describe("selectCurrentWarWeek", () => {
     );
   });
 
-  it("breaks a startDate tie by the highest editionNumber", () => {
+  it("breaks a complete startDate tie by the highest editionNumber", () => {
     const lowerEdition = warWeekFixture({
       edition: "x",
       editionNumber: 10,
-      status: "upcoming",
+      status: "complete",
       startDate: "2026-02-22",
     });
     const higherEdition = warWeekFixture({
       edition: "xi",
       editionNumber: 11,
-      status: "upcoming",
+      status: "complete",
       startDate: "2026-02-22",
     });
     expect(selectCurrentWarWeek([lowerEdition, higherEdition])).toEqual(
       higherEdition,
+    );
+  });
+
+  it("breaks an upcoming startDate tie by the lowest editionNumber", () => {
+    const lowerEdition = warWeekFixture({
+      edition: "xii",
+      editionNumber: 12,
+      status: "upcoming",
+      startDate: "2027-02-22",
+    });
+    const higherEdition = warWeekFixture({
+      edition: "xiii",
+      editionNumber: 13,
+      status: "upcoming",
+      startDate: "2027-02-22",
+    });
+    expect(selectCurrentWarWeek([higherEdition, lowerEdition])).toEqual(
+      lowerEdition,
     );
   });
 
