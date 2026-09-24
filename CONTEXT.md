@@ -17,6 +17,7 @@ domain concepts in code, tests, tickets, or specs.
 | **Team Label**                | What teams are called this year (House / Tribe / Team).                                                                           |
 | **Leader** / **Leader Title** | A participant flagged as a team leader, displayed with the year's title (Captain, Head of House). A label only, not a permission. |
 | **Participant**               | A person in a War Week. A record, not a user.                                                                                     |
+| **Avatar**                    | A Participant's visual marker: their initials in their Team's color for now, a portrait later.                                    |
 | **Company Tag**               | An optional affiliation label on a participant (LTI, IL, …).                                                                      |
 | **Organizer**                 | A signed-in `@jahnelgroup.com` user on the War Week's allowlist. The only role that can write.                                    |
 | **Competition**               | Anything that awards points. Scored as team or individual.                                                                        |
@@ -74,6 +75,19 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - The Teams page lists Teams by name, each with its Leaders first (marked
   with the Leader Title), then Participants by name. A free-for-all War Week
   shows one list of all Participants.
+- A Participant's **Avatar** shows the first letter of the first and last
+  words of their display name, uppercased, with no special cases ("Sir Paul
+  of the Backend" → SB). Its fill is the Team color, or the Appearance
+  Theme's primary color when there's no Team. It appears on the Teams page,
+  the individual leaderboard and Award winners.
+
+## Slack rules
+
+- When a Slack webhook is configured, creating an Announcement can also post
+  it to the War Week's Slack channel ("Also post to Slack", on by default).
+  Edits, deletes, pins and seed loads never post.
+- A failed Slack post never blocks publishing; the Organizer is told it
+  failed.
 
 ## Access rules
 

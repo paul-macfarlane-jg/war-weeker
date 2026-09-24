@@ -1,30 +1,29 @@
-# 16: Themed Participant portraits and bios (reach, needs refinement)
+# 16: Participant initials Avatars
 
-**What to build:** Give Participants a face and a short in-character bio. Pull each person's headshot from the public Jahnel Group website, optionally restyle it with AI to match the War Week's Appearance Theme (e.g. knight, pirate, house crest), and pair it with a one- or two-line theme-flavored bio. Shown on Team pages, the leaderboard, and Awards. The exact shape is not decided yet.
+**What to build:** Give every Participant an **Avatar**: a small circle with their initials in their Team's color. Show it on the Teams page roster, the individual leaderboard rows and the Award winners on `/awards`. No photos, no AI, no schema change. This is the deadline-sized slice of the original "themed portraits and bios" idea; the rest moved to ticket 19.
 
-**Blocked by:** none (but do this only after core functionality is done)
+**Blocked by:** none
 
-**Status:** needs-info
+**Status:** ready-for-agent
 
-> **Needs refinement before any work.** This is a placeholder so the idea isn't lost. Grill it (`/grill-with-docs`) and turn it into real acceptance criteria before it moves to `ready-for-agent`. Participant is currently "a record, not a user" with no image or bio fields, so this adds to the domain model (`CONTEXT.md`).
+## Decisions
 
-## Candidate ideas (not commitments)
+Grilled 2026-09-24 with Paul.
 
-- Match Participants to jahnelgroup.com team-page entries by name and store the photo URL (or a copied image) on the Participant
-- Plain headshots first; AI theme restyling as a second step
-- AI-generated theme bios from the person's public title plus the year's story theme ("Sir Paul of the Backend, Keeper of Migrations")
-- Organizer review before anything shows: approve, regenerate, or replace per person
-- Fallback avatar (initials in the Team color) for anyone without a match
-- Surface portraits on Team pages, the individual leaderboard, Award winners, and the Reveal
+- **Initials:** the first letter of the first word and the first letter of the last word of `displayName`, uppercased. One word gives one letter. No special cases for titles or particles ("Paul Macfarlane" → PM, "Cher" → C, "Sir Paul of the Backend" → SB).
+- **Color:** the fill is the Participant's Team color. A Participant with no Team, or in a free-for-all War Week, gets the War Week's Appearance Theme primary color. The text is white or black, whichever has higher contrast against the fill.
+- **Where:** the Teams page roster, the individual leaderboard (including during the Reveal, since those are the same rows) and Participant recipients on `/awards`. Team recipients of Awards get no Avatar. Admin pages are out of scope.
+- The Avatar is decorative next to the visible name (`aria-hidden`), so screen readers don't read the initials twice.
+- **Out of scope here:** photos, scraping jahnelgroup.com, AI restyling, bios, Organizer review. All of this is in ticket 19.
 
-## Open questions to grill
+## Acceptance criteria
 
-- **Consent:** is it OK to show AI-altered likenesses of coworkers? Opt-in, opt-out, or organizer-approved only? Does anyone need to sign off (marketing, HR)?
-- Is scraping the public site acceptable, or should Organizers upload photos / paste URLs instead? How are name mismatches and people not on the site (contractors, LTI/IL Company Tags) handled?
-- Which image model does the restyling, what does it cost for ~100 people, and is it a one-off batch script or an in-app action?
-- Where do images live (Vercel Blob, Neon, committed static files) and how big can they be for a phone on conference Wi-Fi?
-- Bios: AI-generated, Organizer-written, or AI draft plus Organizer edit? Where does the source info come from, and what keeps them kind and not embarrassing?
-- Per-War-Week (restyled for each year's theme) or one portrait per person reused across years? History War Weeks likely stay without portraits.
-- Is the public app OK showing employee faces to anyone with the link, given it has no sign-in?
-- Does the MCP server expose portraits or bios?
-- What is the smallest version that fits the deadline (Fri 2026-09-25 10:00 AM), if any?
+- [ ] A pure function derives initials from a display name. Unit tests cover two words, one word, many words, extra whitespace, and lowercase input.
+- [ ] A pure function picks the Avatar colors (Team color, else the Appearance Theme primary color) and the higher-contrast text color. Unit tests cover a light fill and a dark fill.
+- [ ] One shared Avatar component is used on the Teams page roster, the individual leaderboard rows and Participant Award recipients.
+- [ ] Hidden Standings stay hidden: the individual leaderboard shows no Avatars or names while hidden (no new data reaches the client).
+- [ ] Screenshots of the Teams page, the individual leaderboard and `/awards` for the seeded demo War Week, at 390px wide, saved under `test-results/16-avatars/`.
+- [ ] `CONTEXT.md` defines **Avatar** and its display rule (done during grilling; keep it in sync if the implementation differs).
+- [ ] `pnpm gate` passes.
+
+## Comments
