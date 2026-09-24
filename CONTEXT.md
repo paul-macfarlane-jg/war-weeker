@@ -114,7 +114,9 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   sign-in; signed-in non-Organizers see "Organizers only".
 - Every page and API route needs a JG sign-in. Anonymous visitors to a
   page go to `/sign-in` and come back afterwards; API routes answer 401.
-  Only `/sign-in` and `/api/auth/*` are public.
+  Only `/sign-in`, `/api/auth/*` and `/about` are public. `/about` is
+  static copy and media (`public/about/`, written by
+  `scripts/about-media.ts`): it never reads the database or the session.
 - `/api/mcp` also lets in `Authorization: Bearer <MCP_TOKEN>` (off when
   `MCP_TOKEN` is unset or blank), and anyone while `MCP_PUBLIC=true` (off by
   default; for a claude.ai connector demo). `canUseMcp` in
