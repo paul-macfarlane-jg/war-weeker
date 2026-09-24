@@ -4,7 +4,7 @@
 
 **Blocked by:** none (it reads better after 21 lands, but only the MCP paragraph depends on 21 and can name the header without it)
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Decisions
 
@@ -15,10 +15,10 @@ Proposed by Claude on 2026-09-24. Confirm at the start of `/implement`.
 
 ## Acceptance criteria
 
-- [ ] `GET /llms.txt` returns 200 `text/plain` anonymously. Smoke covers it.
-- [ ] Every registered MCP tool name appears in it, and a test enforces this.
-- [ ] It contains no data from the database.
-- [ ] The spec stretch item 5 is marked delivered.
-- [ ] `pnpm gate` passes.
+- [x] `GET /llms.txt` returns 200 `text/plain` anonymously. Smoke covers it.
+- [x] Every registered MCP tool name appears in it, and a test enforces this.
+- [x] It contains no data from the database.
+- [x] The spec stretch item 5 is marked delivered.
+- [x] `pnpm gate` passes.
 
 ## Comments
