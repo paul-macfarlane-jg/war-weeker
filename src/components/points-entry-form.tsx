@@ -22,7 +22,7 @@ import type {
 } from "@/queries/points-entries";
 
 const fieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
+  "border-border bg-background h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
 
 type Initial = {
   competitionId: string;

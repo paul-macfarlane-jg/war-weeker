@@ -109,7 +109,7 @@ export function AwardForm({
         />
       </label>
 
-      <fieldset className="flex flex-col gap-3">
+      <fieldset className="flex min-w-0 flex-col gap-3">
         <legend className="text-sm font-medium">Recipients</legend>
         <p className="text-foreground/60 text-xs">
           A {teamLabel}, Participants, or both. Awards don&apos;t affect the
