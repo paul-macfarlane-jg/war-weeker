@@ -23,6 +23,7 @@ domain concepts in code, tests, tickets, or specs.
 | **Competition**               | Anything that awards points. Scored as team or individual.                                                                        |
 | **Competition Group**         | An optional grouping of competitions ("Team Night Events").                                                                       |
 | **Points Entry**              | One ledger row: points awarded to a team or participant for a competition.                                                        |
+| **Placement Points**          | A Competition's optional preset points for 1st, 2nd, 3rd… (up to 5 places, highest first), offered as buttons on Points Entry.  |
 | **Counts Toward Team**        | Whether an individual competition's points also go to the participant's team.                                                     |
 | **Standings**                 | The main leaderboard, computed from Points Entries.                                                                               |
 | **Reveal**                    | The organizer action that un-hides the standings, with an animation.                                                              |
@@ -111,6 +112,9 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   same War Week; the server actions refuse anything else.
 - Going over a Competition's max points shows a warning and still saves.
   Ties are just equal entries for each target.
+- When a Competition has Placement Points, the form offers one button per
+  place ("1st · 5"). A tap fills the Points field, which stays editable; it
+  doesn't touch the note.
 - An edit keeps the entry's entered-by email and entered-at time; the admin
   ledger marks it as edited.
 - `/admin/points` shows the real Standings even while they're hidden.

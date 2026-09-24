@@ -71,6 +71,61 @@ describe("warWeekSeedSchema", () => {
     rejectionOf({ ...fixture, days: [...fixture.days, fixture.days[0]] });
   });
 
+  describe("Placement Points", () => {
+    function withCompetition(competition: Record<string, unknown>) {
+      const fixture = loadFixture();
+      return {
+        ...fixture,
+        competitions: [
+          ...fixture.competitions,
+          { name: "Fixture Cup", scoring: "team", ...competition },
+        ],
+      };
+    }
+    const at = `competitions.${loadFixture().competitions.length}.placementPoints`;
+
+    it("accepts a non-increasing list within maxPoints", () => {
+      const result = warWeekSeedSchema.safeParse(
+        withCompetition({ maxPoints: 5, placementPoints: [5, 3, 3, 0.5] }),
+      );
+      expect(result.success ? [] : result.error.issues).toEqual([]);
+    });
+
+    it("rejects an increasing list", () => {
+      expect(
+        rejectionOf(withCompetition({ placementPoints: [3, 5, 1] })),
+      ).toContain(
+        `${at}: each place must be worth no more than the one above it`,
+      );
+    });
+
+    it("rejects a negative value", () => {
+      expect(
+        rejectionOf(withCompetition({ placementPoints: [3, 1, -1] })),
+      ).toContain(`${at}.2: must be at least 0`);
+    });
+
+    it("rejects a first place over maxPoints", () => {
+      expect(
+        rejectionOf(
+          withCompetition({ maxPoints: 3, placementPoints: [5, 3, 1] }),
+        ),
+      ).toContain(`${at}: 1st place can't be worth more than maxPoints`);
+    });
+
+    it("rejects more than five places", () => {
+      expect(
+        rejectionOf(withCompetition({ placementPoints: [6, 5, 4, 3, 2, 1] })),
+      ).toContain(`${at}: at most 5 places`);
+    });
+
+    it("rejects an empty list", () => {
+      expect(rejectionOf(withCompetition({ placementPoints: [] }))).toContain(
+        `${at}: at least 1 place`,
+      );
+    });
+  });
+
   describe("Points Entries", () => {
     function withEntry(entry: Record<string, unknown>) {
       const fixture = loadFixture();

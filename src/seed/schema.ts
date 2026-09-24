@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { announcementTitleSchema, videoUrlSchema } from "@/lib/announcements";
 import { AWARD_DESCRIPTION_MAX, AWARD_NAME_MAX } from "@/lib/awards";
+import { MAX_PLACEMENTS } from "@/lib/competitions";
 import {
   pointsSchema as points,
   pointsEntryNoteSchema,
@@ -93,10 +94,29 @@ export const competitionSeedSchema = z
     name: z.string().min(1).max(120),
     description: z.string().max(2000).nullish(),
     maxPoints: points.positive().nullish(),
+    /** Placement Points for 1st, 2nd, 3rd…, highest first. */
+    placementPoints: z
+      .array(points.min(0, { error: "must be at least 0" }))
+      .min(1, { error: "at least 1 place" })
+      .max(MAX_PLACEMENTS, { error: `at most ${MAX_PLACEMENTS} places` })
+      .refine((list) => list.every((p, i) => i === 0 || p <= list[i - 1]), {
+        error: "each place must be worth no more than the one above it",
+      })
+      .nullish(),
     scoring: z.enum(["team", "individual"]),
     countsTowardTeam: z.boolean().default(false),
     group: z.string().min(1).max(120).nullish(),
   })
+  .refine(
+    (c) =>
+      c.maxPoints == null ||
+      c.placementPoints == null ||
+      c.placementPoints[0] <= c.maxPoints,
+    {
+      message: "1st place can't be worth more than maxPoints",
+      path: ["placementPoints"],
+    },
+  )
   .refine((c) => !c.countsTowardTeam || c.scoring === "individual", {
     message: "countsTowardTeam can only be set on an individual Competition",
     path: ["countsTowardTeam"],

@@ -23,6 +23,7 @@ export type PointsEntryFormCompetition = {
   name: string;
   scoring: "team" | "individual";
   maxPoints: number | null;
+  placementPoints: number[] | null;
 };
 
 export type PointsEntryFormTarget = {
@@ -55,6 +56,7 @@ export async function getPointsEntryFormOptions(
         name: competition.name,
         scoring: competition.scoring,
         maxPoints: competition.maxPoints,
+        placementPoints: competition.placementPoints,
       })
       .from(competition)
       .where(eq(competition.warWeekId, warWeek.id))

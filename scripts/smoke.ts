@@ -311,6 +311,31 @@ async function runQuery<T extends Record<string, unknown>>(
   }
 }
 
+async function assertPlacementPointsSeeded() {
+  const check =
+    "the XI seed loads 5/3/1 Placement Points for Catan and none for Beast Mode";
+  try {
+    const rows = await runQuery<{ name: string; placement_points: string }>(
+      `select c.name, c.placement_points::text
+       from competition c join war_week w on w.id = c.war_week_id
+       where w.edition = 'xi' and c.name in ('Settlers of Catan', 'Beast Mode Workout')`,
+    );
+    const byName = Object.fromEntries(
+      rows.map((r) => [r.name, r.placement_points]),
+    );
+    if (
+      byName["Settlers of Catan"] === "{5.00,3.00,1.00}" &&
+      byName["Beast Mode Workout"] === null
+    ) {
+      ok(check);
+    } else {
+      fail(check, JSON.stringify(byName));
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
 async function assertMoreLinks() {
   const check =
     "GET /xi/more links to Competitions, Teams, Awards, FAQ, history and Install app";
@@ -2829,6 +2854,7 @@ async function main() {
   }
   await assertSeedLoadedOnce();
   await assertPointsEntryTargetConstraint();
+  await assertPlacementPointsSeeded();
 
   // Clear leftovers from an interrupted run, then add the smoke Organizer
   // to XI's allowlist until the run ends.

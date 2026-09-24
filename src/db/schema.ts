@@ -156,6 +156,12 @@ export const competition = pgTable(
       scale: 2,
       mode: "number",
     }),
+    // Placement Points: points for 1st, 2nd, 3rd…, highest first.
+    placementPoints: numeric("placement_points", {
+      precision: 8,
+      scale: 2,
+      mode: "number",
+    }).array(),
     scoring: competitionScoring("scoring").notNull(),
     countsTowardTeam: boolean("counts_toward_team").notNull().default(false),
     competitionGroup: varchar("competition_group", { length: 120 }),
