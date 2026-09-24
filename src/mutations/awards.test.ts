@@ -99,8 +99,8 @@ describe.skipIf(!isLocalDatabase)("Award mutations", () => {
           description: "Most valuable",
           team: { id: home.teamId, name: "Red", color: "#f00" },
           participants: [
-            { id: home.neoId, displayName: "Neo" },
-            { id: home.trinityId, displayName: "Trinity" },
+            { id: home.neoId, displayName: "Neo", teamColor: "#f00" },
+            { id: home.trinityId, displayName: "Trinity", teamColor: "#f00" },
           ],
         },
       ]);

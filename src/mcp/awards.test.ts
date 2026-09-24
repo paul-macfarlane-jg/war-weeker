@@ -12,8 +12,8 @@ describe("toAwardsResult", () => {
           description: "Most valuable",
           team: { id: "t", name: "Slytherin", color: "#1a472a" },
           participants: [
-            { id: "p1", displayName: "Dom Favata" },
-            { id: "p2", displayName: "Lucas Fernandes" },
+            { id: "p1", displayName: "Dom Favata", teamColor: null },
+            { id: "p2", displayName: "Lucas Fernandes", teamColor: null },
           ],
         },
         {
@@ -21,7 +21,9 @@ describe("toAwardsResult", () => {
           name: "Catan Champion",
           description: null,
           team: null,
-          participants: [{ id: "p3", displayName: "Anthony Conway" }],
+          participants: [
+            { id: "p3", displayName: "Anthony Conway", teamColor: null },
+          ],
         },
       ]),
     ).toEqual({
