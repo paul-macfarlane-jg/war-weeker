@@ -142,3 +142,7 @@ Red-team (required by `docs/agents/planning.md` for an access-control change): r
 - **Deviations:** `/about` is an exact public path, not a prefix (red-team). The Archive still is `/history`. The maintainer's guide link points at `blob/main`, so it resolves once `staging` is promoted: click it during the production smoke (runbook step 5).
 - **Paragraph set:** unchanged from grilling; nothing from it is on the site.
 - **Status:** done.
+
+### 2026-09-24 — PR
+
+https://github.com/paul-macfarlane/war-weeker/pull/45 (into `staging`).
