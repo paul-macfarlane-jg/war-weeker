@@ -4,7 +4,7 @@
 
 **Blocked by:** none for the manual steps. The regression rounds run after the hackathon batch (16, 20–28) has merged to `staging`. Round 1 can start at 17:00 on 2026-09-24 on whatever has merged.
 
-**Status:** ready-for-human
+**Status:** in-progress
 
 ## Manual steps (Paul)
 
@@ -29,3 +29,5 @@
 - [ ] Paul promotes `staging` → `main` and smokes production before 10:00 ET on 2026-09-25.
 
 ## Comments
+
+**2026-09-24 15:55 ET, Claude (implement) — [PROGRESS]:** Claimed the regression walk. Branch `docs/29-regression-round-1` off `staging` 14693a7. Every hackathon ticket (16, 20–28) is `done` and merged to `staging`, and `main` already carries the same commits (PR #44), so round 1 starts early. Staging preview: `https://war-weeker-git-staging-pauls-team.vercel.app` (Vercel deployment 6646615147, commit 14693a7), behind Vercel team login; Paul signs in inside the browser pane, the agent never enters credentials. Findings tickets will be numbered from **32**, since 30 (code cleanup) and 31 (maintainers guide) already exist. Manual steps stay with Paul; the `MCP_TOKEN` step gates walk step 3.
