@@ -1,6 +1,7 @@
 import { RichText } from "@/components/rich-text";
 import type { Announcement } from "@/db/schema";
-import { formatPublishedAt, videoEmbedUrl } from "@/lib/announcements";
+import { formatPublishedAt } from "@/lib/announcements";
+import { videoEmbedUrl } from "@/lib/video";
 
 export type AnnouncementCardData = Pick<
   Announcement,

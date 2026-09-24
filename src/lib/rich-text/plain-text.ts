@@ -24,11 +24,14 @@ function blockLines(block: Block, indent = ""): string[] {
       );
     case "image":
       return [];
+    case "video":
+      return [indent + block.attrs.src];
   }
 }
 
 /**
- * Rich text as plain text for a Claude user; images are dropped. Shared by
+ * Rich text as plain text for a Claude user; images are dropped and videos
+ * become their URL. Shared by
  * every MCP serializer that returns a rich-text field as readable text
  * (Schedule Item descriptions, Announcement bodies).
  */

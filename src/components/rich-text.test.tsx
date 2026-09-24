@@ -117,6 +117,35 @@ describe("RichText", () => {
     expect(html).toContain("<p><span>kept</span></p>");
   });
 
+  it("renders an allow-listed video as a lazy 16:9 embed", () => {
+    const html = render(
+      doc({
+        type: "video",
+        attrs: { src: "https://www.youtube.com/watch?v=abc123" },
+      }),
+    );
+
+    expect(html).toContain(
+      'src="https://www.youtube-nocookie.com/embed/abc123"',
+    );
+    expect(html).toContain('title="Embedded video"');
+    expect(html).toContain('loading="lazy"');
+    expect(html).toContain('allow="fullscreen"');
+    expect(html).toContain('referrerPolicy="strict-origin-when-cross-origin"');
+    expect(html).toContain("aspect-video");
+  });
+
+  it("drops a video outside the allow-list on render", () => {
+    const html = render(
+      doc(
+        { type: "video", attrs: { src: "https://evil.example.com/x" } },
+        { type: "video", attrs: { src: "javascript:alert(1)" } },
+      ),
+    );
+
+    expect(html).not.toContain("<iframe");
+  });
+
   it("renders nothing for a value that is not a document", () => {
     expect(render("<b>hi</b>")).toBe("");
     expect(render(null)).toBe("");

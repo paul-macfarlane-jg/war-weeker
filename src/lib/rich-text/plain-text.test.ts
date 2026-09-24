@@ -42,6 +42,19 @@ describe("toPlainText", () => {
     expect(toPlainText(content)).toBe("Heads up\nBring snacks.\n- Chips");
   });
 
+  it("renders a video as its URL", () => {
+    const src = "https://youtu.be/abc123";
+    expect(
+      toPlainText({
+        type: "doc",
+        content: [
+          { type: "paragraph", content: [{ type: "text", text: "Watch:" }] },
+          { type: "video", attrs: { src } },
+        ],
+      }),
+    ).toBe(`Watch:\n${src}`);
+  });
+
   it("returns null when there is no renderable text", () => {
     expect(toPlainText({ type: "doc", content: [] })).toBeNull();
   });

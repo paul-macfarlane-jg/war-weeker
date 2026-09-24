@@ -17,6 +17,7 @@ describe("editorExtensions", () => {
         "orderedList",
         "paragraph",
         "text",
+        "video",
       ].sort(),
     );
   });
@@ -33,5 +34,12 @@ describe("editorExtensions", () => {
     const image = schema.nodes.image;
     expect(image.isBlock).toBe(true);
     expect(Object.keys(image.spec.attrs ?? {})).toContain("alt");
+  });
+
+  it("keeps videos as atomic blocks holding only a src", () => {
+    const video = schema.nodes.video;
+    expect(video.isBlock).toBe(true);
+    expect(video.isAtom).toBe(true);
+    expect(Object.keys(video.spec.attrs ?? {})).toEqual(["src"]);
   });
 });
