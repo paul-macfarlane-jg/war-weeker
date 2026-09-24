@@ -26,7 +26,10 @@ hand; `xi.json` is War Week XI with its real schedule, Teams, roster and
 Competitions plus fictional mid-week demo data (close race, standings
 hidden). Edit a file and reload it; setup data follows the seed, while keyed
 Points Entries, Awards and Announcements are only inserted once (see
-`CONTEXT.md`, "Seed idempotence rules").
+`CONTEXT.md`, "Seed idempotence rules"). Organizers can also edit War Week
+settings, the Appearance Theme and Days in `/admin/setup`; reloading a seed
+overwrites those edits with the seed's values, so update the seed to match
+or stop reloading it once organizers are editing in the app.
 
 - `pnpm seed:all` loads every seed. `pnpm seed:load <file> [<file> ...]`
   loads specific ones. Every file is validated before anything loads; each
