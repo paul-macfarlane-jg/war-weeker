@@ -26,6 +26,7 @@
 
 **[CLOSEOUT]** (2026-09-24, branch `fix/32-33-hover-and-overflow`, one PR with ticket 32)
 
+- PR: https://github.com/paul-macfarlane/war-weeker/pull/47
 - Delivered in the main session (Opus 5.5), no workers.
 - `pnpm gate` PASS (typecheck, lint, 498 tests, build, smoke 139 ok).
 - Evidence: `pnpm tsx scripts/fix-32-33-evidence.ts` against a local build and seeded Postgres.
