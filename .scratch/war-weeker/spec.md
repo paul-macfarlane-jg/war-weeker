@@ -272,7 +272,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 
 ## Out of Scope
 
-- **Cut completely:** Leagues, ELO, match and bracket tracking, multi-tenancy, video hosting and uploads, image uploads, Slack cross-posting, hours tracking and hours-based honors (computed Four Score or Centurion), the War Week projects board, sign-ups and interest forms, an AI chat inside the app, per-person history across years.
+- **Cut completely:** Leagues, ELO, match and bracket tracking, multi-tenancy, video hosting and uploads, image uploads, Slack cross-posting (except new Announcements via webhook, ticket 15), hours tracking and hours-based honors (computed Four Score or Centurion), the War Week projects board, sign-ups and interest forms, an AI chat inside the app, per-person history across years.
 - **The Stairs App integration.** HQ Attendance is scored with Points Entries entered by hand. A doc stub records how the integration could work:
   - The Stairs App logs self-reported stair climbs, keyed by `@jahnelgroup.com` email.
   - Its API needs a Firebase ID token.
