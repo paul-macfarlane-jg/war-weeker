@@ -36,6 +36,7 @@ Grilled 2026-09-24 with Paul.
   - `CONTEXT.md` already matches the implementation. No change made.
   - Evidence: `test-results/16-avatars/phone-{teams,leaderboard,leaderboard-hidden,awards}.png` at 390px, captured with `DATABASE_URL=<.env.example value> pnpm tsx scripts/avatars-evidence.ts`. The script restores XI's Standings visibility afterwards.
   - Verified: `DATABASE_URL=<.env.example value> pnpm gate` passed (typecheck, lint with 0 errors, 409 tests, build, smoke with 121 checks). The worktree has no `.env.local`.
+- PR: https://github.com/paul-macfarlane/war-weeker/pull/36
 - 2026-09-24 (Claude) [AI CODE REVIEW]: two-axis review against `origin/staging`.
   - Standards: no hard violations. The only finding was that the ticket wasn't `done` yet, which this closeout fixes. Judgement call: `primaryColor` is passed down three component layers, the same way `teamLabel`/`leaderTitle` already are. Kept.
   - Spec: all acceptance criteria are met. Possible scope creep: the checked-in `scripts/avatars-evidence.ts`. Kept, because it follows the repo's one-off evidence-script pattern (tickets 11 and 13). Judgement call: optional `primaryColor` is an implicit switch for showing Avatars. Kept and documented on the prop. Minor: the Teams shot sets Standings hidden, which is harmless.
