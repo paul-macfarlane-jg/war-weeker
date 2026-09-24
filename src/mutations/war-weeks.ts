@@ -2,10 +2,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
 import { warWeek } from "@/db/schema";
-import type {
-  MutationContext,
-  MutationResult,
-} from "@/mutations/points-entries";
+import type { MutationContext, MutationResult } from "@/mutations/types";
 
 /**
  * Hides the War Week's Standings on the public site and MCP, or reveals
