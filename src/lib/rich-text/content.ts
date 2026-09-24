@@ -322,10 +322,16 @@ export function sanitizeContent(input: unknown): SanitizeContentResult {
 
 /**
  * zod schema for rich text arriving on a write path (seed files, organizer
- * forms): checks the shape, then sanitizes.
+ * forms, or a direct POST past the editor): sanitizes first, the same way
+ * `sanitizeContent` always has, so a document holding an unrecognized block
+ * (or an unsafe link/image URL) is cleaned rather than rejected outright.
+ * The only failure is input that is not a document at all.
  */
-export const contentInputSchema = contentSchema.transform((content) => {
+export const contentInputSchema = z.unknown().transform((content, ctx) => {
   const result = sanitizeContent(content);
-  // contentSchema already guarantees a document, so this cannot fail.
-  return result.ok ? result.content : { type: "doc" as const, content: [] };
+  if (!result.ok) {
+    ctx.addIssue({ code: "custom", message: result.error });
+    return z.NEVER;
+  }
+  return result.content;
 });
