@@ -16,7 +16,7 @@ const SECTIONS = [
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
   { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
-  { label: "Awards", icon: Medal, href: null },
+  { label: "Awards", icon: Medal, href: "/admin/awards" },
 ] as const;
 
 /** A section an admin page can be: only sections that have a page. */

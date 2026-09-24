@@ -1,15 +1,9 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
-import {
-  WarWeek,
-  award,
-  awardParticipant,
-  participant,
-  team,
-  warWeek,
-} from "@/db/schema";
+import { WarWeek, team, warWeek } from "@/db/schema";
 import { type ArchiveDetail, isArchived, selectArchive } from "@/lib/archive";
+import { getAwards } from "@/queries/awards";
 
 /** The Archive list: every archived War Week, newest first. */
 export async function listArchive(dbOrTx: DBOrTx = db): Promise<WarWeek[]> {
@@ -27,48 +21,17 @@ export async function getArchiveDetail(
       .from(team)
       .where(eq(team.warWeekId, pastWarWeek.id))
       .orderBy(asc(team.name)),
-    dbOrTx
-      .select({
-        id: award.id,
-        name: award.name,
-        description: award.description,
-        team: team.name,
-      })
-      .from(award)
-      .leftJoin(team, eq(award.teamId, team.id))
-      .where(eq(award.warWeekId, pastWarWeek.id))
-      .orderBy(asc(award.name)),
+    getAwards(pastWarWeek, dbOrTx),
   ]);
-
-  const recipients =
-    awards.length === 0
-      ? []
-      : await dbOrTx
-          .select({
-            awardId: awardParticipant.awardId,
-            displayName: participant.displayName,
-          })
-          .from(awardParticipant)
-          .innerJoin(
-            participant,
-            eq(awardParticipant.participantId, participant.id),
-          )
-          .where(
-            inArray(
-              awardParticipant.awardId,
-              awards.map((a) => a.id),
-            ),
-          )
-          .orderBy(asc(participant.displayName));
 
   return {
     warWeek: pastWarWeek,
     teams,
-    awards: awards.map(({ id, ...rest }) => ({
-      ...rest,
-      participants: recipients
-        .filter((r) => r.awardId === id)
-        .map((r) => r.displayName),
+    awards: awards.map((a) => ({
+      name: a.name,
+      description: a.description,
+      team: a.team?.name ?? null,
+      participants: a.participants.map((p) => p.displayName),
     })),
   };
 }

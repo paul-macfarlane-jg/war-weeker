@@ -2,12 +2,16 @@ import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
 import { toAnnouncementsResult } from "@/mcp/announcements";
+import { toAwardsResult } from "@/mcp/awards";
+import { toFaqResult } from "@/mcp/faq";
 import { toHistoryListResult, toHistoryResult } from "@/mcp/history";
 import { toLeaderboardResult } from "@/mcp/leaderboard";
 import { toScheduleResult } from "@/mcp/schedule";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
 import { getAnnouncements } from "@/queries/announcements";
 import { getArchiveDetailByYear, listArchive } from "@/queries/archive";
+import { getAwards } from "@/queries/awards";
+import { getFaqItems } from "@/queries/faq";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
@@ -119,6 +123,46 @@ const handler = createMcpHandler(
               warWeek.edition,
               await getAnnouncements(warWeek, { limit: limit ?? 10 }),
             )
+          : { warWeek: null };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_awards",
+      {
+        title: "Get Awards",
+        description:
+          "Returns the current War Week's Awards by name, each with its description and recipients: a Team, Participants, or both. Awards don't affect Standings.",
+        inputSchema: z.object({}),
+      },
+      async () => {
+        const warWeek = await getCurrentWarWeek();
+        const result = warWeek
+          ? toAwardsResult(warWeek.edition, await getAwards(warWeek))
+          : { warWeek: null };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_faq",
+      {
+        title: "Get FAQ",
+        description:
+          "Returns the current War Week's FAQ in order: each question with its answer as plain text.",
+        inputSchema: z.object({}),
+      },
+      async () => {
+        const warWeek = await getCurrentWarWeek();
+        const result = warWeek
+          ? toFaqResult(warWeek.edition, await getFaqItems(warWeek))
           : { warWeek: null };
 
         return {
