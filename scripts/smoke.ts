@@ -8,6 +8,7 @@ import path from "node:path";
 import { Client } from "pg";
 
 import { WAR_WEEK_TIME_ZONE } from "@/lib/schedule";
+import { YOU_ROW_CLASS } from "@/lib/you";
 import { MCP_TOOLS } from "@/mcp/tools";
 
 loadEnvConfig(process.cwd());
@@ -693,9 +694,6 @@ const SMOKE_YOU_EMAIL = "smoke-you@jahnelgroup.com";
 const YOU_PARTICIPANT = "Anthony Conway";
 const YOU_TAG = 'data-you="true"';
 
-// The row highlight's class, as rendered into server HTML.
-const YOU_ROW = "has-[[data-you]]:ring-2";
-
 const countOf = (body: string, needle: string) => body.split(needle).length - 1;
 
 /**
@@ -749,7 +747,7 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
       teams.status,
       {
         oneTag: countOf(teams.body, YOU_TAG) === 1,
-        rowStyled: teams.body.includes(YOU_ROW),
+        rowStyled: teams.body.includes(YOU_ROW_CLASS),
         noPicker: !teams.body.includes("Which one is you?"),
       },
     );
@@ -759,7 +757,7 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
       leaderboard.status,
       {
         oneTag: countOf(leaderboard.body, YOU_TAG) === 1,
-        rowStyled: leaderboard.body.includes(YOU_ROW),
+        rowStyled: leaderboard.body.includes(YOU_ROW_CLASS),
         participant: leaderboard.body.includes(YOU_PARTICIPANT),
       },
     );
@@ -769,7 +767,7 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
       awards.status,
       {
         tag: countOf(awards.body, YOU_TAG) >= 1,
-        rowStyled: awards.body.includes(YOU_ROW),
+        rowStyled: awards.body.includes(YOU_ROW_CLASS),
       },
     );
 

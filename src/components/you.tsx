@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useId, useSyncExternalStore } from "react";
 
+import type { RosterParticipant } from "@/lib/roster";
 import { type You, parseStoredYou, resolveYou, youStorageKey } from "@/lib/you";
 
 type YouState = {
@@ -103,13 +104,22 @@ export function YouTag({ participantId }: { participantId: string }) {
 export function YouPicker({
   participants,
 }: {
-  participants: { id: string; displayName: string }[];
+  participants: Pick<RosterParticipant, "id" | "displayName">[];
 }) {
   const { you, pick } = useContext(YouContext);
   const inputId = useId();
   const listId = useId();
 
   if (you?.via === "email") return null;
+
+  // Display names are unique within a War Week, so a name finds one person.
+  const pickByName = (value: string) => {
+    const name = value.trim().toLowerCase();
+    const found = participants.find(
+      (p) => p.displayName.toLowerCase() === name,
+    );
+    if (found) pick(found.id);
+  };
 
   const picked = you
     ? participants.find((p) => p.id === you.participantId)
@@ -145,12 +155,17 @@ export function YouPicker({
         placeholder="Start typing your name"
         className="border-border bg-background rounded-md border px-2 py-1.5"
         onChange={(event) => {
-          const name = event.target.value.trim().toLowerCase();
-          const match = participants.find(
-            (p) => p.displayName.toLowerCase() === name,
-          );
-          if (match) pick(match.id);
+          // Typing "Alex" mustn't pick Alex before "Alex Kelly" is finished:
+          // only a choice from the list picks as it changes (it has no
+          // typing inputType); typed names are picked on Enter or blur.
+          const { inputType } = event.nativeEvent as InputEvent;
+          if (inputType && inputType !== "insertReplacementText") return;
+          pickByName(event.target.value);
         }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") pickByName(event.currentTarget.value);
+        }}
+        onBlur={(event) => pickByName(event.target.value)}
       />
       <datalist id={listId}>
         {participants.map((p) => (

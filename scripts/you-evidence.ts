@@ -300,6 +300,14 @@ async function main() {
       (await youRows(page)).length === 0,
     );
     await shoot(page, "phone-picker.png", false);
+    await evaluate(page, `document.querySelector('input[list]').focus()`);
+    await page.send("Input.insertText", { text: "Jory" });
+    await sleep(500);
+    check(
+      "unlinked: typing part of a name picks nobody yet",
+      (await youRows(page)).length === 0,
+    );
+    await evaluate(page, `document.querySelector('input[list]').blur()`);
     await evaluate(
       page,
       `(() => {
