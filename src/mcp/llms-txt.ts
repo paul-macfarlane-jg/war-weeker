@@ -1,4 +1,4 @@
-import { REPO_URL } from "@/components/site-footer";
+import { REPO_URL } from "@/lib/site";
 import { MCP_TOOLS } from "@/mcp/tools";
 
 const PAGES: [path: string, purpose: string][] = [
@@ -52,7 +52,7 @@ ${tools}
 ## Access
 
 - Browser: sign in with Google using a @jahnelgroup.com account.
-- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the War Weeker operators issue. A signed-in browser session also works. Anything else gets 401.
+- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the War Weeker operators issue. A signed-in browser session also works. Otherwise it answers 401.
 - Claude Code: \`claude mcp add --transport http war-weeker ${origin}/api/mcp --header "Authorization: Bearer <MCP_TOKEN>"\`
 
 ## Source

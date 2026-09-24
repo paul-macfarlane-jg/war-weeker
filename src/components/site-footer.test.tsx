@@ -1,7 +1,9 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { REPO_URL, SiteFooter } from "./site-footer";
+import { REPO_URL } from "@/lib/site";
+
+import { SiteFooter } from "./site-footer";
 
 describe("SiteFooter", () => {
   it("credits Jahnel Group for the current year and links to the repo in a new tab", () => {
