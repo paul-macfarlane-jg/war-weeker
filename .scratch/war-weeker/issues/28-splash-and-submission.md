@@ -21,7 +21,7 @@ Route: polish, plus a red-team for the public path (see decision 3).
    1. **Organizer setup, no code:** War Week, Days, Teams, roster, Competitions, schedule, FAQ (25, 26, 27)
    2. **Points entry with Placement Points:** tap "1st · 5" (09, 22)
    3. **Schedule with Now / Next** on the ET clock (06)
-   4. **Announcements** with video, also posted to Slack (12, 15, 23)
+   4. **Announcements** with video (12, 23)
    5. **The Archive:** every War Week since 2016 in its own theme (11)
    6. **Ask Claude:** the MCP connector answers "who's winning?" (21)
 
@@ -64,7 +64,7 @@ Short (about 50 words):
 
 Long (about 120 words):
 
-> War Weeker is one place for Jahnel Group to run War Week and to remember it. Competiscore, which held our points, is gone, and ten years of history lived only in old wiki pages. War Weeker brings it together: organizers set up each edition's story, look, teams, schedule and Competitions with no code, enter points with placement presets, post Announcements that also land in Slack, and hide the Standings until a live, animated Reveal. Participants follow along in an installable phone app, with Now/Next on the schedule and their own team highlighted, or just ask Claude through the MCP connector. The Archive restores every War Week since 2016. I built it in a week with Claude Code and the Atlas plugin: grilled specs, tickets, and reviewed pull requests. https://war-weeker.vercel.app/about
+> War Weeker is one place for Jahnel Group to run War Week and to remember it. Competiscore, which held our points, is gone, and ten years of history lived only in old wiki pages. War Weeker brings it together: organizers set up each edition's story, look, teams, schedule and Competitions with no code, enter points with placement presets, post Announcements with video, and hide the Standings until a live, animated Reveal. Participants follow along in an installable phone app, with Now/Next on the schedule and their own team highlighted, or just ask Claude through the MCP connector. The Archive restores every War Week since 2016. I built it in a week with Claude Code and the Atlas plugin: grilled specs, tickets, and reviewed pull requests. https://war-weeker.vercel.app/about
 
 Look at this first:
 
@@ -85,3 +85,7 @@ The third bullet needs `MCP_PUBLIC=true` in production during judging (ticket 21
 | 4 | thread / Paul | 29 regression on staging |
 | 5 | Paul | Production is not seeded yet: from your own terminal (the URL is a secret, never in chat or `.env.local`), run `DATABASE_URL='<neon url>' pnpm seed:all` against production once its migrations are applied. Set `MCP_PUBLIC=true` in Vercel production. Promote `staging` → `main`, then smoke production (sign in, `/xi`, `/xi/leaderboard`, `/history`, `/about` in a private window, the MCP connector). |
 | 6 | Paul | Submit the form: long paragraph, `/about` URL, the three bullets |
+
+### [SCOPE CHANGE] 2026-09-24 (Paul): Slack cut from the hackathon
+
+Ticket 15 is deferred. Card 4 no longer claims Slack posting, and the long paragraph now says "post Announcements with video". If 15 lands before this ticket is implemented, add the Slack wording back and ask Paul to re-approve it.
