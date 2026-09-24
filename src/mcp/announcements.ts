@@ -21,7 +21,8 @@ type AnnouncementRow = Pick<
 /**
  * Serializes a War Week's Announcements (already sorted and limited by the
  * query) into the `get_announcements` MCP tool payload. The body renders as
- * plain text; images are dropped, like the schedule serializer.
+ * plain text; images are dropped, like the schedule serializer. The author
+ * is the handle before the `@`, never the email: no MCP tool returns one.
  */
 export function toAnnouncementsResult(
   edition: string,
@@ -32,7 +33,7 @@ export function toAnnouncementsResult(
     announcements: rows.map((row) => ({
       title: row.title,
       pinned: row.pinned,
-      author: row.authorEmail,
+      author: row.authorEmail.split("@")[0],
       publishedAt: row.publishedAt.toISOString(),
       body: toPlainText(row.body),
       videoUrls: row.videoUrls,

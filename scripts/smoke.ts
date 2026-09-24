@@ -17,6 +17,8 @@ const READY_TIMEOUT_MS = 30_000;
 const AUTH_SECRET =
   process.env.BETTER_AUTH_SECRET || `smoke-only-secret-${randomUUID()}`;
 const SESSION_COOKIE = "better-auth.session_token";
+// A smoke-only MCP bearer token; MCP_PUBLIC stays off so anonymous gets 401.
+const MCP_TOKEN = `smoke-mcp-token-${randomUUID()}`;
 
 const childEnv = {
   ...process.env,
@@ -26,6 +28,8 @@ const childEnv = {
   BETTER_AUTH_URL: BASE_URL,
   GOOGLE_CLIENT_ID: "",
   GOOGLE_CLIENT_SECRET: "",
+  MCP_TOKEN,
+  MCP_PUBLIC: "",
 };
 
 let failures = 0;
@@ -2409,6 +2413,69 @@ async function assertSignInRequired() {
   } catch (error) {
     fail(mcpCheck, String(error));
   }
+
+  await assertMcpBearerToken();
+}
+
+/** Without a session, `/api/mcp` takes `Authorization: Bearer <MCP_TOKEN>`. */
+async function assertMcpBearerToken() {
+  const initialize = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "smoke-test", version: "0.1.0" },
+    },
+  };
+
+  const wrongCheck = "POST /api/mcp with a wrong bearer token answers 401";
+  try {
+    const { status } = await mcpRequest(initialize, undefined, "", {
+      Authorization: "Bearer not-the-token",
+    });
+    if (status === 401) ok(wrongCheck);
+    else fail(wrongCheck, `status=${status}`);
+  } catch (error) {
+    fail(wrongCheck, String(error));
+  }
+
+  const check =
+    "POST /api/mcp with the bearer token and no session completes initialize and get_current_war_week";
+  try {
+    const bearer = { Authorization: `Bearer ${MCP_TOKEN}` };
+    const init = await mcpRequest(initialize, undefined, "", bearer);
+    const call = await mcpRequest(
+      {
+        jsonrpc: "2.0",
+        id: 2,
+        method: "tools/call",
+        params: { name: "get_current_war_week", arguments: {} },
+      },
+      init.sessionId,
+      "",
+      bearer,
+    );
+    const text = (
+      call.json?.result as { content?: { text: string }[] } | undefined
+    )?.content?.[0]?.text;
+    const parsed = text ? JSON.parse(text) : undefined;
+    if (
+      init.status === 200 &&
+      init.json?.result !== undefined &&
+      parsed?.edition === "xi"
+    ) {
+      ok(check);
+    } else {
+      fail(
+        check,
+        `init=${init.status} ${JSON.stringify(init.json)} call=${call.status} ${JSON.stringify(call.json)}`,
+      );
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
 }
 
 async function assertAdminLink(sessions: {
@@ -2444,6 +2511,7 @@ async function mcpRequest(
   body: Record<string, unknown>,
   sessionId?: string,
   cookie = viewerCookie,
+  extraHeaders: Record<string, string> = {},
 ): Promise<{
   status: number;
   json: Record<string, unknown> | undefined;
@@ -2455,6 +2523,7 @@ async function mcpRequest(
   };
   if (cookie) headers.cookie = cookie;
   if (sessionId) headers["mcp-session-id"] = sessionId;
+  Object.assign(headers, extraHeaders);
 
   const res = await fetch(`${BASE_URL}/api/mcp`, {
     method: "POST",

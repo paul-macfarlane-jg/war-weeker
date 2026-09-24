@@ -46,8 +46,9 @@ const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];
 
 /**
  * The only paths reachable without a session: the sign-in page and
- * better-auth's own routes. Everything else, `/api/mcp` included, needs a
- * Jahnel Group sign-in (see CONTEXT.md, "Access rules").
+ * better-auth's own routes. Everything else needs a Jahnel Group sign-in,
+ * except that `/api/mcp` also takes `canUseMcp` (see CONTEXT.md, "Access
+ * rules").
  */
 export function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some(
@@ -71,4 +72,46 @@ export function safeCallbackPath(value: string | null | undefined): string {
   } catch {
     return "/";
   }
+}
+
+export type McpAccessInput = {
+  /** A signed-in Jahnel Group session. */
+  hasSession: boolean;
+  /** The request's `Authorization` header, if any. */
+  authorization: string | null | undefined;
+  /** `MCP_TOKEN`; unset or blank turns token auth off. */
+  mcpToken: string | undefined;
+  /** `MCP_PUBLIC`; only `true` opens `/api/mcp` to everyone. */
+  mcpPublic: string | undefined;
+};
+
+/**
+ * Who may use `/api/mcp`: a Jahnel Group session, a request carrying
+ * `Authorization: Bearer <MCP_TOKEN>`, or anyone while `MCP_PUBLIC=true`
+ * (see CONTEXT.md, "Access rules"). Every MCP tool is read-only and returns
+ * only what a signed-in Participant sees.
+ */
+export function canUseMcp({
+  hasSession,
+  authorization,
+  mcpToken,
+  mcpPublic,
+}: McpAccessInput): boolean {
+  if (hasSession) return true;
+  if (mcpPublic?.trim().toLowerCase() === "true") return true;
+
+  const expected = mcpToken?.trim();
+  if (!expected || !authorization) return false;
+  const match = /^Bearer\s+(.+)$/i.exec(authorization.trim());
+  return match ? constantTimeEqual(match[1].trim(), expected) : false;
+}
+
+/** Compares every character whatever the input, so timing doesn't leak it. */
+function constantTimeEqual(a: string, b: string): boolean {
+  const length = Math.max(a.length, b.length);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < length; i++) {
+    diff |= (a.charCodeAt(i) || 0) ^ (b.charCodeAt(i) || 0);
+  }
+  return diff === 0;
 }
