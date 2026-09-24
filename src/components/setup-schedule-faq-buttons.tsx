@@ -25,12 +25,15 @@ function useRefreshingAction() {
   return { pending, run };
 }
 
-export function DeleteScheduleItemButton({
+/** Deletes a Schedule Item or FAQ Item named `name`, after a confirm. */
+export function DeleteSetupItemButton({
   id,
-  title,
+  name,
+  kind,
 }: {
   id: string;
-  title: string;
+  name: string;
+  kind: "schedule-item" | "faq-item";
 }) {
   const { pending, run } = useRefreshingAction();
   return (
@@ -39,31 +42,10 @@ export function DeleteScheduleItemButton({
       size="xs"
       disabled={pending}
       onClick={() => {
-        if (!window.confirm(`Delete "${title}"?`)) return;
-        run(() => deleteScheduleItem(id));
-      }}
-    >
-      {pending ? "Deleting…" : "Delete"}
-    </Button>
-  );
-}
-
-export function DeleteFaqItemButton({
-  id,
-  question,
-}: {
-  id: string;
-  question: string;
-}) {
-  const { pending, run } = useRefreshingAction();
-  return (
-    <Button
-      variant="destructive"
-      size="xs"
-      disabled={pending}
-      onClick={() => {
-        if (!window.confirm(`Delete "${question}"?`)) return;
-        run(() => deleteFaqItem(id));
+        if (!window.confirm(`Delete "${name}"?`)) return;
+        run(() =>
+          kind === "schedule-item" ? deleteScheduleItem(id) : deleteFaqItem(id),
+        );
       }}
     >
       {pending ? "Deleting…" : "Delete"}

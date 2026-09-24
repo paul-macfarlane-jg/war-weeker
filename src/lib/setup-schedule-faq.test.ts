@@ -206,10 +206,10 @@ describe("parseFaqItemInput", () => {
 });
 
 describe("faqItemGuardError", () => {
-  it("refuses a question already asked, ignoring case", () => {
+  it("refuses a question already asked", () => {
     expect(faqItemGuardError("Where do I park?", ["Lunch?"])).toBeNull();
-    expect(faqItemGuardError("where do I park?", ["Where do I park?"])).toBe(
-      'There\'s already an FAQ Item "where do I park?".',
+    expect(faqItemGuardError("Where do I park?", ["Where do I park?"])).toBe(
+      'There\'s already an FAQ Item "Where do I park?".',
     );
   });
 });

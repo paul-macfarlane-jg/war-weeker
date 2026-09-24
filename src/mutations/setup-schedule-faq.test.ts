@@ -236,9 +236,9 @@ describe.skipIf(!isLocalDatabase)("FAQ Item mutations", () => {
       const { schema, other, ctx } = await fixture(tx);
 
       await m.createFaqItem(faq("Parking?"), ctx, tx);
-      expect(await m.createFaqItem(faq("parking?"), ctx, tx)).toEqual({
+      expect(await m.createFaqItem(faq("Parking?"), ctx, tx)).toEqual({
         ok: false,
-        error: 'There\'s already an FAQ Item "parking?".',
+        error: 'There\'s already an FAQ Item "Parking?".',
       });
 
       await m.createFaqItem(

@@ -169,13 +169,12 @@ export function duplicateScheduleItemError(
   return `There's already a Schedule Item "${values.title}" at ${formatEtTime(values.startTime)} on that Day.`;
 }
 
-/** Refuses a question the War Week's FAQ already asks, ignoring case. */
+/** Refuses a question the War Week's FAQ already asks (its natural key). */
 export function faqItemGuardError(
   question: string,
   otherQuestions: string[],
 ): string | null {
-  const lower = question.toLowerCase();
-  return otherQuestions.some((other) => other.toLowerCase() === lower)
+  return otherQuestions.includes(question)
     ? duplicateFaqItemError(question)
     : null;
 }

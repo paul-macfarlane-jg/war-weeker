@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import {
-  DeleteFaqItemButton,
+  DeleteSetupItemButton,
   MoveFaqItemButtons,
 } from "@/components/setup-schedule-faq-buttons";
 import { buttonVariants } from "@/components/ui/button";
@@ -74,7 +74,11 @@ export default async function SetupFaqPage() {
                   >
                     Edit
                   </Link>
-                  <DeleteFaqItemButton id={item.id} question={item.question} />
+                  <DeleteSetupItemButton
+                    id={item.id}
+                    name={item.question}
+                    kind="faq-item"
+                  />
                 </div>
               </li>
             ))}
