@@ -8,6 +8,7 @@ import path from "node:path";
 import { Client } from "pg";
 
 import { WAR_WEEK_TIME_ZONE } from "@/lib/schedule";
+import { YOU_ROW_CLASS } from "@/lib/you";
 import { MCP_TOOLS } from "@/mcp/tools";
 
 loadEnvConfig(process.cwd());
@@ -688,6 +689,121 @@ async function assertFreeForAllRoster() {
 }
 
 type SmokeSession = { cookie: string };
+
+const SMOKE_YOU_EMAIL = "smoke-you@jahnelgroup.com";
+const YOU_PARTICIPANT = "Anthony Conway";
+const YOU_TAG = 'data-you="true"';
+
+const countOf = (body: string, needle: string) => body.split(needle).length - 1;
+
+/**
+ * Account linking and the "You" highlight (ticket 20). Gives XI's
+ * Anthony Conway (on the roster, the individual leaderboard and an Award)
+ * the smoke user's email for the length of the check, then restores it.
+ */
+async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
+  const [{ email: originalEmail }] = await runQuery<{ email: string | null }>(
+    `select p.email from participant p join war_week w on w.id = p.war_week_id
+     where w.edition = 'xi' and p.display_name = $1`,
+    [YOU_PARTICIPANT],
+  );
+  const [{ standings_hidden: wasHidden }] = await runQuery<{
+    standings_hidden: boolean;
+  }>(`select standings_hidden from war_week where edition = 'xi'`);
+  const setEmail = (email: string | null) =>
+    runQuery(
+      `update participant p set email = $1 from war_week w
+       where w.id = p.war_week_id and w.edition = 'xi' and p.display_name = $2`,
+      [email, YOU_PARTICIPANT],
+    );
+  const setHidden = (hidden: boolean) =>
+    runQuery(`update war_week set standings_hidden = $1 where edition = 'xi'`, [
+      hidden,
+    ]);
+
+  const get = async (target: string, session: SmokeSession) => {
+    const res = await fetch(`${BASE_URL}${target}`, {
+      headers: { cookie: session.cookie },
+    });
+    return { status: res.status, body: await res.text() };
+  };
+  const report = (
+    check: string,
+    status: number,
+    checks: Record<string, boolean>,
+  ) => {
+    if (status === 200 && Object.values(checks).every(Boolean)) ok(check);
+    else fail(check, `status=${status} ${JSON.stringify(checks)}`);
+  };
+
+  try {
+    await setEmail(SMOKE_YOU_EMAIL);
+    const you = await createSmokeSession(SMOKE_YOU_EMAIL);
+
+    await setHidden(false);
+    const teams = await get("/xi/teams", you);
+    report(
+      "a signed-in user linked by email sees one 'You' on /xi/teams and no picker",
+      teams.status,
+      {
+        oneTag: countOf(teams.body, YOU_TAG) === 1,
+        rowStyled: teams.body.includes(YOU_ROW_CLASS),
+        noPicker: !teams.body.includes("Which one is you?"),
+      },
+    );
+    const leaderboard = await get("/xi/leaderboard", you);
+    report(
+      "a signed-in user linked by email sees one 'You' on the individual leaderboard",
+      leaderboard.status,
+      {
+        oneTag: countOf(leaderboard.body, YOU_TAG) === 1,
+        rowStyled: leaderboard.body.includes(YOU_ROW_CLASS),
+        participant: leaderboard.body.includes(YOU_PARTICIPANT),
+      },
+    );
+    const awards = await get("/xi/awards", you);
+    report(
+      "a signed-in user linked by email sees 'You' on their Award on /xi/awards",
+      awards.status,
+      {
+        tag: countOf(awards.body, YOU_TAG) >= 1,
+        rowStyled: awards.body.includes(YOU_ROW_CLASS),
+      },
+    );
+
+    await setHidden(true);
+    const hidden = await get("/xi/leaderboard", you);
+    report(
+      "hidden Standings show no 'You' and no names on /xi/leaderboard",
+      hidden.status,
+      {
+        noTag: !hidden.body.includes(YOU_TAG),
+        noParticipant: !hidden.body.includes(YOU_PARTICIPANT),
+        locked: hidden.body.includes("Standings hidden"),
+      },
+    );
+
+    const unlinked = await get("/xi/teams", sessions.notOrganizer);
+    report(
+      "a signed-in user with no email match gets the 'Which one is you?' picker and no 'You'",
+      unlinked.status,
+      {
+        picker: unlinked.body.includes("Which one is you?"),
+        noTag: !unlinked.body.includes(YOU_TAG),
+        noEmails: !unlinked.body.includes(SMOKE_YOU_EMAIL),
+      },
+    );
+  } catch (error) {
+    fail("'You' highlight", String(error));
+  } finally {
+    await setEmail(originalEmail).catch((error) =>
+      fail(`restore ${YOU_PARTICIPANT}'s email`, String(error)),
+    );
+    await setHidden(wasHidden).catch((error) =>
+      fail("restore XI standings_hidden", String(error)),
+    );
+  }
+}
 
 // Smoke users never share an email with a real person, so cleanup can't
 // touch a real account.
@@ -3559,6 +3675,7 @@ async function main() {
       await assertCompetitionDetail();
       await assertTeams();
       await assertFreeForAllRoster();
+      await assertYouHighlight(sessions);
       await assertMcp();
       await assertSignInPage();
       await assertAdminGate(sessions);

@@ -1,5 +1,7 @@
 import { Avatar } from "@/components/avatar";
+import { YouTag } from "@/components/you";
 import type { RosterParticipant, RosterTeam } from "@/lib/roster";
+import { YOU_ROW_CLASS } from "@/lib/you";
 
 export function RosterList({
   participants,
@@ -23,7 +25,7 @@ export function RosterList({
       {participants.map((p) => (
         <li
           key={p.id}
-          className="border-border flex flex-wrap items-center gap-2 border-b px-2 py-2 last:border-b-0"
+          className={`border-border flex flex-wrap items-center gap-2 border-b px-2 py-2 last:border-b-0 ${YOU_ROW_CLASS}`}
         >
           <Avatar
             name={p.displayName}
@@ -33,6 +35,7 @@ export function RosterList({
           <span className={p.isLeader ? "font-semibold" : undefined}>
             {p.displayName}
           </span>
+          <YouTag participantId={p.id} />
           {p.isLeader ? (
             <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
               {leaderTitle}

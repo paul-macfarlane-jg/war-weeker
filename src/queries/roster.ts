@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { DBOrTx, db } from "@/db";
 import { WarWeek, participant, team } from "@/db/schema";
 import { type Roster, buildRoster } from "@/lib/roster";
+import type { YouCandidate } from "@/lib/you";
 
 /** Loads a War Week's Teams and Participants, arranged by `buildRoster`. */
 export async function getRoster(
@@ -32,4 +33,18 @@ export async function getRoster(
   ]);
 
   return buildRoster({ mode: warWeek.mode, teams, participants });
+}
+
+/**
+ * A War Week's Participants with their emails, for account linking. Stays
+ * on the server: only the matched id reaches the client.
+ */
+export async function getYouCandidates(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<YouCandidate[]> {
+  return dbOrTx
+    .select({ id: participant.id, email: participant.email })
+    .from(participant)
+    .where(eq(participant.warWeekId, warWeek.id));
 }

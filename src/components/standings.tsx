@@ -1,7 +1,9 @@
 import { Avatar } from "@/components/avatar";
+import { YouTag } from "@/components/you";
 import { formatPoints } from "@/lib/points";
 import { type RowReveal, countUpTotal } from "@/lib/reveal";
 import type { IndividualStanding, TeamStanding } from "@/lib/standings";
+import { YOU_ROW_CLASS } from "@/lib/you";
 
 export function StandingsHidden() {
   return (
@@ -92,7 +94,7 @@ export function IndividualStandingsList({
         return (
           <li
             key={row.id}
-            className={`border-border flex items-center gap-3 border-b px-2 py-2 last:border-b-0 ${shown.className}`}
+            className={`border-border flex items-center gap-3 border-b px-2 py-2 last:border-b-0 ${YOU_ROW_CLASS} ${shown.className}`}
           >
             <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
               {row.rank}
@@ -115,6 +117,7 @@ export function IndividualStandingsList({
                 </span>
               ) : null}
             </span>
+            <YouTag participantId={row.id} />
             <span className="font-semibold tabular-nums">
               {formatPoints(shown.total)}
             </span>

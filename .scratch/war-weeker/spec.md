@@ -281,8 +281,8 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
 - **Admin screens for setup** (theme, Days, Schedule, Teams, roster, Competitions, FAQ). Moved into scope as the setup CRUD stretch item: ticket 25 delivers War Week settings, the Appearance Theme and Days in `/admin/setup`; tickets 26 and 27 add Teams, roster, Competitions, Schedule and FAQ. The seed stays the way to bootstrap a War Week, and reloading it overwrites setup edited in the UI.
 - **Roles other than Organizer**, including captains entering points.
 - **Stretch items, only if time allows, in this order:**
-  1. account linking (a Google sign-in matched to a Participant by email)
-  2. a "Which one is you?" picker (localStorage) that highlights you on the leaderboard and roster
+  1. account linking (a Google sign-in matched to a Participant by email) (delivered: ticket 20)
+  2. a "Which one is you?" picker (localStorage) that highlights you on the leaderboard and roster (delivered: ticket 20)
   3. placement presets (1st/2nd/3rd turned into points) (delivered: ticket 22)
   4. a video node inside the rich-text editor (delivered: ticket 23)
   5. `llms.txt` (delivered: ticket 24)

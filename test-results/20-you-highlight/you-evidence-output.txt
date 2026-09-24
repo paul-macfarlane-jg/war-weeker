@@ -1,0 +1,17 @@
+ok - linked: one "You" on /xi/teams, in Anthony Conway's row
+ok - linked: no picker
+ok - linked: the /xi/teams row has the accent ring
+ok - linked: one "You" on the individual leaderboard
+ok - linked: the leaderboard row has the accent ring
+ok - linked: "You" on Anthony Conway's Award
+ok - linked: the Award recipient row has the accent ring
+ok - hidden: no "You" on /xi/leaderboard
+ok - unlinked: no "You" before picking
+ok - unlinked: typing part of a name picks nobody yet
+ok - unlinked: picking Jory Hutchins highlights their row
+ok - unlinked: still highlighted after a reload
+ok - unlinked: the picked row has the accent ring
+ok - unlinked: the pick highlights the individual leaderboard
+ok - unlinked: "Not me / clear" removes the highlight
+ok - unlinked: the stored pick is gone
+ok - unlinked: the picker is back
