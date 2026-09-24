@@ -8,6 +8,7 @@ import {
 import Link from "next/link";
 
 import { SignOutButton } from "@/components/auth-buttons";
+import { SiteFooter } from "@/components/site-footer";
 import type { WarWeek } from "@/db/schema";
 import { warWeekThemeStyle } from "@/lib/theme";
 
@@ -100,6 +101,7 @@ export function AdminShell({
         </nav>
         <main className="flex-1 p-8">{children}</main>
       </div>
+      <SiteFooter className="border-border border-t" />
     </div>
   );
 }
@@ -113,22 +115,25 @@ export function AdminRefused({
   email: string;
 }) {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col items-center justify-center gap-4 px-4 text-center">
-      <h1 className="text-2xl font-bold">Organizers only</h1>
-      <p className="text-foreground/70">
-        {email} is not an Organizer for War Week {warWeek.edition.toUpperCase()}
-        . Ask an Organizer to add you to the allowlist if you should have
-        access.
-      </p>
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/${warWeek.edition}`}
-          className="text-primary underline underline-offset-4"
-        >
-          Go to War Week {warWeek.edition.toUpperCase()}
-        </Link>
-        <SignOutButton />
-      </div>
-    </main>
+    <>
+      <main className="mx-auto flex max-w-md flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
+        <h1 className="text-2xl font-bold">Organizers only</h1>
+        <p className="text-foreground/70">
+          {email} is not an Organizer for War Week{" "}
+          {warWeek.edition.toUpperCase()}. Ask an Organizer to add you to the
+          allowlist if you should have access.
+        </p>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/${warWeek.edition}`}
+            className="text-primary underline underline-offset-4"
+          >
+            Go to War Week {warWeek.edition.toUpperCase()}
+          </Link>
+          <SignOutButton />
+        </div>
+      </main>
+      <SiteFooter />
+    </>
   );
 }
