@@ -14,6 +14,28 @@ export type CompetitionListItem = Pick<
   | "competitionGroup"
 >;
 
+/** The most places a Competition can preset Placement Points for. */
+export const MAX_PLACEMENTS = 5;
+
+/**
+ * The Placement Points preset for a place (1 = 1st), or null when the
+ * Competition has no preset for it.
+ */
+export function pointsForPlacement(
+  competition: Pick<Competition, "placementPoints">,
+  place: number,
+): number | null {
+  if (!Number.isInteger(place) || place < 1) return null;
+  return competition.placementPoints?.[place - 1] ?? null;
+}
+
+const ORDINAL_SUFFIXES = ["st", "nd", "rd"];
+
+/** "1st", "2nd", "3rd", "4th", "5th". */
+export function placementLabel(place: number): string {
+  return `${place}${ORDINAL_SUFFIXES[place - 1] ?? "th"}`;
+}
+
 export type CompetitionGroups<T> = {
   groups: { name: string; competitions: T[] }[];
   ungrouped: T[];

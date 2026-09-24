@@ -223,6 +223,7 @@ async function syncCompetitions(
             name: c.name,
             description: c.description ?? null,
             maxPoints: c.maxPoints ?? null,
+            placementPoints: c.placementPoints ?? null,
             scoring: c.scoring,
             countsTowardTeam: c.countsTowardTeam,
             competitionGroup: c.group ?? null,
@@ -233,6 +234,7 @@ async function syncCompetitions(
           set: {
             description: sql`excluded.description`,
             maxPoints: sql`excluded.max_points`,
+            placementPoints: sql`excluded.placement_points`,
             scoring: sql`excluded.scoring`,
             countsTowardTeam: sql`excluded.counts_toward_team`,
             competitionGroup: sql`excluded.competition_group`,

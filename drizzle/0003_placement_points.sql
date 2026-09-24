@@ -1,0 +1,1 @@
+ALTER TABLE "competition" ADD COLUMN "placement_points" numeric(8, 2)[];

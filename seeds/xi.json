@@ -981,6 +981,7 @@
       "scoring": "individual",
       "countsTowardTeam": true,
       "maxPoints": 5,
+      "placementPoints": [5, 3, 1],
       "description": "The 9th annual Catan tournament hosted by Tony Mercadante."
     },
     {
@@ -1001,6 +1002,7 @@
       "scoring": "individual",
       "countsTowardTeam": true,
       "maxPoints": 5,
+      "placementPoints": [5, 3, 1],
       "description": "Finals Monday night in Team Room 4's new Beyblade Terrordome."
     },
     {

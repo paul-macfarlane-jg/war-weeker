@@ -7,6 +7,8 @@ import {
   formatMaxPoints,
   groupCompetitions,
   isCompetitionId,
+  placementLabel,
+  pointsForPlacement,
 } from "@/lib/competitions";
 
 function competition(
@@ -163,5 +165,40 @@ describe("buildCompetitionLedger", () => {
     expect(
       buildCompetitionLedger({ standingsHidden: false, rows: [] }),
     ).toEqual({ hidden: false, entries: [] });
+  });
+});
+
+describe("pointsForPlacement", () => {
+  const cup = { placementPoints: [5, 3, 1] };
+
+  it("returns the points for each place, 1st first", () => {
+    expect(pointsForPlacement(cup, 1)).toBe(5);
+    expect(pointsForPlacement(cup, 2)).toBe(3);
+    expect(pointsForPlacement(cup, 3)).toBe(1);
+  });
+
+  it("returns null for a place past the presets", () => {
+    expect(pointsForPlacement(cup, 4)).toBeNull();
+  });
+
+  it("returns null for a place below 1 or not a whole number", () => {
+    expect(pointsForPlacement(cup, 0)).toBeNull();
+    expect(pointsForPlacement(cup, 1.5)).toBeNull();
+  });
+
+  it("returns null when the Competition has no presets", () => {
+    expect(pointsForPlacement({ placementPoints: null }, 1)).toBeNull();
+  });
+});
+
+describe("placementLabel", () => {
+  it("names places as ordinals", () => {
+    expect([1, 2, 3, 4, 5].map(placementLabel)).toEqual([
+      "1st",
+      "2nd",
+      "3rd",
+      "4th",
+      "5th",
+    ]);
   });
 });

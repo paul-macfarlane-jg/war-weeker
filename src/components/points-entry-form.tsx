@@ -9,7 +9,12 @@ import {
   updatePointsEntry,
 } from "@/actions/points-entries";
 import { Button } from "@/components/ui/button";
-import { formatMaxPoints } from "@/lib/competitions";
+import {
+  formatMaxPoints,
+  placementLabel,
+  pointsForPlacement,
+} from "@/lib/competitions";
+import { formatPoints } from "@/lib/points";
 import { overMaxWarning } from "@/lib/points-entry";
 import type {
   PointsEntryFormOptions,
@@ -65,6 +70,7 @@ export function PointsEntryForm({
       : competition?.scoring === "individual"
         ? options.participants
         : [];
+  const places = (competition?.placementPoints ?? []).map((_, i) => i + 1);
   const warning = competition
     ? overMaxWarning(
         points.trim() === "" ? NaN : Number(points),
@@ -158,6 +164,27 @@ export function PointsEntryForm({
           onChange={(event) => setPoints(event.target.value)}
         />
       </label>
+      {competition && places.length > 0 && (
+        <div
+          role="group"
+          aria-label="Placement Points"
+          className="-mt-2 flex flex-wrap gap-2"
+        >
+          {places.map((place) => {
+            const preset = pointsForPlacement(competition, place)!;
+            return (
+              <Button
+                key={place}
+                type="button"
+                variant="outline"
+                onClick={() => setPoints(String(preset))}
+              >
+                {`${placementLabel(place)} · ${formatPoints(preset)}`}
+              </Button>
+            );
+          })}
+        </div>
+      )}
       {warning && (
         <p role="status" className="text-sm font-medium text-amber-600">
           ⚠️ {warning}
