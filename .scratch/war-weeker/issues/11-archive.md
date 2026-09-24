@@ -4,7 +4,7 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 - [ ] `/history` lists all `complete` War Weeks, newest first
 - [ ] Each past War Week renders in its own Appearance Theme (e.g. 2023 Harry Potter, 2025 Survivor) at its edition URL

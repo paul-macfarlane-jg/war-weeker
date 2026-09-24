@@ -312,13 +312,14 @@ async function runQuery<T extends Record<string, unknown>>(
 }
 
 async function assertMoreLinks() {
-  const check = "GET /xi/more links to Competitions and Teams";
+  const check = "GET /xi/more links to Competitions, Teams and history";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/more`);
     const body = await res.text();
     const checks = {
       competitions: body.includes('href="/xi/competitions"'),
       teams: body.includes('href="/xi/teams"'),
+      history: body.includes('href="/history"'),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(check);
@@ -327,6 +328,100 @@ async function assertMoreLinks() {
     }
   } catch (error) {
     fail(check, String(error));
+  }
+}
+
+async function assertHistory() {
+  const check =
+    "GET /history lists every complete War Week, newest first, each in its own theme";
+  try {
+    const res = await signedInFetch(`${BASE_URL}/history`);
+    const body = await res.text();
+    const complete = await runQuery<{ edition: string; primary: string }>(
+      `select edition, primary_color as primary from war_week
+         where status = 'complete' order by year desc`,
+    );
+    const positions = complete.map((w) => body.indexOf(`href="/${w.edition}"`));
+    const checks = {
+      allListed: positions.every((p) => p >= 0),
+      newestFirst: positions.every((p, i) => i === 0 || p > positions[i - 1]),
+      ownThemes: complete.every((w) => body.includes(`--primary:${w.primary}`)),
+      excludesLive: !body.includes("The Matrix"),
+    };
+    if (
+      res.status === 200 &&
+      complete.length === 10 &&
+      Object.values(checks).every(Boolean)
+    ) {
+      ok(check);
+    } else {
+      fail(
+        check,
+        `status=${res.status} complete=${complete.length} ${JSON.stringify(checks)}`,
+      );
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function assertArchiveDetail() {
+  const check =
+    "GET /viii renders 2023 in its Harry Potter theme with stored winner, Houses, Awards, highlights and wiki link";
+  try {
+    const res = await signedInFetch(`${BASE_URL}/viii`);
+    const body = await res.text();
+    const checks = {
+      theme: body.includes("--primary:#740001"),
+      storyTheme: body.includes("Harry Potter: The Houses of Hogwarts"),
+      winner: body.includes("Winner") && body.includes("Slytherin"),
+      houses: ["Gryffindor", "Hufflepuff", "Ravenclaw"].every((h) =>
+        body.includes(h),
+      ),
+      awards: body.includes("House Cup"),
+      highlights: body.includes("Highlights"),
+      wiki: body.includes(
+        'href="https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-2023"',
+      ),
+      noSlack: !body.includes("Join the Slack channel"),
+    };
+    if (res.status === 200 && Object.values(checks).every(Boolean)) {
+      ok(check);
+    } else {
+      fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+
+  const linkOnlyCheck =
+    "GET /i, /ii, /iii render as link-only cards with the wiki link";
+  try {
+    const results = await Promise.all(
+      [
+        ["i", 2016],
+        ["ii", 2017],
+        ["iii", 2018],
+      ].map(async ([edition, year]) => {
+        const res = await signedInFetch(`${BASE_URL}/${edition}`);
+        const body = await res.text();
+        return {
+          edition,
+          status: res.status,
+          linkOnly: body.includes("lives on") && !body.includes("Awards</h2>"),
+          wiki: body.includes(
+            `href="https://sites.google.com/jahnelgroup.com/jahnel-group-wiki/war-week-${year}"`,
+          ),
+        };
+      }),
+    );
+    if (results.every((r) => r.status === 200 && r.linkOnly && r.wiki)) {
+      ok(linkOnlyCheck);
+    } else {
+      fail(linkOnlyCheck, JSON.stringify(results));
+    }
+  } catch (error) {
+    fail(linkOnlyCheck, String(error));
   }
 }
 
@@ -1357,6 +1452,8 @@ async function assertMcp() {
       "get_current_war_week",
       "get_leaderboard",
       "get_schedule",
+      "list_history",
+      "get_history",
     ]) {
       if (tools.some((tool) => tool.name === name)) {
         ok(`MCP tools/list includes ${name}`);
@@ -1459,6 +1556,80 @@ async function assertMcp() {
         ok(check);
       } else {
         fail(check, `result=${JSON.stringify(schedule.json)}`);
+      }
+    }
+
+    const callTool = async (
+      id: number,
+      name: string,
+      args: Record<string, unknown>,
+    ) => {
+      const res = await mcpRequest(
+        {
+          jsonrpc: "2.0",
+          id,
+          method: "tools/call",
+          params: { name, arguments: args },
+        },
+        sessionId,
+      );
+      const text = (
+        res.json?.result as
+          { content?: { type: string; text: string }[] } | undefined
+      )?.content?.[0]?.text;
+      return { raw: res.json, parsed: text ? JSON.parse(text) : undefined };
+    };
+
+    const list = await callTool(8, "list_history", {});
+    const years = (
+      list.parsed?.warWeeks as { year: number }[] | undefined
+    )?.map((w) => w.year);
+    const expectedYears = Array.from({ length: 10 }, (_, i) => 2025 - i);
+    if (JSON.stringify(years) === JSON.stringify(expectedYears)) {
+      ok("MCP list_history returns 2025 down to 2016");
+    } else {
+      fail(
+        "MCP list_history returns 2025 down to 2016",
+        `result=${JSON.stringify(list.raw)}`,
+      );
+    }
+
+    const y2023 = await callTool(9, "get_history", { year: 2023 });
+    const p = y2023.parsed;
+    if (
+      p?.found === true &&
+      p.edition === "viii" &&
+      p.winner === "Slytherin" &&
+      p.teams?.length === 4 &&
+      p.awards?.some((a: { name: string }) => a.name === "House Cup") &&
+      p.highlights?.length > 0 &&
+      String(p.wikiUrl).endsWith("war-week-2023")
+    ) {
+      ok(
+        "MCP get_history(2023) returns the stored winner, Houses, Awards and wiki link",
+      );
+    } else {
+      fail(
+        "MCP get_history(2023) returns the stored winner, Houses, Awards and wiki link",
+        `result=${JSON.stringify(y2023.raw)}`,
+      );
+    }
+
+    for (const [id, year] of [
+      [10, 2030],
+      [11, 2026],
+    ] as const) {
+      const check = `MCP get_history(${year}) returns a clear not-found result`;
+      const missing = await callTool(id, "get_history", { year });
+      if (
+        missing.parsed?.found === false &&
+        String(missing.parsed.message).includes(
+          `No past War Week found for ${year}`,
+        )
+      ) {
+        ok(check);
+      } else {
+        fail(check, `result=${JSON.stringify(missing.raw)}`);
       }
     }
   } catch (error) {
@@ -1573,6 +1744,8 @@ async function main() {
       await assertSchedule();
       await assertHomeNowNext();
       await assertMoreLinks();
+      await assertHistory();
+      await assertArchiveDetail();
       await assertCompetitions();
       await assertCompetitionDetail();
       await assertTeams();

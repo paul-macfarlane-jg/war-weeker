@@ -1,9 +1,11 @@
 import { createMcpHandler } from "mcp-handler";
 import { z } from "zod";
 
+import { toHistoryListResult, toHistoryResult } from "@/mcp/history";
 import { toLeaderboardResult } from "@/mcp/leaderboard";
 import { toScheduleResult } from "@/mcp/schedule";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
+import { getArchiveDetailByYear, listArchive } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
@@ -83,6 +85,45 @@ const handler = createMcpHandler(
               date,
             )
           : { warWeek: null };
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "list_history",
+      {
+        title: "List War Week history",
+        description:
+          "Lists every past (complete) War Week in the Archive, newest first: edition, year, dates, Story Theme, stored winner and original wiki link.",
+        inputSchema: z.object({}),
+      },
+      async () => {
+        const result = toHistoryListResult(await listArchive());
+
+        return {
+          content: [{ type: "text", text: JSON.stringify(result) }],
+        };
+      },
+    );
+
+    server.registerTool(
+      "get_history",
+      {
+        title: "Get a past War Week",
+        description:
+          "Returns one past War Week by year: Story Theme, dates, Teams and colors, the stored winner, Awards with recipients, highlights and the original wiki link. A year not in the Archive returns found: false.",
+        inputSchema: z.object({
+          year: z.number().int().describe("The War Week's year, e.g. 2023."),
+        }),
+      },
+      async ({ year }) => {
+        const result = toHistoryResult(
+          year,
+          await getArchiveDetailByYear(year),
+        );
 
         return {
           content: [{ type: "text", text: JSON.stringify(result) }],
