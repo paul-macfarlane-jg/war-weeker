@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BottomTabBar, TopNav } from "@/components/primary-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 import { getNavAccount, getWarWeekForEdition } from "./war-week";
@@ -40,6 +41,7 @@ export default async function EditionLayout({
         account={account}
       />
       {children}
+      <SiteFooter />
       <BottomTabBar edition={warWeek.edition} />
     </div>
   );

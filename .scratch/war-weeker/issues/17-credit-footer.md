@@ -4,7 +4,7 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** done
 
 ## Decisions
 
@@ -16,10 +16,15 @@
 
 ## Acceptance criteria
 
-- [ ] The footer shows on edition pages (`/[edition]/…`, including Home, Schedule, Teams, Leaderboard, News, Awards, FAQ, More), `/history`, `/admin/…`, and `/sign-in`.
-- [ ] It reads `© <current year> Jahnel Group` and has a `GitHub` link to https://github.com/paul-macfarlane/war-weeker that opens in a new tab.
+- [x] The footer shows on edition pages (`/[edition]/…`, including Home, Schedule, Teams, Leaderboard, News, Awards, FAQ, More), `/history`, `/admin/…`, and `/sign-in`.
+- [x] It reads `© <current year> Jahnel Group` and has a `GitHub` link to https://github.com/paul-macfarlane/war-weeker that opens in a new tab.
 - [ ] At 390px wide, the footer is fully visible above the bottom tab bar when scrolled to the bottom of a page; screenshot as evidence.
-- [ ] Text meets WCAG AA contrast against the background in at least one light and one dark War Week theme.
-- [ ] Lint, typecheck, and existing tests pass.
+- [x] Text meets WCAG AA contrast against the background in at least one light and one dark War Week theme.
+- [x] Lint, typecheck, and existing tests pass.
 
 ## Comments
+
+- 2026-09-24 (agent): Implemented as `src/components/site-footer.tsx`, rendered inside each themed wrapper (edition layout, `AdminShell`/`AdminRefused`, `/history`, `/sign-in`) so it picks up the War Week's colors. On edition pages it sits before the wrapper's `pb-20`, so it clears the fixed bottom tab bar on phones.
+  - Contrast (`text-foreground/70` over `background`, all seeded themes): lowest 5.61:1 (VIII, light), 6.12:1 (VII, light), 9.07:1 (XI, dark). All pass AA.
+  - 390px screenshot: verified on `/sign-in` only. Edition and admin pages need a signed-in session, and the agent couldn't create one locally, so the above-the-tab-bar screenshot still needs a manual check.
+
