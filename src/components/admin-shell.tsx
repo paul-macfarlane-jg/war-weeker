@@ -14,7 +14,7 @@ import { warWeekThemeStyle } from "@/lib/theme";
 const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
-  { label: "Standings visibility", icon: EyeOff, href: null },
+  { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: null },
   { label: "Awards", icon: Medal, href: null },
 ] as const;

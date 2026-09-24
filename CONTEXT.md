@@ -101,6 +101,29 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   ledger marks it as edited.
 - `/admin/points` shows the real Standings even while they're hidden.
 
+## Reveal rules
+
+- Organizers hide or reveal the current War Week's Standings in
+  `/admin/standings`, through the `hideStandings` and `revealStandings` server
+  actions. The actions take no War Week id.
+- While hidden, the home and leaderboard pages show "Standings hidden 🔒",
+  Competition pages hide their Points Entries, and MCP `get_leaderboard`
+  returns the hidden result. No totals reach the client, not even in the RSC
+  payload.
+- An open home or leaderboard page refreshes about every 10 s. When a page
+  that showed hidden Standings gets revealed ones, it plays the Reveal once:
+  - Rows appear from last place up to first, and tied rows appear together.
+  - Totals count up from 0.
+  - Every list ends together, so each first place lands at the finale.
+  - The whole Reveal is under 8 s.
+- A page that first loads after the Reveal shows the Standings with no
+  animation. So does one with `prefers-reduced-motion`.
+- Refreshes pause while a tab isn't visible. A locked phone plays the Reveal
+  when it's unlocked, or, if the browser reloaded the tab, just shows the
+  Standings.
+- Hiding again returns every page and MCP to hidden. The next Reveal plays
+  again.
+
 ## Seed idempotence rules
 
 A seed file loads in one transaction. Loading the same file twice leaves the

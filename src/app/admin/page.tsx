@@ -29,8 +29,14 @@ export default async function AdminPage() {
           >
             Enter points
           </Link>{" "}
-          and see the current standings. Standings visibility, Announcements and
-          Awards are coming in later slices.
+          and see the current standings, or{" "}
+          <Link
+            href="/admin/standings"
+            className="text-primary underline underline-offset-4"
+          >
+            hide or reveal them
+          </Link>
+          . Announcements and Awards are coming in later slices.
         </p>
       </div>
     </AdminShell>

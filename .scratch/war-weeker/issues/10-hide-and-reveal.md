@@ -4,7 +4,7 @@
 
 **Blocked by:** 05, 08
 
-**Status:** plan-review
+**Status:** in-progress
 
 **Notes:** Touches standings hidden/reveal logic, so red-team the plan (repo policy). MCP must return the hidden result whenever `standingsHidden` is on.
 
@@ -44,3 +44,15 @@ Owner: Claude Opus 5.5, single session, branch `feat/10-hide-and-reveal`. No sch
    - The recorded animation start times of both browsers, which must be less than 10 s apart.
    - `gate.txt` with the exit status.
 9. CONTEXT.md gets "Reveal rules". The ticket moves to `done` in the final commit, with the AI review and closeout.
+
+### [RED TEAM] 2026-09-23
+
+Fresh-context `atlas-red-team-reviewer`. No blocking findings: hidden reads skip queries, routes are force-dynamic, and `requireOrganizer` runs on the loaded row. The plan is amended to take in every should-fix item:
+
+- Ties reveal together. The stagger steps through distinct ranks, not array index, and vitest has a tie case.
+- Both leaderboards animate on one clock, each stepping through its own ranks. The total is capped under 10 s, so a poll never lands mid-reveal. An empty list shows "No points yet.", and the transition still counts as used.
+- The requestAnimationFrame loop is cancelled on cleanup and when `hidden` flips back to true. New rows mid-animation just render with the props they carry.
+- The root carries `data-reveal-started-at` when the animation starts. The evidence reads it over CDP, checks `prefers-reduced-motion` is off, waits one more poll to prove "plays once", and opens a third browser after the Reveal to prove "no animation on first load".
+- Smoke also fetches `/xi` and `/xi/leaderboard` as RSC (`RSC: 1`) while hidden and asserts no `total` key leaks. Reveal checks run after the seed-hidden MCP check, and a `finally` restores the flag with direct SQL.
+- The actions take no War Week id. They act on `getCurrentWarWeek()`, as `/admin` does (nit 8).
+- CONTEXT.md notes that a locked phone doesn't poll, so it animates late or not at all after a reload (nit 10).
