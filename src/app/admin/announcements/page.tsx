@@ -27,7 +27,7 @@ export default async function AdminAnnouncementsPage() {
   return (
     <AdminShell warWeek={warWeek} email={email} current="Announcements">
       <section className="flex max-w-5xl flex-col gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <h1 className="text-2xl font-bold">Announcements</h1>
           <Link
             href="/admin/announcements/new"
@@ -40,7 +40,7 @@ export default async function AdminAnnouncementsPage() {
         {announcements.length === 0 ? (
           <p className="text-foreground/70 text-sm">No Announcements yet.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-foreground/60 border-border border-b">
                 <tr>
