@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSessionEmail, isGoogleConfigured } from "@/auth/server";
@@ -100,6 +101,15 @@ export default async function SignInPage({
           )}
         </div>
       </main>
+      <p className="text-foreground/70 relative text-sm">
+        New here?{" "}
+        <Link
+          href="/about"
+          className="hover:text-foreground underline underline-offset-4"
+        >
+          What War Weeker is
+        </Link>
+      </p>
       <SiteFooter className="relative py-0" />
     </div>
   );

@@ -16,4 +16,11 @@ describe("SiteFooter", () => {
     expect(html).toContain(">GitHub<");
     expect(REPO_URL).toBe("https://github.com/paul-macfarlane/war-weeker");
   });
+
+  it("links to the About page", () => {
+    const html = renderToStaticMarkup(<SiteFooter />);
+
+    expect(html).toContain('href="/about"');
+    expect(html).toContain(">About<");
+  });
 });

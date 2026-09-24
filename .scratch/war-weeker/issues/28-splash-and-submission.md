@@ -4,7 +4,7 @@
 
 **Blocked by:** 20, 26, 27 (Paul, 2026-09-24: core features; the cards and stills should show them).
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 Route: polish, plus a red-team for the public path (see decision 3).
 
@@ -89,3 +89,17 @@ The third bullet needs `MCP_PUBLIC=true` in production during judging (ticket 21
 ### [SCOPE CHANGE] 2026-09-24 (Paul): Slack cut from the hackathon
 
 Ticket 15 is deferred. Card 4 no longer claims Slack posting, and the long paragraph now says "post Announcements with video". If 15 lands before this ticket is implemented, add the Slack wording back and ask Paul to re-approve it.
+
+### [EXECUTION PLAN] 2026-09-24 (Claude Fable 5.1, `/implement`)
+
+Status → `in-progress` on branch `feat/28-splash-and-submission` from `staging` at `a70a43c`. 20, 26, 27 and 31 are `done` and merged, so the maintainer's guide is linked.
+
+1. **Access.** `PUBLIC_PREFIXES` in `src/lib/access.ts` gains `/about`. Test first in `src/lib/access.test.ts`: `/about` and `/about/` public; `/aboutx`, `/about-anything`, `/aboutx/y` private. `src/proxy.ts` is untouched: the match is `pathname === prefix || pathname.startsWith(prefix + "/")`, so no other path opens. `/about` is a plain segment, not a dynamic route, so `/about/<anything>` matches no page and 404s through Next's not-found page (which is static and reads nothing).
+2. **The page.** `src/app/about/page.tsx`, a synchronous server component: no `dynamic = "force-dynamic"`, no import from `@/queries`, `@/db`, `@/auth` or the `[edition]` layout. XI's Appearance Theme is copied into `src/lib/about.ts` as literal constants and applied with the existing `warWeekThemeStyle`, so the page never reads the database or the session. The six cards, the video hero (`<video>` with poster; `motion-reduce` shows the poster `<img>`), the one-sentence mentions (You, install, themes), Paul's section, "Open War Week XI" → `/xi`, and the maintainer's guide link to GitHub. Copy uses CONTEXT.md vocabulary; no build-tooling words. Unit test renders the page with `renderToStaticMarkup` and asserts the structure and the absence of "Claude Code", "Atlas" and "agent".
+3. **Links.** More page (`/about`, "About War Weeker"), `/sign-in` (a line under the card), `SiteFooter` ("About" beside GitHub; footer test updated).
+4. **Smoke.** `assertAboutPage`: anonymous GET `/about` is 200 with no redirect, contains the hero video, six cards and the `/xi` link; `assertMoreLinks` also checks `/about`; the sign-in check gains the About link.
+5. **Media.** `scripts/about-media.ts`: production build on port 3202, seeded local Postgres, sessions minted like `reveal-evidence.ts`, `ffmpeg` required up front. Records `/xi/leaderboard` at 390×844 (DSF 2) through `Page.startScreencast`, flips `standings_hidden` off, trims to about 12 s around the Reveal, encodes `public/about/reveal.mp4` (H.264, yuv420p, muted) and the poster from the hidden frame. Stills at 1280×720: `organizer-setup` (`/admin/setup` as the seeded Organizer), `points` (`/admin/points` with Settlers of Catan selected so the "1st · 5" presets show), `schedule` (`/xi/schedule?at=` inside XI's week), `announcements` (`/xi/news`), `archive` (`/history`, every edition in its own theme), `ask-claude` (a themed chat card the script renders from the real `get_leaderboard` answer fetched from `/api/mcp`). Afterwards it screenshots `/about` anonymously at 390 and desktop, plus reduced-motion, into `test-results/28-splash/`, and restores `standings_hidden`.
+6. **Docs.** `CONTEXT.md` access rules list `/about`.
+7. **Verify.** `pnpm gate`, then `/code-review`, closeout, `done`.
+
+Red-team (required by `docs/agents/planning.md` for an access-control change): recorded below.
