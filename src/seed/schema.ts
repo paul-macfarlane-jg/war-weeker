@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { announcementTitleSchema, videoUrlSchema } from "@/lib/announcements";
+import { AWARD_DESCRIPTION_MAX, AWARD_NAME_MAX } from "@/lib/awards";
 import {
   pointsSchema as points,
   pointsEntryNoteSchema,
@@ -127,8 +128,8 @@ export type PointsEntrySeed = z.infer<typeof pointsEntrySeedSchema>;
 export const awardSeedSchema = z
   .object({
     key: seedKey,
-    name: z.string().min(1).max(120),
-    description: z.string().max(1000).nullish(),
+    name: z.string().min(1).max(AWARD_NAME_MAX),
+    description: z.string().max(AWARD_DESCRIPTION_MAX).nullish(),
     /** A Team name from this seed. */
     team: z.string().min(1).max(80).nullish(),
     /** Participant display names from this seed. */

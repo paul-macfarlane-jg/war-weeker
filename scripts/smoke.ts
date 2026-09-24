@@ -312,13 +312,16 @@ async function runQuery<T extends Record<string, unknown>>(
 }
 
 async function assertMoreLinks() {
-  const check = "GET /xi/more links to Competitions, Teams and history";
+  const check =
+    "GET /xi/more links to Competitions, Teams, Awards, FAQ and history";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/more`);
     const body = await res.text();
     const checks = {
       competitions: body.includes('href="/xi/competitions"'),
       teams: body.includes('href="/xi/teams"'),
+      awards: body.includes('href="/xi/awards"'),
+      faq: body.includes('href="/xi/faq"'),
       history: body.includes('href="/history"'),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
@@ -1834,6 +1837,457 @@ async function assertAnnouncementAdminPages(sessions: {
   }
 }
 
+// Awards the smoke creates carry this name prefix so cleanup can find them
+// (and never touch a seeded Award).
+const SMOKE_AWARD_PREFIX = "smoke-award-";
+
+const XI_AWARDS = [
+  {
+    name: "Black Midnight",
+    recipients: [
+      "Ian Ballard",
+      "Joshua Jameson",
+      "Bich Dudla",
+      "Steven Vickers",
+    ],
+  },
+  { name: "Catan Champion", recipients: ["Anthony Conway"] },
+  { name: "Terrordome Champion", recipients: ["Jory Hutchins"] },
+];
+
+const XI_FAQ_QUESTIONS = [
+  "I have some great pics and videos. Where do I put them?",
+  "How do I record War Week time in Tense?",
+  "When are the hours cutoffs this year?",
+  "What are the awards at this year's War Week?",
+  "Are we allowed to have personal guests at War Week?",
+  "What about client or prospect guests?",
+];
+
+/** AC1: /xi/awards lists each seeded Award with its recipients. */
+async function assertAwardsPage() {
+  const check =
+    "GET /xi/awards lists the seeded Awards with descriptions and recipients, and says Awards don't affect Standings";
+  try {
+    const res = await signedInFetch(`${BASE_URL}/xi/awards`);
+    const body = await res.text();
+    const missing = XI_AWARDS.flatMap((award) =>
+      [award.name, ...award.recipients].filter(
+        (text) => !body.includes(escapeHtml(text)),
+      ),
+    );
+    const hasDescription = body.includes(
+      "Last Beyblade spinning in the Terrordome.",
+    );
+    const hasNote = body.includes(escapeHtml("Awards don't add points"));
+    if (
+      res.status === 200 &&
+      missing.length === 0 &&
+      hasDescription &&
+      hasNote
+    ) {
+      ok(check);
+    } else {
+      fail(
+        check,
+        `status=${res.status} missing=${JSON.stringify(missing)} description=${hasDescription} note=${hasNote}`,
+      );
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+/** AC3: /xi/faq lists the seeded FAQ Items in sort order with rich answers. */
+async function assertFaqPage() {
+  const check =
+    "GET /xi/faq lists the six seeded FAQ Items in seed order with their answers";
+  try {
+    const res = await signedInFetch(`${BASE_URL}/xi/faq`);
+    const body = await res.text();
+    const positions = XI_FAQ_QUESTIONS.map((q) => body.indexOf(escapeHtml(q)));
+    const ordered =
+      positions.every((p) => p >= 0) &&
+      positions.every((p, i) => i === 0 || p > positions[i - 1]);
+    const hasAnswer = body.includes(
+      escapeHtml("Let Jason know so the proper arrangements can be made."),
+    );
+    if (res.status === 200 && ordered && hasAnswer) {
+      ok(check);
+    } else {
+      fail(
+        check,
+        `status=${res.status} positions=${JSON.stringify(positions)} answer=${hasAnswer}`,
+      );
+    }
+  } catch (error) {
+    fail(check, String(error));
+  }
+}
+
+async function smokeAwards() {
+  return runQuery<{
+    id: string;
+    name: string;
+    description: string | null;
+    team_id: string | null;
+    participant_ids: string[];
+  }>(
+    `select a.id, a.name, a.description, a.team_id,
+       coalesce(array_agg(ap.participant_id order by ap.participant_id)
+         filter (where ap.participant_id is not null), '{}') as participant_ids
+     from award a left join award_participant ap on ap.award_id = a.id
+     where a.name like $1 group by a.id order by a.name`,
+    [`${SMOKE_AWARD_PREFIX}%`],
+  );
+}
+
+async function deleteSmokeAwards() {
+  await runQuery(`delete from award where name like $1`, [
+    `${SMOKE_AWARD_PREFIX}%`,
+  ]);
+}
+
+/** AC2: Organizer-only create, edit and delete with Participant and/or Team recipients. */
+async function assertAwardActions(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const ids = serverActionIds();
+  const missing = ["createAward", "updateAward", "deleteAward"].filter(
+    (name) => !ids[name],
+  );
+  if (missing.length > 0) {
+    fail("Award server action ids in the build manifest", missing.join(", "));
+    return;
+  }
+
+  const run = async (check: string, body: () => Promise<string | null>) => {
+    try {
+      const problem = await body();
+      if (problem === null) ok(check);
+      else fail(check, problem);
+    } catch (error) {
+      fail(check, String(error));
+    }
+  };
+
+  const recipients = await runQuery<{ kind: string; id: string }>(
+    `select 'team' as kind, t.id from team t join war_week w on w.id = t.war_week_id
+       where w.edition = 'xi' and t.name = 'Red'
+     union all
+     select 'participant', p.id from participant p join war_week w on w.id = p.war_week_id
+       where w.edition = 'xi' and p.display_name in ('Anthony Conway', 'Jory Hutchins')
+     union all
+     (select 'elsewhere', p.id from participant p join war_week w on w.id = p.war_week_id
+       where w.edition <> 'xi' limit 1)`,
+  );
+  const redId = recipients.find((r) => r.kind === "team")?.id;
+  const participantIds = recipients
+    .filter((r) => r.kind === "participant")
+    .map((r) => r.id)
+    .sort();
+  const elsewhereId = recipients.find((r) => r.kind === "elsewhere")?.id;
+  if (!redId || participantIds.length !== 2 || !elsewhereId) {
+    fail("Award smoke recipients exist", JSON.stringify(recipients));
+    return;
+  }
+
+  const pointsBefore = await runQuery<{ count: string }>(
+    "select count(*) from points_entry",
+  );
+
+  try {
+    await deleteSmokeAwards();
+
+    await run(
+      "createAward rejects a signed-in JG user off the allowlist",
+      async () => {
+        const result = await callAction(
+          ids.createAward,
+          [
+            {
+              name: `${SMOKE_AWARD_PREFIX}refused`,
+              description: null,
+              teamId: redId,
+              participantIds: [],
+            },
+          ],
+          sessions.notOrganizer,
+        );
+        const rows = await smokeAwards();
+        return !result.ok &&
+          /not an Organizer/.test(result.error) &&
+          rows.length === 0
+          ? null
+          : `result=${JSON.stringify(result)} rows=${rows.length}`;
+      },
+    );
+
+    await run("createAward refuses an Award with no recipients", async () => {
+      const result = await callAction(
+        ids.createAward,
+        [
+          {
+            name: `${SMOKE_AWARD_PREFIX}empty`,
+            description: null,
+            teamId: null,
+            participantIds: [],
+          },
+        ],
+        sessions.organizer,
+      );
+      const rows = await smokeAwards();
+      return !result.ok &&
+        /Choose a Team or at least one Participant/.test(result.error) &&
+        rows.length === 0
+        ? null
+        : `result=${JSON.stringify(result)} rows=${rows.length}`;
+    });
+
+    await run(
+      "createAward refuses a Participant of another War Week",
+      async () => {
+        const result = await callAction(
+          ids.createAward,
+          [
+            {
+              name: `${SMOKE_AWARD_PREFIX}elsewhere`,
+              description: null,
+              teamId: null,
+              participantIds: [elsewhereId],
+            },
+          ],
+          sessions.organizer,
+        );
+        const rows = await smokeAwards();
+        return !result.ok &&
+          /Participants of this War Week/.test(result.error) &&
+          rows.length === 0
+          ? null
+          : `result=${JSON.stringify(result)} rows=${rows.length}`;
+      },
+    );
+
+    await run(
+      "createAward as an Organizer saves an Award to a Team and two Participants, shown on /xi/awards",
+      async () => {
+        const result = await callAction(
+          ids.createAward,
+          [
+            {
+              name: `${SMOKE_AWARD_PREFIX}mvp`,
+              description: "Smoke MVP",
+              teamId: redId,
+              participantIds,
+            },
+          ],
+          sessions.organizer,
+        );
+        const [row] = await smokeAwards();
+        const page = await (
+          await signedInFetch(`${BASE_URL}/xi/awards`)
+        ).text();
+        return result.ok &&
+          row?.team_id === redId &&
+          JSON.stringify(row.participant_ids) ===
+            JSON.stringify(participantIds) &&
+          page.includes(`${SMOKE_AWARD_PREFIX}mvp`)
+          ? null
+          : `result=${JSON.stringify(result)} row=${JSON.stringify(row)}`;
+      },
+    );
+
+    const [created] = await smokeAwards();
+    if (!created) {
+      fail("smoke Award exists for edit and delete", "none created");
+      return;
+    }
+
+    for (const [name, args] of [
+      [
+        "updateAward",
+        [
+          created.id,
+          {
+            name: `${SMOKE_AWARD_PREFIX}hijack`,
+            description: null,
+            teamId: redId,
+            participantIds: [],
+          },
+        ],
+      ],
+      ["deleteAward", [created.id]],
+    ] as const) {
+      await run(
+        `${name} rejects a signed-in JG user off the allowlist`,
+        async () => {
+          const result = await callAction(
+            ids[name],
+            [...args],
+            sessions.notOrganizer,
+          );
+          const [row] = await smokeAwards();
+          return !result.ok &&
+            /not an Organizer/.test(result.error) &&
+            row?.name === `${SMOKE_AWARD_PREFIX}mvp`
+            ? null
+            : `result=${JSON.stringify(result)} row=${JSON.stringify(row)}`;
+        },
+      );
+    }
+
+    await run(
+      "updateAward as an Organizer renames it and replaces the recipients with one Participant and no Team",
+      async () => {
+        const result = await callAction(
+          ids.updateAward,
+          [
+            created.id,
+            {
+              name: `${SMOKE_AWARD_PREFIX}edited`,
+              description: "",
+              teamId: null,
+              participantIds: [participantIds[0]],
+            },
+          ],
+          sessions.organizer,
+        );
+        const [row] = await smokeAwards();
+        return result.ok &&
+          row?.id === created.id &&
+          row.name === `${SMOKE_AWARD_PREFIX}edited` &&
+          row.description === null &&
+          row.team_id === null &&
+          JSON.stringify(row.participant_ids) ===
+            JSON.stringify([participantIds[0]])
+          ? null
+          : `result=${JSON.stringify(result)} row=${JSON.stringify(row)}`;
+      },
+    );
+
+    await run("Giving and editing Awards adds no Points Entries", async () => {
+      const [after] = await runQuery<{ count: string }>(
+        "select count(*) from points_entry",
+      );
+      return after.count === pointsBefore[0].count
+        ? null
+        : `before=${pointsBefore[0].count} after=${after.count}`;
+    });
+
+    await run("deleteAward as an Organizer removes it", async () => {
+      const result = await callAction(
+        ids.deleteAward,
+        [created.id],
+        sessions.organizer,
+      );
+      const rows = await smokeAwards();
+      return result.ok && rows.length === 0
+        ? null
+        : `result=${JSON.stringify(result)} rows=${rows.length}`;
+    });
+
+    await run(
+      "deleteAward of an id that no longer exists says so",
+      async () => {
+        const result = await callAction(
+          ids.deleteAward,
+          ["00000000-0000-4000-8000-000000000000"],
+          sessions.organizer,
+        );
+        return !result.ok && /no longer exists/.test(result.error)
+          ? null
+          : `result=${JSON.stringify(result)}`;
+      },
+    );
+  } finally {
+    await deleteSmokeAwards().catch((error) =>
+      fail("delete smoke Awards", String(error)),
+    );
+  }
+}
+
+/** /admin/awards, its New form and the edit form for a seeded Award. */
+async function assertAwardAdminPages(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const listCheck =
+    "GET /admin/awards as an Organizer lists the seeded Awards and New Award, and refuses a non-Organizer";
+  try {
+    const organizerRes = await fetch(`${BASE_URL}/admin/awards`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const organizerBody = await organizerRes.text();
+    const hasAll = XI_AWARDS.every((a) => organizerBody.includes(a.name));
+    const notOrganizerRes = await fetch(`${BASE_URL}/admin/awards`, {
+      headers: { cookie: sessions.notOrganizer.cookie },
+    });
+    const notOrganizerBody = await notOrganizerRes.text();
+    if (
+      organizerRes.status === 200 &&
+      hasAll &&
+      organizerBody.includes("New Award") &&
+      notOrganizerRes.status === 200 &&
+      notOrganizerBody.includes("Organizers only")
+    ) {
+      ok(listCheck);
+    } else {
+      fail(
+        listCheck,
+        `organizerStatus=${organizerRes.status} hasAll=${hasAll} notOrganizerStatus=${notOrganizerRes.status}`,
+      );
+    }
+  } catch (error) {
+    fail(listCheck, String(error));
+  }
+
+  const newCheck =
+    "GET /admin/awards/new as an Organizer shows the Award form with XI's Teams and Participants";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/awards/new`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const body = await res.text();
+    if (
+      res.status === 200 &&
+      body.includes('aria-label="Award"') &&
+      body.includes(">Red</option>") &&
+      body.includes("Anthony Conway")
+    ) {
+      ok(newCheck);
+    } else {
+      fail(newCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(newCheck, String(error));
+  }
+
+  const editCheck =
+    "GET /admin/awards/[id] as an Organizer shows Edit Award for the seeded Catan Champion";
+  try {
+    const [catan] = await runQuery<{ id: string }>(
+      `select a.id from award a join war_week w on w.id = a.war_week_id
+       where w.edition = 'xi' and a.name = 'Catan Champion'`,
+    );
+    const res = await fetch(`${BASE_URL}/admin/awards/${catan.id}`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const body = await res.text();
+    if (
+      res.status === 200 &&
+      body.includes("Edit Award") &&
+      body.includes('value="Catan Champion"')
+    ) {
+      ok(editCheck);
+    } else {
+      fail(editCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(editCheck, String(error));
+  }
+}
+
 async function assertSignInRequired() {
   for (const target of ["/", "/xi", "/xi/leaderboard"]) {
     const check = `anonymous GET ${target} redirects to sign-in`;
@@ -1981,6 +2435,8 @@ async function assertMcp() {
       "get_leaderboard",
       "get_schedule",
       "get_announcements",
+      "get_awards",
+      "get_faq",
       "list_history",
       "get_history",
     ]) {
@@ -2152,6 +2608,42 @@ async function assertMcp() {
       ok(allCheck);
     } else {
       fail(allCheck, `result=${JSON.stringify(announcementsAll.raw)}`);
+    }
+
+    const awards = await callTool(14, "get_awards", {});
+    const awardsCheck =
+      "MCP get_awards returns XI's three seeded Awards with the same recipients as /xi/awards";
+    const mcpAwards = awards.parsed?.awards as
+      { name: string; participants: string[] }[] | undefined;
+    const sameAwards =
+      awards.parsed?.edition === "xi" &&
+      mcpAwards?.length === XI_AWARDS.length &&
+      XI_AWARDS.every((expected) => {
+        const found = mcpAwards.find((a) => a.name === expected.name);
+        return (
+          found &&
+          JSON.stringify([...found.participants].sort()) ===
+            JSON.stringify([...expected.recipients].sort())
+        );
+      });
+    if (sameAwards) ok(awardsCheck);
+    else fail(awardsCheck, `result=${JSON.stringify(awards.raw)}`);
+
+    const faq = await callTool(15, "get_faq", {});
+    const faqCheck =
+      "MCP get_faq returns XI's six FAQ Items in seed order with plain-text answers";
+    const mcpFaq = faq.parsed?.faq as
+      { question: string; answer: string | null }[] | undefined;
+    if (
+      faq.parsed?.edition === "xi" &&
+      JSON.stringify(mcpFaq?.map((f) => f.question)) ===
+        JSON.stringify(XI_FAQ_QUESTIONS) &&
+      mcpFaq?.[5].answer ===
+        "They're very welcome. Let Jason know so the proper arrangements can be made."
+    ) {
+      ok(faqCheck);
+    } else {
+      fail(faqCheck, `result=${JSON.stringify(faq.raw)}`);
     }
 
     const list = await callTool(8, "list_history", {});
@@ -2337,6 +2829,10 @@ async function main() {
       await assertAnnouncementActions(sessions);
       await assertAnnouncementUnsafeContentStripped(sessions);
       await assertAnnouncementAdminPages(sessions);
+      await assertAwardsPage();
+      await assertFaqPage();
+      await assertAwardActions(sessions);
+      await assertAwardAdminPages(sessions);
     }
   } finally {
     await killServer(server);

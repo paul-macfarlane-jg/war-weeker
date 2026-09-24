@@ -27,7 +27,12 @@ function destinationsFor(edition: string): Destination[] {
       label: "More",
       href: `/${edition}/more`,
       icon: Menu,
-      subpaths: [`/${edition}/competitions`, `/${edition}/teams`],
+      subpaths: [
+        `/${edition}/competitions`,
+        `/${edition}/teams`,
+        `/${edition}/awards`,
+        `/${edition}/faq`,
+      ],
     },
   ];
 }

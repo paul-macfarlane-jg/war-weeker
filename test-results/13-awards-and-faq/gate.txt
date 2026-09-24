@@ -36,13 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
-(node:87527) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:10183) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
- Test Files  27 passed (27)
-      Tests  295 passed (295)
-   Start at  23:32:25
-   Duration  3.32s (transform 1.46s, setup 0ms, import 14.39s, tests 4.67s, environment 2ms)
+ Test Files  31 passed (31)
+      Tests  308 passed (308)
+   Start at  09:02:36
+   Duration  2.80s (transform 1.46s, setup 0ms, import 11.14s, tests 4.68s, environment 2ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -50,23 +50,25 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 15ms
+✓ Running next.config.ts took 14ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.7s
+✓ Compiled successfully in 1210ms
   Running TypeScript ...
-  Finished TypeScript in 13.7s ...
+  Finished TypeScript in 2.6s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 147ms
+✓ Generating static pages using 9 workers (3/3) in 89ms
   Finalizing page optimization ...
 
 Route (app)
 ┌ ƒ /
 ├ ○ /_not-found
 ├ ƒ /[edition]
+├ ƒ /[edition]/awards
 ├ ƒ /[edition]/competitions
 ├ ƒ /[edition]/competitions/[id]
+├ ƒ /[edition]/faq
 ├ ƒ /[edition]/leaderboard
 ├ ƒ /[edition]/more
 ├ ƒ /[edition]/news
@@ -76,6 +78,9 @@ Route (app)
 ├ ƒ /admin/announcements
 ├ ƒ /admin/announcements/[id]
 ├ ƒ /admin/announcements/new
+├ ƒ /admin/awards
+├ ƒ /admin/awards/[id]
+├ ƒ /admin/awards/new
 ├ ƒ /admin/points
 ├ ƒ /admin/points/[id]
 ├ ƒ /admin/standings
@@ -151,9 +156,9 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
-- Network:       http://192.168.1.120:3100
-✓ Ready in 132ms
-✓ Running next.config.ts took 28ms
+- Network:       http://172.19.6.25:3100
+✓ Ready in 104ms
+✓ Running next.config.ts took 21ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -161,7 +166,7 @@ ok - GET /zz returns 404
 ok - GET /xi/leaderboard responds and shows Standings hidden for the demo seed
 ok - GET /xi/schedule groups by Day with Day Themes, ET times and Competition links
 ok - GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next
-ok - GET /xi/more links to Competitions, Teams and history
+ok - GET /xi/more links to Competitions, Teams, Awards, FAQ and history
 ok - GET /history lists every complete War Week, newest first, each in its own theme
 ok - GET /viii renders 2023 in its Harry Potter theme with stored winner, Houses, Awards, highlights and wiki link
 ok - GET /i, /ii, /iii render as link-only cards with the wiki link
@@ -176,6 +181,8 @@ ok - MCP tools/list includes get_current_war_week
 ok - MCP tools/list includes get_leaderboard
 ok - MCP tools/list includes get_schedule
 ok - MCP tools/list includes get_announcements
+ok - MCP tools/list includes get_awards
+ok - MCP tools/list includes get_faq
 ok - MCP tools/list includes list_history
 ok - MCP tools/list includes get_history
 ok - MCP tools/call get_current_war_week returns edition xi
@@ -185,6 +192,8 @@ ok - MCP get_schedule(2026-02-24) returns only that Day
 ok - MCP get_schedule() returns all six XI Days
 ok - MCP get_announcements(limit: 2) returns edition xi, 2 Announcements, welcome pinned first with its video and body
 ok - MCP get_announcements() returns all 3 Announcements
+ok - MCP get_awards returns XI's three seeded Awards with the same recipients as /xi/awards
+ok - MCP get_faq returns XI's six FAQ Items in seed order with plain-text answers
 ok - MCP list_history returns 2025 down to 2016
 ok - MCP get_history(2023) returns the stored winner, Houses, Awards and wiki link
 ok - MCP get_history(2030) returns a clear not-found result
@@ -233,5 +242,20 @@ ok - createAnnouncement strips a javascript: link, a data: image and an unrecogn
 ok - GET /admin/announcements as an Organizer lists the seeded titles and New Announcement, and refuses a non-Organizer
 ok - GET /admin/announcements/new as an Organizer shows the Announcement form
 ok - GET /admin/announcements/[id] as an Organizer shows Edit Announcement for the seeded welcome Announcement
+ok - GET /xi/awards lists the seeded Awards with descriptions and recipients, and says Awards don't affect Standings
+ok - GET /xi/faq lists the six seeded FAQ Items in seed order with their answers
+ok - createAward rejects a signed-in JG user off the allowlist
+ok - createAward refuses an Award with no recipients
+ok - createAward refuses a Participant of another War Week
+ok - createAward as an Organizer saves an Award to a Team and two Participants, shown on /xi/awards
+ok - updateAward rejects a signed-in JG user off the allowlist
+ok - deleteAward rejects a signed-in JG user off the allowlist
+ok - updateAward as an Organizer renames it and replaces the recipients with one Participant and no Team
+ok - Giving and editing Awards adds no Points Entries
+ok - deleteAward as an Organizer removes it
+ok - deleteAward of an id that no longer exists says so
+ok - GET /admin/awards as an Organizer lists the seeded Awards and New Award, and refuses a non-Organizer
+ok - GET /admin/awards/new as an Organizer shows the Award form with XI's Teams and Participants
+ok - GET /admin/awards/[id] as an Organizer shows Edit Award for the seeded Catan Champion
  ELIFECYCLE  Command failed with exit code 143.
 GATE EXIT 0

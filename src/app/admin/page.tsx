@@ -36,14 +36,21 @@ export default async function AdminPage() {
           >
             hide or reveal them
           </Link>
-          , or{" "}
+          ,{" "}
           <Link
             href="/admin/announcements"
             className="text-primary underline underline-offset-4"
           >
             post Announcements
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/admin/awards"
+            className="text-primary underline underline-offset-4"
+          >
+            give Awards
           </Link>
-          . Awards are coming in a later slice.
+          .
         </p>
       </div>
     </AdminShell>
