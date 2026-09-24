@@ -385,6 +385,7 @@ async function assertInstallable() {
     const iconPaths = [
       ...icons.map((icon) => icon.src),
       "/icons/apple-touch-icon.png",
+      "/favicon.ico",
     ];
     const iconStatuses = await Promise.all(
       iconPaths.map(async (src) => (await fetch(`${BASE_URL}${src}`)).status),
@@ -405,6 +406,7 @@ async function assertInstallable() {
       serviceWorker: sw.status === 200,
       manifestLink: home.includes('rel="manifest"'),
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
+      favicon: home.includes('rel="icon" href="/favicon.ico'),
       install:
         install.status === 200 && installBody.includes("Install War Weeker"),
       installFooter: installBody.includes("Jahnel Group"),
