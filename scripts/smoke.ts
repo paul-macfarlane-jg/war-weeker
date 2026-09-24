@@ -373,6 +373,7 @@ async function assertInstallable() {
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
       install:
         install.status === 200 && installBody.includes("Install War Weeker"),
+      installFooter: installBody.includes("Jahnel Group"),
     };
     if (Object.values(checks).every(Boolean)) {
       ok(check);

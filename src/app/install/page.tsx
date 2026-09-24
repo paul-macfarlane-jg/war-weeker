@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { InstallInstructions } from "@/components/install-instructions";
+import { SiteFooter } from "@/components/site-footer";
 import { warWeekThemeStyle } from "@/lib/theme";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
@@ -20,7 +21,7 @@ export default async function InstallPage() {
   return (
     <div
       style={warWeek ? warWeekThemeStyle(warWeek) : undefined}
-      className="bg-background text-foreground min-h-dvh font-sans"
+      className="bg-background text-foreground flex min-h-dvh flex-col font-sans"
     >
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl">
         <Link
@@ -33,6 +34,7 @@ export default async function InstallPage() {
         <h1 className="text-2xl font-bold">Install War Weeker</h1>
         <InstallInstructions />
       </main>
+      <SiteFooter className="mt-auto" />
     </div>
   );
 }

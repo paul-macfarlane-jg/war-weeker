@@ -1,11 +1,9 @@
-# 14 installable PWA — slice gate, 2026-09-24T13:35:30Z, e9a3810+working tree
-Generating route types...
-✓ Types generated successfully
+# 14 installable PWA — slice gate after merging staging (#17), 2026-09-24T13:38:20Z, df51875+working tree
 typecheck: PASS
-lint: PASS (0 errors; 5 pre-existing no-img-element warnings)
-
- Test Files  32 passed (32)
-      Tests  313 passed (313)
+lint: PASS (0 errors; pre-existing no-img-element warnings only)
+format: PASS
+ Test Files  33 passed (33)
+      Tests  314 passed (314)
 build: PASS
 ok - pnpm seed:load --reset (11 seeds, load 1)
 ok - pnpm seed:load (11 seeds, load 2)
