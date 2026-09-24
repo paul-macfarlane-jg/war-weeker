@@ -42,7 +42,7 @@ export default async function EditPointsEntryPage({
           entryId={entry.id}
           initial={{
             competitionId: entry.competitionId,
-            targetId: entry.teamId ?? entry.participantId ?? "",
+            targetId: entry.targetId,
             points: String(entry.points),
             note: entry.note ?? "",
           }}

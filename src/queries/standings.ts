@@ -28,7 +28,26 @@ export async function getStandings(
       pointsEntries: [],
     });
   }
+  return loadStandings(warWeek, dbOrTx);
+}
 
+/**
+ * The real Standings for Organizers in admin, even while they're hidden on
+ * the public site.
+ */
+export async function getOrganizerStandings(
+  warWeek: Pick<WarWeek, "id" | "mode">,
+  dbOrTx: DBOrTx = db,
+) {
+  return loadStandings(warWeek, dbOrTx);
+}
+
+type VisibleStandings = Extract<Standings, { hidden: false }>;
+
+async function loadStandings(
+  warWeek: Pick<WarWeek, "id" | "mode">,
+  dbOrTx: DBOrTx,
+): Promise<VisibleStandings> {
   const [teams, participants, competitions, pointsEntries] = await Promise.all([
     dbOrTx
       .select({ id: team.id, name: team.name, color: team.color })
@@ -62,12 +81,13 @@ export async function getStandings(
       .where(eq(competition.warWeekId, warWeek.id)),
   ]);
 
+  // Not hidden, so `computeStandings` returns the visible shape.
   return computeStandings({
     mode: warWeek.mode,
-    standingsHidden: warWeek.standingsHidden,
+    standingsHidden: false,
     teams,
     participants,
     competitions,
     pointsEntries,
-  });
+  }) as VisibleStandings;
 }

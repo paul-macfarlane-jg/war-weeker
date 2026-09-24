@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  checkPointsEntryTarget,
+  type AdminLedgerRow,
+  buildAdminLedger,
   overMaxWarning,
   parsePointsEntryInput,
+  pointsEntryTarget,
+  pointsEntryTargetError,
 } from "@/lib/points-entry";
 
 const competitionId = "8b0a4f0e-2a4e-4c1a-9a57-2f7c7b6f5d11";
@@ -41,11 +44,14 @@ describe("parsePointsEntryInput", () => {
 
   it("rejects more than two decimal places and values the column can't hold", () => {
     expect(
-      parsePointsEntryInput({ competitionId, targetId, points: "1.234" }).ok,
-    ).toBe(false);
+      parsePointsEntryInput({ competitionId, targetId, points: "1.234" }),
+    ).toEqual({
+      ok: false,
+      error: "Points must have at most two decimal places.",
+    });
     expect(
-      parsePointsEntryInput({ competitionId, targetId, points: "1000000" }).ok,
-    ).toBe(false);
+      parsePointsEntryInput({ competitionId, targetId, points: "1000000" }),
+    ).toEqual({ ok: false, error: "Points must be at most 999999.99." });
     expect(
       parsePointsEntryInput({ competitionId, targetId, points: "999999.99" })
         .ok,
@@ -76,46 +82,74 @@ describe("parsePointsEntryInput", () => {
   });
 });
 
-describe("checkPointsEntryTarget", () => {
-  const roster = {
-    teamIds: new Set(["team-red"]),
-    participantIds: new Set(["p-neo"]),
-  };
+describe("pointsEntryTargetError", () => {
+  const tug = { name: "Tug of War", scoring: "team" } as const;
+  const chess = { name: "Speed Chess", scoring: "individual" } as const;
 
-  it("targets a Team in a team Competition", () => {
-    expect(
-      checkPointsEntryTarget({ scoring: "team" }, "team-red", roster),
-    ).toEqual({
-      ok: true,
-      target: { teamId: "team-red", participantId: null },
-    });
+  it("accepts a Team for a team Competition and a Participant for an individual one", () => {
+    expect(pointsEntryTargetError(tug, "team")).toBeNull();
+    expect(pointsEntryTargetError(chess, "participant")).toBeNull();
   });
 
-  it("targets a Participant in an individual Competition", () => {
-    expect(
-      checkPointsEntryTarget({ scoring: "individual" }, "p-neo", roster),
-    ).toEqual({ ok: true, target: { teamId: null, participantId: "p-neo" } });
+  it("refuses the other kind", () => {
+    expect(pointsEntryTargetError(tug, "participant")).toBe(
+      '"Tug of War" is a team Competition, so its Points Entries must target a team',
+    );
+    expect(pointsEntryTargetError(chess, "team")).toBe(
+      '"Speed Chess" is an individual Competition, so its Points Entries must target a participant',
+    );
+  });
+});
+
+describe("pointsEntryTarget", () => {
+  it("fills exactly one target column", () => {
+    expect(pointsEntryTarget("team", "t1")).toEqual({
+      teamId: "t1",
+      participantId: null,
+    });
+    expect(pointsEntryTarget("participant", "p1")).toEqual({
+      teamId: null,
+      participantId: "p1",
+    });
+  });
+});
+
+describe("buildAdminLedger", () => {
+  const saved = new Date("2026-09-23T12:00:00Z");
+  const row = (overrides: Partial<AdminLedgerRow>): AdminLedgerRow => ({
+    id: "a",
+    competition: "Tug of War",
+    teamName: "Red",
+    participantName: null,
+    points: 3,
+    note: null,
+    enteredByEmail: "o@jahnelgroup.com",
+    enteredAt: saved,
+    createdAt: saved,
+    updatedAt: saved,
+    ...overrides,
   });
 
-  it("rejects a Participant in a team Competition and vice versa", () => {
-    expect(
-      checkPointsEntryTarget({ scoring: "team" }, "p-neo", roster),
-    ).toEqual({
-      ok: false,
-      error: "This Competition is scored by Team; pick a Team.",
-    });
-    expect(
-      checkPointsEntryTarget({ scoring: "individual" }, "team-red", roster),
-    ).toEqual({
-      ok: false,
-      error: "This Competition is scored individually; pick a Participant.",
-    });
+  it("lists entries newest first with the target's name", () => {
+    const ledger = buildAdminLedger([
+      row({ id: "old", enteredAt: new Date("2026-02-24T15:00:00Z") }),
+      row({ id: "new", participantName: "Neo", teamName: null }),
+    ]);
+    expect(ledger.map((e) => [e.id, e.target])).toEqual([
+      ["new", "Neo"],
+      ["old", "Red"],
+    ]);
   });
 
-  it("rejects a target that isn't in this War Week", () => {
-    expect(
-      checkPointsEntryTarget({ scoring: "team" }, "team-elsewhere", roster).ok,
-    ).toBe(false);
+  it("marks an entry edited only when its row changed after it was saved", () => {
+    const edited = new Date("2026-09-23T12:05:00Z");
+    const [changed, seeded] = buildAdminLedger([
+      // A seeded entry: historical enteredAt, row never changed.
+      row({ id: "b", enteredAt: new Date("2026-02-24T15:00:00Z") }),
+      row({ id: "a", updatedAt: edited }),
+    ]).sort((x, y) => x.id.localeCompare(y.id));
+    expect(changed.editedAt).toEqual(edited);
+    expect(seeded.editedAt).toBeNull();
   });
 });
 

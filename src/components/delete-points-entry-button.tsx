@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
-import { deletePointsEntry } from "@/app/admin/points/actions";
+import { deletePointsEntry } from "@/actions/points-entries";
 import { Button } from "@/components/ui/button";
 
 export function DeletePointsEntryButton({

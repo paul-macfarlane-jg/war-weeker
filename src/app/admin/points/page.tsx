@@ -9,26 +9,18 @@ import {
   TeamStandingsList,
 } from "@/components/standings";
 import { formatPoints } from "@/lib/points";
+import { formatLedgerTime } from "@/lib/points-entry";
 import {
   getAdminLedger,
   getPointsEntryFormOptions,
 } from "@/queries/points-entries";
-import { getStandings } from "@/queries/standings";
+import { getOrganizerStandings } from "@/queries/standings";
 
 import { loadAdminPage } from "../gate";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Points Entries · War Weeker" };
-
-const dateTime = new Intl.DateTimeFormat("en-US", {
-  timeZone: "America/New_York",
-  weekday: "short",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
 
 export default async function AdminPointsPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage("/admin/points");
@@ -37,8 +29,7 @@ export default async function AdminPointsPage() {
   const [options, ledger, standings] = await Promise.all([
     getPointsEntryFormOptions(warWeek),
     getAdminLedger(warWeek),
-    // Organizers see the real Standings even while they're hidden publicly.
-    getStandings({ ...warWeek, standingsHidden: false }),
+    getOrganizerStandings(warWeek),
   ]);
 
   return (
@@ -61,20 +52,18 @@ export default async function AdminPointsPage() {
               </p>
             )}
           </div>
-          {!standings.hidden && (
-            <div className="grid gap-6 xl:grid-cols-2">
-              {(standings.main === "team" || standings.team.length > 0) && (
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-medium">{warWeek.teamLabel} standings</h3>
-                  <TeamStandingsList rows={standings.team} />
-                </div>
-              )}
+          <div className="grid gap-6 xl:grid-cols-2">
+            {(standings.main === "team" || standings.team.length > 0) && (
               <div className="flex flex-col gap-2">
-                <h3 className="font-medium">Individual leaderboard</h3>
-                <IndividualStandingsList rows={standings.individual} />
+                <h3 className="font-medium">{warWeek.teamLabel} standings</h3>
+                <TeamStandingsList rows={standings.team} />
               </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <h3 className="font-medium">Individual leaderboard</h3>
+              <IndividualStandingsList rows={standings.individual} />
             </div>
-          )}
+          </div>
         </section>
       </div>
 
@@ -117,10 +106,10 @@ export default async function AdminPointsPage() {
                     </td>
                     <td className="py-2 pr-4">{entry.enteredByEmail}</td>
                     <td className="py-2 pr-4 whitespace-nowrap">
-                      {dateTime.format(entry.enteredAt)}
-                      {entry.edited && (
+                      {formatLedgerTime(entry.enteredAt)}
+                      {entry.editedAt && (
                         <span className="text-foreground/60 block text-xs">
-                          edited {dateTime.format(entry.updatedAt)}
+                          edited {formatLedgerTime(entry.editedAt)}
                         </span>
                       )}
                     </td>

@@ -19,7 +19,11 @@ const SECTIONS = [
   { label: "Awards", icon: Medal, href: null },
 ] as const;
 
-export type AdminSection = (typeof SECTIONS)[number]["label"];
+/** A section an admin page can be: only sections that have a page. */
+export type AdminSection = Extract<
+  (typeof SECTIONS)[number],
+  { href: string }
+>["label"];
 
 /** Desktop frame for every Organizer page: header, side nav, content. */
 export function AdminShell({
@@ -72,9 +76,9 @@ export function AdminShell({
                 "flex items-center gap-2 rounded-md px-3 py-2 text-sm";
               return (
                 <li key={label}>
-                  {label === current ? (
+                  {href && label === current ? (
                     <Link
-                      href={href!}
+                      href={href}
                       aria-current="page"
                       className={`${base} bg-primary/10 text-primary font-medium`}
                     >

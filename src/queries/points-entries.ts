@@ -1,6 +1,5 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import { z } from "zod";
 
 import { DBOrTx, db } from "@/db";
 import {
@@ -12,8 +11,12 @@ import {
   warWeek as warWeekTable,
 } from "@/db/schema";
 import { isCompetitionId } from "@/lib/competitions";
-
-const isUuid = (id: string) => z.uuid().safeParse(id).success;
+import {
+  type AdminLedgerEntry,
+  type PointsEntryTargetKind,
+  buildAdminLedger,
+  isPointsEntryId,
+} from "@/lib/points-entry";
 
 export type PointsEntryFormCompetition = {
   id: string;
@@ -80,19 +83,6 @@ export async function getPointsEntryFormOptions(
   };
 }
 
-export type AdminLedgerEntry = {
-  id: string;
-  competition: string;
-  target: string;
-  points: number;
-  note: string | null;
-  enteredByEmail: string;
-  enteredAt: Date;
-  updatedAt: Date;
-  /** Changed since it was saved (a seeded entry's `enteredAt` is historical). */
-  edited: boolean;
-};
-
 /** Every Points Entry of a War Week for the admin ledger, newest first. */
 export async function getAdminLedger(
   warWeek: Pick<WarWeek, "id">,
@@ -115,14 +105,8 @@ export async function getAdminLedger(
     .innerJoin(competition, eq(competition.id, pointsEntry.competitionId))
     .leftJoin(team, eq(team.id, pointsEntry.teamId))
     .leftJoin(participant, eq(participant.id, pointsEntry.participantId))
-    .where(eq(competition.warWeekId, warWeek.id))
-    .orderBy(desc(pointsEntry.enteredAt), asc(pointsEntry.id));
-
-  return rows.map(({ teamName, participantName, createdAt, ...row }) => ({
-    ...row,
-    target: participantName ?? teamName ?? "Unknown",
-    edited: row.updatedAt.getTime() - createdAt.getTime() > 1000,
-  }));
+    .where(eq(competition.warWeekId, warWeek.id));
+  return buildAdminLedger(rows);
 }
 
 /** One Points Entry of a War Week, for the edit form. */
@@ -131,17 +115,15 @@ export async function getPointsEntryForEdit(
   id: string,
   dbOrTx: DBOrTx = db,
 ) {
-  if (!isUuid(id)) return undefined;
+  if (!isPointsEntryId(id)) return undefined;
   const [found] = await dbOrTx
     .select({
       id: pointsEntry.id,
       competitionId: pointsEntry.competitionId,
-      teamId: pointsEntry.teamId,
-      participantId: pointsEntry.participantId,
+      targetId: sql<string>`coalesce(${pointsEntry.teamId}, ${pointsEntry.participantId})`,
       points: pointsEntry.points,
       note: pointsEntry.note,
       enteredByEmail: pointsEntry.enteredByEmail,
-      enteredAt: pointsEntry.enteredAt,
     })
     .from(pointsEntry)
     .innerJoin(competition, eq(competition.id, pointsEntry.competitionId))
@@ -156,27 +138,24 @@ const organizerWarWeekColumns = {
   organizerEmails: warWeekTable.organizerEmails,
 };
 
-/** A Competition with the War Week it belongs to, for Organizer checks. */
-export async function getCompetitionWithWarWeek(
-  id: string,
+/** The War Week a Competition belongs to, for the Organizer check. */
+export async function getCompetitionWarWeek(
+  competitionId: string,
   dbOrTx: DBOrTx = db,
 ) {
-  if (!isCompetitionId(id)) return undefined;
+  if (!isCompetitionId(competitionId)) return undefined;
   const [found] = await dbOrTx
-    .select({
-      competition: { id: competition.id, scoring: competition.scoring },
-      warWeek: organizerWarWeekColumns,
-    })
+    .select(organizerWarWeekColumns)
     .from(competition)
     .innerJoin(warWeekTable, eq(warWeekTable.id, competition.warWeekId))
-    .where(eq(competition.id, id))
+    .where(eq(competition.id, competitionId))
     .limit(1);
   return found;
 }
 
-/** A Points Entry's War Week, for Organizer checks on edit and delete. */
+/** The War Week a Points Entry belongs to, for the Organizer check. */
 export async function getPointsEntryWarWeek(id: string, dbOrTx: DBOrTx = db) {
-  if (!isUuid(id)) return undefined;
+  if (!isPointsEntryId(id)) return undefined;
   const [found] = await dbOrTx
     .select(organizerWarWeekColumns)
     .from(pointsEntry)
@@ -187,29 +166,47 @@ export async function getPointsEntryWarWeek(id: string, dbOrTx: DBOrTx = db) {
   return found;
 }
 
-/** The War Week's roster ids that match `targetId` (at most one of each). */
-export async function getTargetRoster(
-  warWeek: Pick<WarWeek, "id">,
-  targetId: string,
+/** One Competition of a War Week, with what the target rule needs. */
+export async function getCompetitionInWarWeek(
+  warWeekId: string,
+  competitionId: string,
   dbOrTx: DBOrTx = db,
 ) {
+  const [found] = await dbOrTx
+    .select({ name: competition.name, scoring: competition.scoring })
+    .from(competition)
+    .where(
+      and(
+        eq(competition.id, competitionId),
+        eq(competition.warWeekId, warWeekId),
+      ),
+    )
+    .limit(1);
+  return found;
+}
+
+/**
+ * Whether `targetId` is a Team or a Participant of this War Week, or
+ * neither (including one from another War Week).
+ */
+export async function getTargetKind(
+  warWeekId: string,
+  targetId: string,
+  dbOrTx: DBOrTx = db,
+): Promise<PointsEntryTargetKind | null> {
   const [teams, participants] = await Promise.all([
     dbOrTx
       .select({ id: team.id })
       .from(team)
-      .where(and(eq(team.id, targetId), eq(team.warWeekId, warWeek.id))),
+      .where(and(eq(team.id, targetId), eq(team.warWeekId, warWeekId))),
     dbOrTx
       .select({ id: participant.id })
       .from(participant)
       .where(
-        and(
-          eq(participant.id, targetId),
-          eq(participant.warWeekId, warWeek.id),
-        ),
+        and(eq(participant.id, targetId), eq(participant.warWeekId, warWeekId)),
       ),
   ]);
-  return {
-    teamIds: new Set(teams.map((t) => t.id)),
-    participantIds: new Set(participants.map((p) => p.id)),
-  };
+  if (teams.length > 0) return "team";
+  if (participants.length > 0) return "participant";
+  return null;
 }

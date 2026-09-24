@@ -36,11 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
+(node:34083) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
 
- Test Files  16 passed (16)
-      Tests  205 passed (205)
-   Start at  20:25:21
-   Duration  1.30s (transform 484ms, setup 0ms, import 4.26s, tests 188ms, environment 1ms)
+ Test Files  17 passed (17)
+      Tests  209 passed (209)
+   Start at  20:32:02
+   Duration  2.32s (transform 774ms, setup 0ms, import 10.90s, tests 2.06s, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -48,15 +50,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 25ms
+✓ Running next.config.ts took 21ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 1243ms
+✓ Compiled successfully in 2.9s
   Running TypeScript ...
-  Finished TypeScript in 3.2s ...
+  Finished TypeScript in 3.6s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 164ms
+✓ Generating static pages using 9 workers (3/3) in 327ms
   Finalizing page optimization ...
 
 Route (app)
@@ -145,8 +147,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 136ms
-✓ Running next.config.ts took 37ms
+✓ Ready in 124ms
+✓ Running next.config.ts took 77ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -192,3 +194,4 @@ ok - updatePointsEntry and deletePointsEntry reject a non-Organizer
 ok - updatePointsEntry as an Organizer edits points and keeps entered-by
 ok - deletePointsEntry as an Organizer removes it
  ELIFECYCLE  Command failed with exit code 143.
+gate exit status: 0

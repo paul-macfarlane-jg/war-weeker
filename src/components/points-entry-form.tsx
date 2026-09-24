@@ -7,7 +7,7 @@ import {
   type PointsEntryActionResult,
   createPointsEntry,
   updatePointsEntry,
-} from "@/app/admin/points/actions";
+} from "@/actions/points-entries";
 import { Button } from "@/components/ui/button";
 import { formatMaxPoints } from "@/lib/competitions";
 import { overMaxWarning } from "@/lib/points-entry";
