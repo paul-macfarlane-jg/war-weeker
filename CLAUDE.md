@@ -1,5 +1,9 @@
 # war-weeker
 
+## Maintainer's guide
+
+When Jason (or any maintainer) asks how to change War Weeker, read and follow `docs/maintainers-guide.md`.
+
 ## Agent skills
 
 ### Issue tracker
