@@ -7,6 +7,7 @@ import { toFaqResult } from "@/mcp/faq";
 import { toHistoryListResult, toHistoryResult } from "@/mcp/history";
 import { toLeaderboardResult } from "@/mcp/leaderboard";
 import { toScheduleResult } from "@/mcp/schedule";
+import { MCP_TOOLS } from "@/mcp/tools";
 import { toCurrentWarWeekResult } from "@/mcp/war-week";
 import { getAnnouncements } from "@/queries/announcements";
 import { getArchiveDetailByYear, listArchive } from "@/queries/archive";
@@ -23,9 +24,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_current_war_week",
       {
-        title: "Get current War Week",
-        description:
-          "Returns the current War Week: the live one, else the next upcoming one, else the most recent complete one.",
+        ...MCP_TOOLS.get_current_war_week,
         inputSchema: z.object({}),
       },
       async () => {
@@ -44,9 +43,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_leaderboard",
       {
-        title: "Get leaderboard",
-        description:
-          "Returns the current War Week's team or individual Standings, ranked by total points. While standings are hidden it returns only a 'hidden until closing ceremonies' message and no numbers.",
+        ...MCP_TOOLS.get_leaderboard,
         inputSchema: z.object({
           kind: z
             .enum(["team", "individual"])
@@ -72,9 +69,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_schedule",
       {
-        title: "Get schedule",
-        description:
-          "Returns the current War Week's schedule, grouped by Day with each Day Theme. Pass a date (YYYY-MM-DD) for one Day; omit it for the whole week. All times are ET (America/New_York) wall-clock HH:MM.",
+        ...MCP_TOOLS.get_schedule,
         inputSchema: z.object({
           date: z.iso
             .date()
@@ -101,9 +96,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_announcements",
       {
-        title: "Get Announcements",
-        description:
-          "Returns the current War Week's recent Announcements as readable text, pinned first then newest first, with title, author, published time, plain-text body and any video links.",
+        ...MCP_TOOLS.get_announcements,
         inputSchema: z.object({
           limit: z
             .number()
@@ -134,9 +127,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_awards",
       {
-        title: "Get Awards",
-        description:
-          "Returns the current War Week's Awards by name, each with its description and recipients: a Team, Participants, or both. Awards don't affect Standings.",
+        ...MCP_TOOLS.get_awards,
         inputSchema: z.object({}),
       },
       async () => {
@@ -154,9 +145,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_faq",
       {
-        title: "Get FAQ",
-        description:
-          "Returns the current War Week's FAQ in order: each question with its answer as plain text.",
+        ...MCP_TOOLS.get_faq,
         inputSchema: z.object({}),
       },
       async () => {
@@ -174,9 +163,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "list_history",
       {
-        title: "List War Week history",
-        description:
-          "Lists every past (complete) War Week in the Archive, newest first: edition, year, dates, Story Theme, stored winner and original wiki link.",
+        ...MCP_TOOLS.list_history,
         inputSchema: z.object({}),
       },
       async () => {
@@ -191,9 +178,7 @@ const handler = createMcpHandler(
     server.registerTool(
       "get_history",
       {
-        title: "Get a past War Week",
-        description:
-          "Returns one past War Week by year: Story Theme, dates, Teams and colors, the stored winner, Awards with recipients, highlights and the original wiki link. A year not in the Archive returns found: false.",
+        ...MCP_TOOLS.get_history,
         inputSchema: z.object({
           year: z.number().int().describe("The War Week's year, e.g. 2023."),
         }),
