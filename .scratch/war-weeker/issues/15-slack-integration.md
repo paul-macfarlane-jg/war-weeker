@@ -2,7 +2,7 @@
 
 **What to build:** When an Organizer publishes a new Announcement in the app, War Weeker can also post it to the War Week's Slack channel through a Slack incoming webhook. This is a small, one-way integration. The PR ships **dormant**: with no webhook configured nothing changes. It switches on once IT provides the webhook URL in Vercel.
 
-**Blocked by:** none (build this last before the hackathon; the webhook itself waits on IT)
+**Blocked by:** none (cut from the hackathon by Paul on 2026-09-24; pick it up only if time remains, else after Fri 2026-09-25 10:00 AM. The webhook itself waits on IT)
 
 **Status:** ready-for-agent
 
