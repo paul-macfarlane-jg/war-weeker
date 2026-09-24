@@ -3,11 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AutoRefresh } from "@/components/auto-refresh";
 import { NowNextSection } from "@/components/now-next";
-import {
-  IndividualStandingsList,
-  StandingsHidden,
-  TeamStandingsList,
-} from "@/components/standings";
+import { HomeStandings } from "@/components/reveal-standings";
 import { Button } from "@/components/ui/button";
 import { computeNowNext, resolveClock } from "@/lib/schedule";
 import { WAR_WEEK_STATUS_LABEL, formatDateRange } from "@/lib/war-week-display";
@@ -112,15 +108,10 @@ export default async function EditionHomePage({
               Full leaderboard
             </Link>
           </div>
-          {standings.hidden ? (
-            <StandingsHidden />
-          ) : standings.main === "team" ? (
-            <TeamStandingsList rows={standings.team} />
-          ) : (
-            <IndividualStandingsList
-              rows={standings.individual.slice(0, HOME_INDIVIDUAL_ROWS)}
-            />
-          )}
+          <HomeStandings
+            standings={standings}
+            individualLimit={HOME_INDIVIDUAL_ROWS}
+          />
         </section>
       </div>
       <AutoRefresh />

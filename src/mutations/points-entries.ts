@@ -7,14 +7,11 @@ import {
   pointsEntryTarget,
   pointsEntryTargetError,
 } from "@/lib/points-entry";
+import type { MutationContext, MutationResult } from "@/mutations/types";
 import {
   getCompetitionInWarWeek,
   getTargetKind,
 } from "@/queries/points-entries";
-
-export type MutationContext = { warWeekId: string; actorEmail: string };
-
-export type MutationResult = { ok: true } | { ok: false; error: string };
 
 const NOT_FOUND = "That Points Entry no longer exists.";
 

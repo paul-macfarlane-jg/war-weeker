@@ -14,8 +14,8 @@ Generating route types...
 
 
 /Users/pmacfarlane/jg-code/war-weeker/src/app/[edition]/page.tsx
-  41:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
-  55:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  37:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  51:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 /Users/pmacfarlane/jg-code/war-weeker/src/app/sign-in/page.tsx
   46:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
@@ -36,13 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
-(node:34083) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:45060) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
- Test Files  17 passed (17)
-      Tests  209 passed (209)
-   Start at  20:32:02
-   Duration  2.32s (transform 774ms, setup 0ms, import 10.90s, tests 2.06s, environment 1ms)
+ Test Files  19 passed (19)
+      Tests  232 passed (232)
+   Start at  20:55:27
+   Duration  2.39s (transform 859ms, setup 0ms, import 10.30s, tests 3.04s, environment 1ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -50,15 +50,15 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
 ▲ Next.js 16.3.6 (Turbopack)
 - Environments: .env.local
-✓ Running next.config.ts took 21ms
+✓ Running next.config.ts took 20ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.9s
+✓ Compiled successfully in 2.3s
   Running TypeScript ...
-  Finished TypeScript in 3.6s ...
+  Finished TypeScript in 3.4s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 327ms
+✓ Generating static pages using 9 workers (3/3) in 110ms
   Finalizing page optimization ...
 
 Route (app)
@@ -75,6 +75,7 @@ Route (app)
 ├ ƒ /admin
 ├ ƒ /admin/points
 ├ ƒ /admin/points/[id]
+├ ƒ /admin/standings
 ├ ƒ /api/auth/[...all]
 ├ ƒ /api/mcp
 └ ƒ /sign-in
@@ -147,8 +148,8 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 ▲ Next.js 16.3.6
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
-✓ Ready in 124ms
-✓ Running next.config.ts took 77ms
+✓ Ready in 128ms
+✓ Running next.config.ts took 41ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -193,5 +194,11 @@ ok - an entry saved in admin shows up on /xi/leaderboard (un-hidden) on the next
 ok - updatePointsEntry and deletePointsEntry reject a non-Organizer
 ok - updatePointsEntry as an Organizer edits points and keeps entered-by
 ok - deletePointsEntry as an Organizer removes it
+ok - while hidden, /xi and /xi/leaderboard HTML and RSC payloads carry no totals
+ok - GET /admin/standings shows the Reveal control to an Organizer and the refusal to a non-Organizer
+ok - revealStandings rejects a signed-in JG user off the allowlist
+ok - revealStandings as an Organizer shows Standings on /xi, /xi/leaderboard and MCP get_leaderboard
+ok - hideStandings rejects a signed-in JG user off the allowlist
+ok - hideStandings as an Organizer returns /xi, /xi/leaderboard and MCP get_leaderboard to hidden
  ELIFECYCLE  Command failed with exit code 143.
 gate exit status: 0
