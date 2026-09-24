@@ -62,7 +62,7 @@ describe("parseAnnouncementInput", () => {
     for (const url of ["http://youtube.com/watch?v=x", "not-a-url"]) {
       expect(parseAnnouncementInput(baseInput({ videoUrls: [url] }))).toEqual({
         ok: false,
-        error: "Video link 1 Invalid URL.",
+        error: "Video link 1 must be an https:// link.",
       });
     }
   });

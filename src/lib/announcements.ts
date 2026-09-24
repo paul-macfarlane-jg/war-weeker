@@ -25,7 +25,7 @@ export const announcementTitleSchema = z
  * embed shapes both live once, in `videoEmbedUrl`.
  */
 export const videoUrlSchema = z
-  .url({ protocol: /^https$/ })
+  .url({ protocol: /^https$/, error: "must be an https:// link" })
   .max(500, { error: "must be at most 500 characters" })
   .refine((url) => videoEmbedUrl(url) !== null, {
     error: "must be a YouTube, Loom, Vimeo or Google Drive video link",
