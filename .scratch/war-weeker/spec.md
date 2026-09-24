@@ -284,7 +284,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   1. account linking (a Google sign-in matched to a Participant by email)
   2. a "Which one is you?" picker (localStorage) that highlights you on the leaderboard and roster
   3. placement presets (1st/2nd/3rd turned into points)
-  4. a video node inside the rich-text editor
+  4. a video node inside the rich-text editor (delivered: ticket 23)
   5. `llms.txt`
   6. setup CRUD screens
 

@@ -1,15 +1,18 @@
 import { z } from "zod";
 
+import { videoEmbedUrl } from "@/lib/video";
+
 /**
  * Rich text (Announcement bodies, FAQ answers, Schedule Item descriptions),
  * stored in `jsonb` exactly as TipTap/ProseMirror emits it: a `doc` holding a
  * list of blocks. Copied from journeys.
  *
  * The allowed set is small and closed: paragraphs, headings, bullet and
- * ordered lists, images by URL, and bold/italic/link marks. `sanitizeContent`
- * runs on every write (the seed loader today, organizer actions later) and
- * again on render, so content that reached storage some other way still
- * cannot render a `javascript:` link or a `data:` image.
+ * ordered lists, images by URL, videos on an allow-listed host, and
+ * bold/italic/link marks. `sanitizeContent` runs on every write (the seed
+ * loader today, organizer actions later) and again on render, so content
+ * that reached storage some other way still cannot render a `javascript:`
+ * link, a `data:` image or a video from an unlisted host.
  */
 
 export type Mark =
@@ -46,7 +49,14 @@ export type ImageBlock = {
   attrs: { src: string; alt: string };
 };
 
-export type Block = Paragraph | Heading | BulletList | OrderedList | ImageBlock;
+/**
+ * `src` is the video's original share URL; the embed URL is derived from it
+ * on render (`videoEmbedUrl`), so only an embeddable, allow-listed URL is kept.
+ */
+export type VideoBlock = { type: "video"; attrs: { src: string } };
+
+export type Block =
+  Paragraph | Heading | BulletList | OrderedList | ImageBlock | VideoBlock;
 
 export type Content = { type: "doc"; content: Block[] };
 
@@ -112,12 +122,20 @@ const imageSchema: z.ZodType<ImageBlock> = z.object({
   }),
 });
 
+const videoSchema: z.ZodType<VideoBlock> = z.object({
+  type: z.literal("video"),
+  attrs: z.object({
+    src: z.string().refine((src) => videoEmbedUrl(src) !== null),
+  }),
+});
+
 const blockSchema: z.ZodType<Block> = z.union([
   paragraphSchema,
   headingSchema,
   bulletListSchema,
   orderedListSchema,
   imageSchema,
+  videoSchema,
 ]);
 
 /** The shape of stored rich text. Pair with `sanitizeContent` on write. */
@@ -228,6 +246,17 @@ function sanitizeImage(input: Record<string, unknown>): ImageBlock | null {
   return { type: "image", attrs: { src, alt } };
 }
 
+function sanitizeVideo(input: Record<string, unknown>): VideoBlock | null {
+  const attrs = isRecord(input.attrs) ? input.attrs : {};
+  const src = attrs.src;
+  // Stricter than the image rule: the URL must be on the video allow-list
+  // and point at a video its host can embed.
+  if (typeof src !== "string" || videoEmbedUrl(src) === null) {
+    return null;
+  }
+  return { type: "video", attrs: { src } };
+}
+
 function sanitizeListItems(input: unknown): ListItem[] {
   if (!Array.isArray(input)) {
     return [];
@@ -294,6 +323,8 @@ function sanitizeBlock(input: unknown): Block | null {
     }
     case "image":
       return sanitizeImage(input);
+    case "video":
+      return sanitizeVideo(input);
     default:
       // Unknown blocks go, and their whole subtree goes with them.
       return null;

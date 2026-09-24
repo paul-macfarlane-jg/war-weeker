@@ -6,14 +6,15 @@ import {
   type TextElement,
   sanitizeContent,
 } from "@/lib/rich-text/content";
+import { VIDEO_IFRAME, videoEmbedUrl } from "@/lib/video";
 
 /**
  * Read-only, server-rendered rich text. Takes whatever came out of a `jsonb`
  * column and runs `sanitizeContent` over it again before rendering, so a
  * document that reached storage without passing the write-path sanitizer
- * still cannot render an unsafe link or image. Rendering walks the closed
- * block set with React elements, so text is always escaped and no raw HTML
- * is ever injected.
+ * still cannot render an unsafe link, image or video. Rendering walks the
+ * closed block set with React elements, so text is always escaped and no
+ * raw HTML is ever injected.
  */
 export function RichText({ content }: { content: unknown }) {
   const result = sanitizeContent(content);
@@ -50,6 +51,19 @@ function BlockView({ block }: { block: Block }) {
       // every host allow-listed.
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={block.attrs.src} alt={block.attrs.alt} />;
+    case "video": {
+      // The sanitizer only keeps videos this resolves, so null is unreachable.
+      const src = videoEmbedUrl(block.attrs.src);
+      if (!src) return null;
+      return (
+        <iframe
+          src={src}
+          {...VIDEO_IFRAME}
+          allowFullScreen
+          className="aspect-video w-full rounded-lg"
+        />
+      );
+    }
   }
 }
 

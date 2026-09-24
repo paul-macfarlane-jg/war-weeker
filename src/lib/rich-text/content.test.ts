@@ -36,3 +36,37 @@ describe("isHttpUrl", () => {
     expect(isHttpUrl("not-a-url")).toBe(false);
   });
 });
+
+describe("video blocks", () => {
+  function video(src: unknown) {
+    return { type: "doc", content: [{ type: "video", attrs: { src } }] };
+  }
+
+  it("keeps a video whose URL is an embeddable allow-listed host", () => {
+    const src = "https://www.youtube.com/watch?v=abc123";
+    expect(contentInputSchema.parse(video(src))).toEqual(video(src));
+  });
+
+  it.each([
+    "https://evil.example.com/watch?v=abc123",
+    "javascript:alert(1)",
+    "http://www.youtube.com/watch?v=abc123",
+    "https://www.youtube.com/playlist?list=x",
+    42,
+  ])("drops a video with src %s", (src) => {
+    expect(contentInputSchema.parse(video(src))).toEqual({
+      type: "doc",
+      content: [],
+    });
+  });
+
+  it("drops attrs other than src", () => {
+    const src = "https://vimeo.com/123456";
+    expect(
+      contentInputSchema.parse({
+        type: "doc",
+        content: [{ type: "video", attrs: { src, onload: "x" } }],
+      }),
+    ).toEqual(video(src));
+  });
+});

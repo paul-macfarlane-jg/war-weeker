@@ -1,13 +1,16 @@
 import Image from "@tiptap/extension-image";
 import StarterKit from "@tiptap/starter-kit";
 
+import { Video } from "@/lib/rich-text/video-node";
+
 /**
  * The TipTap extensions the Organizer's rich-text editor writes with. Copied
  * from journeys and narrowed to the closed set `@/lib/rich-text/content`
  * describes: paragraph, headings, bold, italic, bullet and ordered lists,
- * links, and an image with alt text (no caption). Everything else StarterKit
- * would bring is switched off; undo/redo, the drop cursor and the gap cursor
- * stay, since they emit no content of their own.
+ * links, an image with alt text (no caption), and a video by URL.
+ * Everything else StarterKit would bring is switched off; undo/redo, the
+ * drop cursor and the gap cursor stay, since they emit no content of their
+ * own.
  */
 export const editorExtensions = [
   StarterKit.configure({
@@ -31,4 +34,5 @@ export const editorExtensions = [
     },
   }),
   Image,
+  Video,
 ];
