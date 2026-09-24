@@ -46,7 +46,7 @@ export default async function EditionLayout({
   return (
     <div
       style={warWeekThemeStyle(warWeek)}
-      className="bg-background text-foreground min-h-dvh pb-20 font-sans md:pb-0"
+      className="bg-background text-foreground min-h-dvh pb-20 font-sans lg:pb-0"
     >
       <TopNav
         edition={warWeek.edition}

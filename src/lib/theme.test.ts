@@ -51,9 +51,57 @@ describe("warWeekThemeStyle", () => {
       "--card-foreground": "#d1ffd6",
       "--border": "#008f11",
       "--ring": "#00ff41",
+      "--muted": "color-mix(in oklch, #000000, #d1ffd6 12%)",
+      "--muted-foreground": "color-mix(in oklch, #d1ffd6, #000000 35%)",
+      "--secondary": "color-mix(in oklch, #000000, #d1ffd6 12%)",
+      "--secondary-foreground": "color-mix(in oklch, #d1ffd6, #000000 35%)",
+      "--popover": "#000000",
+      "--popover-foreground": "#d1ffd6",
+      "--input": "color-mix(in oklch, #000000, #d1ffd6 20%)",
       "--font-sans": "var(--font-preset-mono)",
       "--ww-primary": "#00ff41",
     });
+  });
+
+  // Every color token the Button variants draw (destructive stays the fixed
+  // app red), so no hover or open state falls back to the light defaults.
+  const BUTTON_TOKENS = [
+    "--primary",
+    "--primary-foreground",
+    "--background",
+    "--foreground",
+    "--border",
+    "--ring",
+    "--muted",
+    "--secondary",
+    "--secondary-foreground",
+    "--input",
+  ];
+
+  it.each([
+    ["a dark theme", fixture],
+    [
+      "a light theme",
+      {
+        ...fixture,
+        backgroundColor: "#f5ecd7",
+        foregroundColor: "#2b1d0e",
+        primaryColor: "#7f0909",
+        primaryForegroundColor: "#ffffff",
+        accentColor: "#d3a625",
+      },
+    ],
+  ])("sets every token the Button variants reference for %s", (_, theme) => {
+    const style = warWeekThemeStyle(theme) as Record<string, string>;
+    for (const token of BUTTON_TOKENS) {
+      expect(style[token], token).toBeTruthy();
+    }
+    expect(style["--muted"]).toBe(
+      `color-mix(in oklch, ${theme.backgroundColor}, ${theme.foregroundColor} 12%)`,
+    );
+    expect(style["--muted-foreground"]).toBe(
+      `color-mix(in oklch, ${theme.foregroundColor}, ${theme.backgroundColor} 35%)`,
+    );
   });
 
   it("resolves each font preset to its own CSS variable", () => {

@@ -7,7 +7,7 @@
 
 **Blocked by:** none
 
-**Status:** ready-for-agent
+**Status:** in-progress
 
 **Severity:** fix-tonight (a judge on a half-width window or an iPad lands on a sideways-scrolling page)
 
