@@ -27,7 +27,8 @@ Competitions plus fictional mid-week demo data (close race, standings
 hidden). Edit a file and reload it; setup data follows the seed, while keyed
 Points Entries, Awards and Announcements are only inserted once (see
 `CONTEXT.md`, "Seed idempotence rules"). Organizers can also edit War Week
-settings, the Appearance Theme and Days in `/admin/setup`; reloading a seed
+settings, the Appearance Theme, Days, Teams, the roster and Competitions in
+`/admin/setup`; reloading a seed
 overwrites those edits with the seed's values, so update the seed to match
 or stop reloading it once organizers are editing in the app.
 

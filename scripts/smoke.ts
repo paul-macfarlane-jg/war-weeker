@@ -2582,6 +2582,183 @@ async function assertSetup(sessions: {
   }
 }
 
+/**
+ * /admin/setup/teams and /admin/setup/competitions: the pages, one
+ * Participant added through the roster that GET /xi/teams shows (and a
+ * duplicate email refused), and one Competition with Placement Points that
+ * points entry offers as presets. Deletes what it adds.
+ */
+async function assertSetupTeamsAndCompetitions(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const run = async (check: string, body: () => Promise<string | null>) => {
+    try {
+      const problem = await body();
+      if (problem === null) ok(check);
+      else fail(check, problem);
+    } catch (error) {
+      fail(check, String(error));
+    }
+  };
+
+  await run(
+    "GET /admin/setup/teams and /admin/setup/competitions show the editors to an Organizer and the refusal to a non-Organizer; the landing links them",
+    async () => {
+      const problems: string[] = [];
+      for (const [page, marker] of [
+        ["/admin/setup", 'href="/admin/setup/competitions"'],
+        ["/admin/setup/teams", 'aria-label="Roster"'],
+        ["/admin/setup/competitions", 'aria-label="Competitions"'],
+      ] as const) {
+        const organizer = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.organizer.cookie },
+        });
+        const body = await organizer.text();
+        if (organizer.status !== 200 || !body.includes(marker)) {
+          problems.push(`${page} organizer status=${organizer.status}`);
+        }
+        const refused = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.notOrganizer.cookie },
+        });
+        if (!(await refused.text()).includes("Organizers only")) {
+          problems.push(`${page} not refused`);
+        }
+      }
+      return problems.length === 0 ? null : problems.join("; ");
+    },
+  );
+
+  const ids = serverActionIds();
+  const missing = [
+    "createTeam",
+    "updateTeam",
+    "deleteTeam",
+    "createParticipant",
+    "updateParticipant",
+    "deleteParticipant",
+    "createCompetition",
+    "updateCompetition",
+    "deleteCompetition",
+  ].filter((name) => !ids[name]);
+  if (missing.length > 0) {
+    fail(
+      "setup Team, Participant and Competition action ids",
+      missing.join(", "),
+    );
+    return;
+  }
+
+  const [red] = await runQuery<{ id: string }>(
+    `select t.id from team t join war_week w on w.id = t.war_week_id
+     where w.edition = 'xi' and t.name = 'Red'`,
+  );
+  const smokeName = "Smoke Roster Participant";
+  const smokeEmail = "smoke-roster@example.com";
+  const smokeCompetition = "Smoke Placement Presets";
+  const participant = {
+    displayName: smokeName,
+    companyTag: "LTI",
+    email: smokeEmail,
+    teamId: red.id,
+    isLeader: false,
+  };
+
+  try {
+    await run(
+      "createParticipant refuses a signed-in JG user off the allowlist",
+      async () => {
+        const result = await callAction(
+          ids.createParticipant,
+          [participant],
+          sessions.notOrganizer,
+        );
+        return !result.ok && /not an Organizer/.test(result.error)
+          ? null
+          : `result=${JSON.stringify(result)}`;
+      },
+    );
+
+    await run(
+      "an Organizer adds a Participant and GET /xi/teams shows them; a second with the same email is refused",
+      async () => {
+        const created = await callAction(
+          ids.createParticipant,
+          [participant],
+          sessions.organizer,
+        );
+        const body = await (await signedInFetch(`${BASE_URL}/xi/teams`)).text();
+        const duplicate = await callAction(
+          ids.createParticipant,
+          [{ ...participant, displayName: `${smokeName} 2` }],
+          sessions.organizer,
+        );
+        return created.ok &&
+          body.includes(smokeName) &&
+          !duplicate.ok &&
+          duplicate.error === `${smokeEmail} is already ${smokeName}'s email.`
+          ? null
+          : `created=${JSON.stringify(created)} shown=${body.includes(smokeName)} duplicate=${JSON.stringify(duplicate)}`;
+      },
+    );
+
+    await run(
+      "deleteTeam refuses a Team that has Participants, naming the count",
+      async () => {
+        const result = await callAction(
+          ids.deleteTeam,
+          [red.id],
+          sessions.organizer,
+        );
+        return !result.ok &&
+          /^This Team has \d+ Participants/.test(result.error)
+          ? null
+          : `result=${JSON.stringify(result)}`;
+      },
+    );
+
+    await run(
+      "an Organizer adds a Competition with Placement Points and GET /admin/points offers them as presets",
+      async () => {
+        const created = await callAction(
+          ids.createCompetition,
+          [
+            {
+              name: smokeCompetition,
+              description: "",
+              scoring: "team",
+              maxPoints: "10",
+              placementPoints: "9, 4",
+              countsTowardTeam: false,
+              group: "",
+            },
+          ],
+          sessions.organizer,
+        );
+        const body = await (
+          await fetch(`${BASE_URL}/admin/points`, {
+            headers: { cookie: sessions.organizer.cookie },
+          })
+        ).text();
+        const offered =
+          body.includes(smokeCompetition) &&
+          /placementPoints\\?":\[9,4\]/.test(body);
+        return created.ok && offered
+          ? null
+          : `created=${JSON.stringify(created)} offered=${offered}`;
+      },
+    );
+  } finally {
+    await runQuery(
+      `delete from participant where email = $1 or display_name like $2`,
+      [smokeEmail, `${smokeName}%`],
+    );
+    await runQuery("delete from competition where name = $1", [
+      smokeCompetition,
+    ]);
+  }
+}
+
 async function assertSignInRequired() {
   for (const target of ["/", "/xi", "/xi/leaderboard"]) {
     const check = `anonymous GET ${target} redirects to sign-in`;
@@ -3196,6 +3373,7 @@ async function main() {
       await assertAwardActions(sessions);
       await assertAwardAdminPages(sessions);
       await assertSetup(sessions);
+      await assertSetupTeamsAndCompetitions(sessions);
     }
   } finally {
     await killServer(server);

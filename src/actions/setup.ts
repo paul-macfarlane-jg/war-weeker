@@ -1,17 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 import { requireOrganizer } from "@/auth/organizer";
 import type { WarWeek } from "@/db/schema";
 import {
+  type CompetitionInput,
   type DayInput,
+  type ParticipantInput,
+  type TeamInput,
   type WarWeekSettingsInput,
+  parseCompetitionInput,
   parseDayInput,
+  parseParticipantInput,
+  parseTeamInput,
   parseWarWeekSettingsInput,
 } from "@/lib/setup";
 import * as mutations from "@/mutations/setup";
-import type { MutationResult } from "@/mutations/types";
+import type { MutationContext, MutationResult } from "@/mutations/types";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type SetupActionResult = MutationResult;
@@ -36,65 +43,135 @@ function revalidateSite() {
   revalidatePath("/", "layout");
 }
 
-export async function updateWarWeekSettings(
-  input: WarWeekSettingsInput,
+type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
+
+/**
+ * Runs a setup write on the current War Week as its Organizer: refuses a
+ * non-Organizer, then an invalid `parsed` input or an `id` not shaped like a
+ * row id, runs `write`, and revalidates the site on success. Every setup
+ * action goes through here.
+ */
+async function asOrganizer<T>(
+  parsed: Parsed<T>,
+  write: (value: T, ctx: MutationContext) => Promise<MutationResult>,
+  id?: string,
 ): Promise<SetupActionResult> {
   const warWeek = await getCurrentWarWeek();
   if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
   const organizer = await organizerContext(warWeek);
   if (!organizer.ok) return organizer;
-
-  const parsed = parseWarWeekSettingsInput(input);
+  // A malformed id would make Postgres throw; it can't name a row anyway.
+  if (id !== undefined && !z.uuid().safeParse(id).success) {
+    return { ok: false, error: "That record no longer exists." };
+  }
   if (!parsed.ok) return parsed;
 
-  const result = await mutations.updateWarWeekSettings(
-    parsed.value,
-    organizer.ctx,
-  );
+  const result = await write(parsed.value, organizer.ctx);
   if (result.ok) revalidateSite();
   return result;
+}
+
+const nothing: Parsed<null> = { ok: true, value: null };
+
+export async function updateWarWeekSettings(
+  input: WarWeekSettingsInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    parseWarWeekSettingsInput(input),
+    mutations.updateWarWeekSettings,
+  );
 }
 
 export async function createDay(input: DayInput): Promise<SetupActionResult> {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
-  const organizer = await organizerContext(warWeek);
-  if (!organizer.ok) return organizer;
-
-  const parsed = parseDayInput(input);
-  if (!parsed.ok) return parsed;
-
-  const result = await mutations.createDay(parsed.value, organizer.ctx);
-  if (result.ok) revalidateSite();
-  return result;
+  return asOrganizer(parseDayInput(input), mutations.createDay);
 }
 
+// Days (like every setup record) are the current War Week's only: the
+// mutations refuse a row of any other War Week.
 export async function updateDay(
   id: string,
   input: DayInput,
 ): Promise<SetupActionResult> {
-  // Only the current War Week's Days: the mutation refuses any other Day.
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
-  const organizer = await organizerContext(warWeek);
-  if (!organizer.ok) return organizer;
-
-  const parsed = parseDayInput(input);
-  if (!parsed.ok) return parsed;
-
-  const result = await mutations.updateDay(id, parsed.value, organizer.ctx);
-  if (result.ok) revalidateSite();
-  return result;
+  return asOrganizer(
+    parseDayInput(input),
+    (value, ctx) => mutations.updateDay(id, value, ctx),
+    id,
+  );
 }
 
 export async function deleteDay(id: string): Promise<SetupActionResult> {
-  // Only the current War Week's Days: the mutation refuses any other Day.
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
-  const organizer = await organizerContext(warWeek);
-  if (!organizer.ok) return organizer;
+  return asOrganizer(nothing, (_, ctx) => mutations.deleteDay(id, ctx), id);
+}
 
-  const result = await mutations.deleteDay(id, organizer.ctx);
-  if (result.ok) revalidateSite();
-  return result;
+export async function createTeam(input: TeamInput): Promise<SetupActionResult> {
+  return asOrganizer(parseTeamInput(input), mutations.createTeam);
+}
+
+export async function updateTeam(
+  id: string,
+  input: TeamInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    parseTeamInput(input),
+    (value, ctx) => mutations.updateTeam(id, value, ctx),
+    id,
+  );
+}
+
+export async function deleteTeam(id: string): Promise<SetupActionResult> {
+  return asOrganizer(nothing, (_, ctx) => mutations.deleteTeam(id, ctx), id);
+}
+
+export async function createParticipant(
+  input: ParticipantInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(parseParticipantInput(input), mutations.createParticipant);
+}
+
+export async function updateParticipant(
+  id: string,
+  input: ParticipantInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    parseParticipantInput(input),
+    (value, ctx) => mutations.updateParticipant(id, value, ctx),
+    id,
+  );
+}
+
+export async function deleteParticipant(
+  id: string,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    nothing,
+    (_, ctx) => mutations.deleteParticipant(id, ctx),
+    id,
+  );
+}
+
+export async function createCompetition(
+  input: CompetitionInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(parseCompetitionInput(input), mutations.createCompetition);
+}
+
+export async function updateCompetition(
+  id: string,
+  input: CompetitionInput,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    parseCompetitionInput(input),
+    (value, ctx) => mutations.updateCompetition(id, value, ctx),
+    id,
+  );
+}
+
+export async function deleteCompetition(
+  id: string,
+): Promise<SetupActionResult> {
+  return asOrganizer(
+    nothing,
+    (_, ctx) => mutations.deleteCompetition(id, ctx),
+    id,
+  );
 }
