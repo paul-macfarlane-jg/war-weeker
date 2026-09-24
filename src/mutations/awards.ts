@@ -43,10 +43,10 @@ export async function createAward(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  const refusal = await recipientsError(values, ctx.warWeekId, dbOrTx);
-  if (refusal) return { ok: false, error: refusal };
+  return dbOrTx.transaction(async (tx): Promise<MutationResult> => {
+    const refusal = await recipientsError(values, ctx.warWeekId, tx);
+    if (refusal) return { ok: false, error: refusal };
 
-  await dbOrTx.transaction(async (tx) => {
     const [created] = await tx
       .insert(award)
       .values({
@@ -57,8 +57,8 @@ export async function createAward(
       })
       .returning({ id: award.id });
     await insertRecipients(created.id, values.participantIds, tx);
+    return { ok: true };
   });
-  return { ok: true };
 }
 
 /** Edits an Award of this War Week, replacing its Participant recipients. */
@@ -68,10 +68,10 @@ export async function updateAward(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  const refusal = await recipientsError(values, ctx.warWeekId, dbOrTx);
-  if (refusal) return { ok: false, error: refusal };
-
   return dbOrTx.transaction(async (tx): Promise<MutationResult> => {
+    const refusal = await recipientsError(values, ctx.warWeekId, tx);
+    if (refusal) return { ok: false, error: refusal };
+
     const updated = await tx
       .update(award)
       .set({

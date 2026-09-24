@@ -9,16 +9,9 @@ import {
   team,
   warWeek as warWeekTable,
 } from "@/db/schema";
-import { isAwardId } from "@/lib/awards";
+import { type AwardView, isAwardId } from "@/lib/awards";
 
-export type AwardView = {
-  id: string;
-  name: string;
-  description: string | null;
-  team: { id: string; name: string; color: string } | null;
-  /** Recipients by display name. */
-  participants: { id: string; displayName: string }[];
-};
+export type { AwardView };
 
 /** A War Week's Awards by name, each with its Team and Participants. */
 export async function getAwards(

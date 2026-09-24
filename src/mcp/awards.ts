@@ -1,14 +1,7 @@
-import type { AwardView } from "@/queries/awards";
+import type { ArchiveAward } from "@/lib/archive";
+import { type AwardView, namedAward } from "@/lib/awards";
 
-export type AwardsResult = {
-  edition: string;
-  awards: {
-    name: string;
-    description: string | null;
-    team: string | null;
-    participants: string[];
-  }[];
-};
+export type AwardsResult = { edition: string; awards: ArchiveAward[] };
 
 /**
  * Serializes a War Week's Awards into the `get_awards` MCP tool payload:
@@ -18,13 +11,5 @@ export function toAwardsResult(
   edition: string,
   awards: AwardView[],
 ): AwardsResult {
-  return {
-    edition,
-    awards: awards.map((a) => ({
-      name: a.name,
-      description: a.description,
-      team: a.team?.name ?? null,
-      participants: a.participants.map((p) => p.displayName),
-    })),
-  };
+  return { edition, awards: awards.map(namedAward) };
 }

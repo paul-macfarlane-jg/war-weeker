@@ -9,18 +9,15 @@ import {
   updateAward,
 } from "@/actions/awards";
 import { Button } from "@/components/ui/button";
-import { AWARD_DESCRIPTION_MAX, AWARD_NAME_MAX } from "@/lib/awards";
+import {
+  AWARD_DESCRIPTION_MAX,
+  AWARD_NAME_MAX,
+  type AwardInput,
+} from "@/lib/awards";
 import type { AwardFormOptions } from "@/queries/awards";
 
 const fieldClass =
   "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
-type Initial = {
-  name: string;
-  description: string | null;
-  teamId: string | null;
-  participantIds: string[];
-};
 
 /**
  * Give or edit one Award: name, description, and its recipients — one Team,
@@ -35,7 +32,7 @@ export function AwardForm({
 }: {
   /** Set when editing an existing Award. */
   awardId?: string;
-  initial?: Initial;
+  initial?: AwardInput;
   options: AwardFormOptions;
   /** The War Week's Team Label, e.g. "House". */
   teamLabel: string;

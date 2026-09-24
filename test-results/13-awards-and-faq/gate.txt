@@ -36,13 +36,13 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
  RUN  v4.1.11 /Users/pmacfarlane/jg-code/war-weeker
 
-(node:7132) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:10183) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
  Test Files  31 passed (31)
       Tests  308 passed (308)
-   Start at  08:58:50
-   Duration  2.67s (transform 1.32s, setup 0ms, import 10.57s, tests 4.63s, environment 2ms)
+   Start at  09:02:36
+   Duration  2.80s (transform 1.46s, setup 0ms, import 11.14s, tests 4.68s, environment 2ms)
 
 
 > war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/war-weeker
@@ -53,12 +53,12 @@ Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 ✓ Running next.config.ts took 14ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 2.1s
+✓ Compiled successfully in 1210ms
   Running TypeScript ...
-  Finished TypeScript in 4.3s ...
+  Finished TypeScript in 2.6s ...
   Collecting page data using 9 workers ...
   Generating static pages using 9 workers (0/3) ...
-✓ Generating static pages using 9 workers (3/3) in 91ms
+✓ Generating static pages using 9 workers (3/3) in 89ms
   Finalizing page optimization ...
 
 Route (app)
@@ -158,7 +158,7 @@ ok - the database rejects a Points Entry with both a Team and a Participant
 - Local:         http://localhost:3100
 - Network:       http://172.19.6.25:3100
 ✓ Ready in 104ms
-✓ Running next.config.ts took 23ms
+✓ Running next.config.ts took 21ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
 ok - GET /xi renders War Week XI with Standings hidden
@@ -258,3 +258,4 @@ ok - GET /admin/awards as an Organizer lists the seeded Awards and New Award, an
 ok - GET /admin/awards/new as an Organizer shows the Award form with XI's Teams and Participants
 ok - GET /admin/awards/[id] as an Organizer shows Edit Award for the seeded Catan Champion
  ELIFECYCLE  Command failed with exit code 143.
+GATE EXIT 0

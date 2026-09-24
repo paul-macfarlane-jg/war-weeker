@@ -3,6 +3,7 @@ import { asc, eq } from "drizzle-orm";
 import { DBOrTx, db } from "@/db";
 import { WarWeek, team, warWeek } from "@/db/schema";
 import { type ArchiveDetail, isArchived, selectArchive } from "@/lib/archive";
+import { namedAward } from "@/lib/awards";
 import { getAwards } from "@/queries/awards";
 
 /** The Archive list: every archived War Week, newest first. */
@@ -27,12 +28,7 @@ export async function getArchiveDetail(
   return {
     warWeek: pastWarWeek,
     teams,
-    awards: awards.map((a) => ({
-      name: a.name,
-      description: a.description,
-      team: a.team?.name ?? null,
-      participants: a.participants.map((p) => p.displayName),
-    })),
+    awards: awards.map(namedAward),
   };
 }
 

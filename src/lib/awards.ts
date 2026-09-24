@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { ArchiveAward } from "@/lib/archive";
+
 /** The Award name's column length. */
 export const AWARD_NAME_MAX = 120;
 
@@ -76,4 +78,24 @@ const uuid = z.uuid();
 /** Whether a URL segment or action argument is shaped like a row id. */
 export function isAwardId(id: string): boolean {
   return uuid.safeParse(id).success;
+}
+
+/** An Award with its recipients, as the read path returns it. */
+export type AwardView = {
+  id: string;
+  name: string;
+  description: string | null;
+  team: { id: string; name: string; color: string } | null;
+  /** Ordered by display name. */
+  participants: { id: string; displayName: string }[];
+};
+
+/** An Award with recipients by name only, as the Archive and MCP show it. */
+export function namedAward(award: AwardView): ArchiveAward {
+  return {
+    name: award.name,
+    description: award.description,
+    team: award.team?.name ?? null,
+    participants: award.participants.map((p) => p.displayName),
+  };
 }
