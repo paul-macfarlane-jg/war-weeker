@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
 
-import { APP_BACKGROUND_COLOR, APP_THEME_COLOR } from "@/lib/pwa";
+import {
+  APP_BACKGROUND_COLOR,
+  APP_DESCRIPTION,
+  APP_NAME,
+  APP_THEME_COLOR,
+} from "@/lib/pwa";
 
 /** Served at `/manifest.webmanifest`; makes War Weeker installable. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "War Weeker",
-    short_name: "War Weeker",
-    description: "One place to follow War Week.",
+    name: APP_NAME,
+    short_name: APP_NAME,
+    description: APP_DESCRIPTION,
     start_url: "/",
     display: "standalone",
     theme_color: APP_THEME_COLOR,

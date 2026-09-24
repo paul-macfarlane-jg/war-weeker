@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Lora } from "next/font/google";
 
 import { PwaSetup } from "@/components/pwa-setup";
-import { APP_THEME_COLOR } from "@/lib/pwa";
+import { APP_DESCRIPTION, APP_NAME, APP_THEME_COLOR } from "@/lib/pwa";
 
 import "./globals.css";
 
@@ -22,12 +22,12 @@ const fontPresetMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "War Weeker",
-  description: "One place to follow War Week.",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
   // iOS Add to Home Screen: launch full-screen with this name and icon.
   appleWebApp: {
     capable: true,
-    title: "War Weeker",
+    title: APP_NAME,
     statusBarStyle: "default",
   },
   icons: { apple: "/icons/apple-touch-icon.png" },

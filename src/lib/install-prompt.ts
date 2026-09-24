@@ -33,11 +33,13 @@ export function captureInstallPrompt(): () => void {
   };
 }
 
+/** For `useSyncExternalStore`: calls `listener` when the prompt changes. */
 export function subscribeInstallPrompt(listener: () => void): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
+/** The captured prompt, or null when the browser hasn't offered one. */
 export function getInstallPrompt(): BeforeInstallPromptEvent | null {
   return deferred;
 }

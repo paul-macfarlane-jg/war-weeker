@@ -118,7 +118,7 @@ function Steps({ title, steps }: { title: string; steps: React.ReactNode[] }) {
 function IosSteps() {
   return (
     <Steps
-      title="iPhone and iPad (Safari)"
+      title={`${PLATFORM_LABEL.ios} (Safari)`}
       steps={[
         "Open War Weeker in Safari.",
         <>
