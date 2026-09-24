@@ -70,7 +70,7 @@ HTTP at `http://localhost:3000/api/mcp`. It needs a signed-in
 `@jahnelgroup.com` session like every other route (anonymous requests get
 401), so MCP clients can't connect yet; see "Organizer sign-in". It currently
 exposes one tool, `get_current_war_week`, which returns the current War
-Week (live, else the most recent upcoming, else the most recent complete).
+Week (live, else the next upcoming, else the most recent complete).
 Point any Streamable HTTP MCP client at that URL, e.g.:
 
 ```json

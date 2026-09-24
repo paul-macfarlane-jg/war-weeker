@@ -120,3 +120,9 @@ Two-axis review (`/code-review`, base `staging`, commit 703d60b).
 - `formatDateRange` and the status labels moved to `src/lib/war-week-display.ts` (with a test), and the home page and sign-in share them.
 - Screenshots: `test-results/sign-in/`, `test-results/sign-in-mobile/`, `test-results/sign-in-refused/`. These were rendered with placeholder Google client values, only so the button appears; there was no real OAuth.
 - Gate: PASS (`test-results/08-gate/gate.log`, 193 vitest tests, 48 smoke checks).
+
+### [SCOPE CHANGE] 2026-09-23: current War Week rule (developer request)
+
+- The developer asked for the sign-in theme to come from "the next known War Week, or the previous most recent War Week if there is no next known War Week". `selectCurrentWarWeek` now picks a `live` War Week first, then the **next** `upcoming` one (earliest start date, ties to the lowest edition), then the most recent `complete` one. It used to pick the latest-starting `upcoming` one. The rule is still never clock-based.
+- The rule is shared, so `/`, `/admin`, `/sign-in` and MCP all follow it. Spec, README and the MCP tool description are updated. The test was changed first (red), then the code.
+- Gate: PASS (`test-results/08-gate/gate.log`, 194 vitest tests, 48 smoke checks).

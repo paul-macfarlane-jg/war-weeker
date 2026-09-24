@@ -201,7 +201,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - team label, leader title, Slack channel URL, `standingsHidden`
   - Appearance Theme fields, wiki URL, organizer emails (a list)
   - for past years: winner (text) and highlights (a list of text)
-  - The **current** War Week is the one with status `live`, or failing that the most recent `upcoming`, or failing that the most recent `complete`. It is never derived from the clock.
+  - The **current** War Week is the one with status `live`, or failing that the next `upcoming` (earliest start date), or failing that the most recent `complete`. It is never derived from the clock.
 - **Day:** War Week, date, day theme.
 - **Schedule Item:** Day, start time, end time (optional), title, host (optional), location (optional), virtual link (optional), description (rich, optional), category (`competition` / `education` / `social` / `meal` / `work`), Competition (optional). All times are ET. Items don't repeat.
 - **Team:** War Week, name, color, logo (optional). A free-for-all War Week has no Teams.

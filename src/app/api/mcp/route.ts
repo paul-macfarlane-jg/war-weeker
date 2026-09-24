@@ -17,7 +17,7 @@ const handler = createMcpHandler(
       {
         title: "Get current War Week",
         description:
-          "Returns the current War Week: the live one, else the most recent upcoming one, else the most recent complete one.",
+          "Returns the current War Week: the live one, else the next upcoming one, else the most recent complete one.",
         inputSchema: z.object({}),
       },
       async () => {
