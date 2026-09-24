@@ -2,7 +2,11 @@ import type { CSSProperties } from "react";
 import { describe, expect, it } from "vitest";
 
 import type { WarWeek } from "@/db/schema";
-import { warWeekThemeStyle } from "@/lib/theme";
+import {
+  contrastRatio,
+  themeContrastWarnings,
+  warWeekThemeStyle,
+} from "@/lib/theme";
 
 const fixture: WarWeek = {
   id: "11111111-1111-1111-1111-111111111111",
@@ -64,5 +68,41 @@ describe("warWeekThemeStyle", () => {
 
     expect(sansStyle["--font-sans"]).toBe("var(--font-preset-sans)");
     expect(serifStyle["--font-sans"]).toBe("var(--font-preset-serif)");
+  });
+});
+
+describe("contrastRatio", () => {
+  it("is 21:1 for black on white and 1:1 for a color on itself", () => {
+    expect(contrastRatio("#000", "#ffffff")).toBeCloseTo(21, 5);
+    expect(contrastRatio("#00ff41", "#00FF41")).toBeCloseTo(1, 5);
+  });
+
+  it("is null when a color isn't hex", () => {
+    expect(contrastRatio("green", "#fff")).toBeNull();
+  });
+});
+
+describe("themeContrastWarnings", () => {
+  it("has no warnings for a readable theme", () => {
+    expect(themeContrastWarnings(fixture)).toEqual([]);
+  });
+
+  it("warns about each unreadable text-on-color pair", () => {
+    expect(
+      themeContrastWarnings({
+        ...fixture,
+        foregroundColor: "#111111",
+        accentColor: "#000000",
+      }),
+    ).toEqual([
+      "Text on background is 1.1:1, below 4.5:1 and may be hard to read.",
+      "Primary text on accent is 1.0:1, below 4.5:1 and may be hard to read.",
+    ]);
+  });
+
+  it("skips pairs with an invalid color", () => {
+    expect(
+      themeContrastWarnings({ ...fixture, backgroundColor: "nope" }),
+    ).toEqual([]);
   });
 });

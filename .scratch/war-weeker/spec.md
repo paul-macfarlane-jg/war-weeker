@@ -278,7 +278,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   - Its API needs a Firebase ID token.
   - The recommended future route is an API-key-protected date-range report endpoint added to the Stairs backend, about 5–8 hours.
   - The blocker is that no one is documented as owning the Stairs deploy.
-- **Admin screens for setup** (theme, Days, Schedule, Teams, roster, Competitions, FAQ). Setup is seed-only.
+- **Admin screens for setup** (theme, Days, Schedule, Teams, roster, Competitions, FAQ). Moved into scope as the setup CRUD stretch item: ticket 25 delivers War Week settings, the Appearance Theme and Days in `/admin/setup`; tickets 26 and 27 add Teams, roster, Competitions, Schedule and FAQ. The seed stays the way to bootstrap a War Week, and reloading it overwrites setup edited in the UI.
 - **Roles other than Organizer**, including captains entering points.
 - **Stretch items, only if time allows, in this order:**
   1. account linking (a Google sign-in matched to a Participant by email)
@@ -286,7 +286,7 @@ For the hackathon demo, War Week XI (2026, The Matrix) is seeded as the **live**
   3. placement presets (1st/2nd/3rd turned into points) (delivered: ticket 22)
   4. a video node inside the rich-text editor (delivered: ticket 23)
   5. `llms.txt`
-  6. setup CRUD screens
+  6. setup CRUD screens (in progress: ticket 25 War Week settings and Days; 26 and 27 to follow)
 
 ## Further Notes
 

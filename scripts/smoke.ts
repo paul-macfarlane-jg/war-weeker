@@ -2368,6 +2368,191 @@ async function assertAwardAdminPages(sessions: {
   }
 }
 
+/**
+ * /admin/setup: the landing, settings and Days pages, and one settings save
+ * and one Day Theme edit that the public site reflects. Restores XI after.
+ */
+async function assertSetup(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const run = async (check: string, body: () => Promise<string | null>) => {
+    try {
+      const problem = await body();
+      if (problem === null) ok(check);
+      else fail(check, problem);
+    } catch (error) {
+      fail(check, String(error));
+    }
+  };
+
+  await run(
+    "GET /admin/setup, /admin/setup/war-week and /admin/setup/days show the setup pages to an Organizer and the refusal to a non-Organizer",
+    async () => {
+      const problems: string[] = [];
+      for (const [page, marker] of [
+        ["/admin/setup", 'href="/admin/setup/days"'],
+        ["/admin/setup/war-week", 'aria-label="War Week settings"'],
+        ["/admin/setup/days", 'aria-label="Days"'],
+      ] as const) {
+        const organizer = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.organizer.cookie },
+        });
+        const body = await organizer.text();
+        if (
+          organizer.status !== 200 ||
+          !body.includes(marker) ||
+          !body.includes("overwrites the setup")
+        ) {
+          problems.push(`${page} organizer status=${organizer.status}`);
+        }
+        const refused = await fetch(`${BASE_URL}${page}`, {
+          headers: { cookie: sessions.notOrganizer.cookie },
+        });
+        if (!(await refused.text()).includes("Organizers only")) {
+          problems.push(`${page} not refused`);
+        }
+      }
+      return problems.length === 0 ? null : problems.join("; ");
+    },
+  );
+
+  const ids = serverActionIds();
+  const missing = [
+    "updateWarWeekSettings",
+    "createDay",
+    "updateDay",
+    "deleteDay",
+  ].filter((name) => !ids[name]);
+  if (missing.length > 0) {
+    fail("setup server action ids in the build manifest", missing.join(", "));
+    return;
+  }
+
+  const [xi] = await runQuery<Record<string, string | string[] | null>>(
+    `select story_theme, start_date::text, end_date::text, status, mode,
+       team_label, leader_title, slack_channel_url, wiki_url, organizer_emails,
+       primary_color, primary_foreground_color, accent_color, background_color,
+       foreground_color, logo_url, banner_url, font_preset
+     from war_week where edition = 'xi'`,
+  );
+  const input = {
+    storyTheme: xi.story_theme,
+    startDate: xi.start_date,
+    endDate: xi.end_date,
+    status: xi.status,
+    mode: xi.mode,
+    teamLabel: xi.team_label,
+    leaderTitle: xi.leader_title,
+    slackChannelUrl: xi.slack_channel_url,
+    wikiUrl: xi.wiki_url ?? "",
+    organizerEmails: (xi.organizer_emails as string[]).join("\n"),
+    primaryColor: xi.primary_color,
+    primaryForegroundColor: xi.primary_foreground_color,
+    accentColor: xi.accent_color,
+    backgroundColor: xi.background_color,
+    foregroundColor: xi.foreground_color,
+    logoUrl: xi.logo_url ?? "",
+    bannerUrl: xi.banner_url ?? "",
+    fontPreset: xi.font_preset,
+  };
+  const [busyDay] = await runQuery<{ id: string; day_theme: string }>(
+    `select d.id, d.day_theme from day d join war_week w on w.id = d.war_week_id
+     join schedule_item s on s.day_id = d.id
+     where w.edition = 'xi' order by d.date limit 1`,
+  );
+  const smokePrimary = "#ab12cd";
+  const smokeDayTheme = "smoke-day-theme";
+
+  try {
+    await run(
+      "updateWarWeekSettings rejects a signed-in JG user off the allowlist",
+      async () => {
+        const result = await callAction(
+          ids.updateWarWeekSettings,
+          [{ ...input, primaryColor: smokePrimary }],
+          sessions.notOrganizer,
+        );
+        const [row] = await runQuery<{ primary_color: string }>(
+          "select primary_color from war_week where edition = 'xi'",
+        );
+        return !result.ok &&
+          /not an Organizer/.test(result.error) &&
+          row.primary_color === xi.primary_color
+          ? null
+          : `result=${JSON.stringify(result)} color=${row.primary_color}`;
+      },
+    );
+
+    await run(
+      "updateWarWeekSettings refuses free-for-all while XI has Teams",
+      async () => {
+        const result = await callAction(
+          ids.updateWarWeekSettings,
+          [{ ...input, mode: "free-for-all" }],
+          sessions.organizer,
+        );
+        return !result.ok && /Delete them before switching/.test(result.error)
+          ? null
+          : `result=${JSON.stringify(result)}`;
+      },
+    );
+
+    await run(
+      "an Organizer saves a new primary color and GET /xi is themed with it",
+      async () => {
+        const result = await callAction(
+          ids.updateWarWeekSettings,
+          [{ ...input, primaryColor: smokePrimary }],
+          sessions.organizer,
+        );
+        const body = await (await signedInFetch(`${BASE_URL}/xi`)).text();
+        return result.ok && body.includes(`--primary:${smokePrimary}`)
+          ? null
+          : `result=${JSON.stringify(result)} themed=${body.includes(smokePrimary)}`;
+      },
+    );
+
+    await run(
+      "an Organizer edits a Day Theme and GET /xi/schedule shows it; deleting a Day with Schedule Items is refused",
+      async () => {
+        const [dayRow] = await runQuery<{ date: string }>(
+          "select date::text from day where id = $1",
+          [busyDay.id],
+        );
+        const updated = await callAction(
+          ids.updateDay,
+          [busyDay.id, { date: dayRow.date, dayTheme: smokeDayTheme }],
+          sessions.organizer,
+        );
+        const body = await (
+          await signedInFetch(`${BASE_URL}/xi/schedule`)
+        ).text();
+        const deleted = await callAction(
+          ids.deleteDay,
+          [busyDay.id],
+          sessions.organizer,
+        );
+        return updated.ok &&
+          body.includes(smokeDayTheme) &&
+          !deleted.ok &&
+          /Schedule Item/.test(deleted.error)
+          ? null
+          : `updated=${JSON.stringify(updated)} shown=${body.includes(smokeDayTheme)} deleted=${JSON.stringify(deleted)}`;
+      },
+    );
+  } finally {
+    await runQuery(
+      "update war_week set primary_color = $1, mode = $2 where edition = 'xi'",
+      [xi.primary_color, xi.mode],
+    );
+    await runQuery("update day set day_theme = $1 where id = $2", [
+      busyDay.day_theme,
+      busyDay.id,
+    ]);
+  }
+}
+
 async function assertSignInRequired() {
   for (const target of ["/", "/xi", "/xi/leaderboard"]) {
     const check = `anonymous GET ${target} redirects to sign-in`;
@@ -2980,6 +3165,7 @@ async function main() {
       await assertFaqPage();
       await assertAwardActions(sessions);
       await assertAwardAdminPages(sessions);
+      await assertSetup(sessions);
     }
   } finally {
     await killServer(server);

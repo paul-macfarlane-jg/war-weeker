@@ -181,6 +181,17 @@ same rows with the same values (only `updated_at` moves).
     create in the app have no key and are never touched by a load. Adding a
     new keyed record to a seed and reloading adds just that record.
 
+**Setup in the UI.** Organizers can also edit setup in `/admin/setup`
+(War Week settings, the Appearance Theme and Days so far). The seed stays the
+way to bootstrap a War Week, and there's no merge: reloading a seed makes
+its War Week match the seed again, overwriting settings, Days and other
+setup data edited in the UI and deleting setup rows the seed doesn't list.
+Once organizers edit setup in the UI, update the seed file to match or stop
+reloading it. Setup screens refuse edits that would cascade: switching to
+free-for-all while Teams exist, dates that leave a Day outside the War Week,
+deleting a Day with Schedule Items, and an Organizer removing their own
+email.
+
 **Reset exception.** `pnpm seed:load --reset` (and the Seed workflow's reset
 option) deletes each seeded War Week, with all its setup and organizer-owned
 data, before loading, so the War Week matches its seed exactly and
