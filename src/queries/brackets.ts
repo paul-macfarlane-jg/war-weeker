@@ -1,9 +1,10 @@
-import { asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 
 import { DBOrTx, db } from "@/db";
 import {
   type Competition,
+  type WarWeek,
   competition,
   entrant,
   heat,
@@ -162,4 +163,48 @@ export async function getBracket(
     champion: champion(bracket),
     finalized: found.finalizedAt !== null,
   };
+}
+
+export type BracketCompetitionLink = Pick<
+  Competition,
+  "id" | "name" | "format" | "finalizedAt"
+>;
+
+/** A War Week's Competitions run as a Bracket, by name. */
+export async function getBracketCompetitions(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<BracketCompetitionLink[]> {
+  return dbOrTx
+    .select({
+      id: competition.id,
+      name: competition.name,
+      format: competition.format,
+      finalizedAt: competition.finalizedAt,
+    })
+    .from(competition)
+    .where(
+      and(
+        eq(competition.warWeekId, warWeek.id),
+        ne(competition.format, "points"),
+      ),
+    )
+    .orderBy(asc(competition.name));
+}
+
+/**
+ * Each Participant's Team id in a War Week, so the Bracket view can find
+ * Your Team's Entrant in a team Competition.
+ */
+export async function getParticipantTeamIds(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<Record<string, string>> {
+  const rows = await dbOrTx
+    .select({ id: participant.id, teamId: participant.teamId })
+    .from(participant)
+    .where(
+      and(eq(participant.warWeekId, warWeek.id), isNotNull(participant.teamId)),
+    );
+  return Object.fromEntries(rows.map((row) => [row.id, row.teamId!]));
 }

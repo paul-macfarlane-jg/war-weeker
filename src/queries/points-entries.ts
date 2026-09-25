@@ -94,6 +94,7 @@ export async function getAdminLedger(
     .select({
       id: pointsEntry.id,
       competition: competition.name,
+      competitionId: competition.id,
       teamName: team.name,
       participantName: participant.displayName,
       points: pointsEntry.points,

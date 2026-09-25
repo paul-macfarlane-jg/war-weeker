@@ -119,6 +119,7 @@ describe("buildAdminLedger", () => {
   const row = (overrides: Partial<AdminLedgerRow>): AdminLedgerRow => ({
     id: "a",
     competition: "Tug of War",
+    competitionId: "c",
     teamName: "Red",
     participantName: null,
     points: 3,

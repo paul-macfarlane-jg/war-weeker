@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useId, useState } from "react";
 
 import {
@@ -21,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { WarWeek } from "@/db/schema";
+import { formatLabel } from "@/lib/bracket/view";
 import type { CompetitionInput } from "@/lib/setup";
 import type { SetupCompetition } from "@/queries/setup";
 
@@ -196,7 +198,22 @@ function CompetitionRow({
             }
           />
           <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
-            <p className="text-foreground/60 text-xs">{usage}</p>
+            <div className="flex flex-col gap-1">
+              {competition && (
+                <p className="text-sm">
+                  Format: {formatLabel(competition.format)} ·{" "}
+                  <Link
+                    href={`/admin/setup/competitions/${competition.id}/bracket`}
+                    className="text-primary inline-flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-0"
+                  >
+                    {competition.format === "points"
+                      ? "Run as a Bracket"
+                      : "Bracket"}
+                  </Link>
+                </p>
+              )}
+              <p className="text-foreground/60 text-xs">{usage}</p>
+            </div>
             <SetupRowButtons
               pending={pending}
               addLabel="Add Competition"

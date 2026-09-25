@@ -134,6 +134,7 @@ export type AdminLedgerRow = Pick<
   | "generatedByBracket"
 > & {
   competition: string;
+  competitionId: string;
   teamName: string | null;
   participantName: string | null;
 };
@@ -142,6 +143,7 @@ export type AdminLedgerEntry = Pick<
   AdminLedgerRow,
   | "id"
   | "competition"
+  | "competitionId"
   | "points"
   | "note"
   | "enteredByEmail"
@@ -168,6 +170,7 @@ export function buildAdminLedger(rows: AdminLedgerRow[]): AdminLedgerEntry[] {
     .map((row) => ({
       id: row.id,
       competition: row.competition,
+      competitionId: row.competitionId,
       target: row.participantName ?? row.teamName ?? "Unknown",
       points: row.points,
       note: row.note,

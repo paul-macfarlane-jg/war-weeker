@@ -27,6 +27,7 @@ import { shuffleSeedPositions } from "@/lib/bracket/seeding";
 import {
   type Bracket,
   BracketError,
+  HAS_RESULTS_ERROR,
   type HeatResult,
 } from "@/lib/bracket/types";
 import { inUseError } from "@/lib/setup";
@@ -37,8 +38,6 @@ const COMPETITION_NOT_FOUND = "That Competition no longer exists.";
 const HEAT_NOT_FOUND = "That Heat no longer exists.";
 const NOT_A_BRACKET = "This Competition isn't run as a Bracket.";
 const FINALIZED = "Un-finalize the Bracket before changing it.";
-const HAS_RESULTS =
-  "This Bracket has Heat Results. Confirm to clear them and start over.";
 /** The note on every Points Entry a finalized Bracket generates. */
 export const FROM_BRACKET_NOTE = "From bracket";
 
@@ -228,7 +227,7 @@ export async function replaceEntrants(
       );
     }
     if (!options.force && hasResults(await loadBracket(competitionId, tx))) {
-      return refuse(HAS_RESULTS);
+      return refuse(HAS_RESULTS_ERROR);
     }
 
     await tx.delete(heat).where(eq(heat.competitionId, competitionId));
@@ -265,7 +264,7 @@ export async function generateBracket(
     const entrants = await getBracketEntrants(competitionId, tx);
     if (entrants.length < 2) return refuse("Add at least 2 Entrants first.");
     if (!options.force && hasResults(await loadBracket(competitionId, tx))) {
-      return refuse(HAS_RESULTS);
+      return refuse(HAS_RESULTS_ERROR);
     }
 
     const seeded = shuffleSeedPositions(

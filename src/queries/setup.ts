@@ -127,6 +127,7 @@ export type SetupCompetition = Pick<
   | "placementPoints"
   | "countsTowardTeam"
   | "competitionGroup"
+  | "format"
 > & { pointsEntryCount: number; scheduleItemCount: number };
 
 /** A War Week's Competitions by name. */
@@ -144,6 +145,7 @@ export async function getSetupCompetitions(
       placementPoints: competition.placementPoints,
       countsTowardTeam: competition.countsTowardTeam,
       competitionGroup: competition.competitionGroup,
+      format: competition.format,
       pointsEntryCount: dbOrTx.$count(
         pointsEntry,
         eq(pointsEntry.competitionId, competition.id),
