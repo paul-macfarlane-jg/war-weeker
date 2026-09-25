@@ -119,6 +119,14 @@ export function AwardForm({
             {teamLabel}
             <Select
               value={teamId === "" ? NO_TEAM : teamId}
+              // Lets SelectValue show the Team's name rather than its id.
+              items={[
+                { value: NO_TEAM, label: `No ${teamLabel}` },
+                ...options.teams.map((team) => ({
+                  value: team.id,
+                  label: team.name,
+                })),
+              ]}
               onValueChange={(value) =>
                 setTeamId(!value || value === NO_TEAM ? "" : value)
               }
