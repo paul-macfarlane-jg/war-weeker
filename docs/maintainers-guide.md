@@ -170,6 +170,23 @@ The chain is schema → `pnpm db:generate` → migration in `drizzle/` →
 `pnpm db:migrate` locally → seed format and seed files → UI. Never hand-edit
 a migration.
 
+### Add or change a form control
+
+All UI uses shadcn components (base-nova / Base UI, `components.json`) —
+never a plain `<select>`, `<input type="checkbox">`, `<input type="date">`,
+`<input type="time">`, or `<input type="color">`. Add a missing primitive
+with `pnpm dlx shadcn@latest add <name>`; don't hand-roll a control shadcn
+already has. App-specific wrappers like `EntityCombobox`, `DatePicker`,
+`DateRangePicker`, `TimeCombobox`, and `ColorField` live in
+`src/components/` and already handle search, chips, and portaling their
+popup into the themed root — reach for one of those before building a new
+control.
+
+```text
+/implement Convert the <field> on the <form> to shadcn's <Select / Switch /
+…>, keeping the same state and submitted value.
+```
+
 ### Add a page
 
 ```text

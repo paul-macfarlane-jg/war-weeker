@@ -10,12 +10,12 @@ import {
 } from "@/actions/announcements";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ANNOUNCEMENT_TITLE_MAX, MAX_VIDEO_LINKS } from "@/lib/announcements";
 import type { Content } from "@/lib/rich-text/content";
 import { videoEmbedUrl } from "@/lib/video";
-
-const fieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
 
 const EMPTY_BODY: Content = { type: "doc", content: [] };
 
@@ -81,11 +81,11 @@ export function AnnouncementForm({
     >
       <label className="flex flex-col gap-1 text-sm font-medium">
         Title
-        <input
+        <Input
           name="title"
           required
           maxLength={ANNOUNCEMENT_TITLE_MAX}
-          className={fieldClass}
+          className="h-11 sm:h-9"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
@@ -109,10 +109,10 @@ export function AnnouncementForm({
           return (
             <div key={index} className="flex flex-col gap-1">
               <div className="flex items-center gap-2">
-                <input
+                <Input
                   type="url"
                   aria-label={`Video link ${index + 1}`}
-                  className={`${fieldClass} flex-1`}
+                  className="h-11 flex-1 sm:h-9"
                   value={url}
                   onChange={(event) => setVideoUrl(index, event.target.value)}
                 />
@@ -147,15 +147,10 @@ export function AnnouncementForm({
         )}
       </fieldset>
 
-      <label className="flex items-center gap-2 text-sm font-medium">
-        <input
-          type="checkbox"
-          name="pinned"
-          checked={pinned}
-          onChange={(event) => setPinned(event.target.checked)}
-        />
+      <Label className="flex items-center gap-2 text-sm font-medium">
+        <Switch name="pinned" checked={pinned} onCheckedChange={setPinned} />
         Pinned (shown first in the feed and on the home page)
-      </label>
+      </Label>
 
       <div className="flex items-center gap-3">
         <Button type="submit" size="lg" disabled={pending}>
