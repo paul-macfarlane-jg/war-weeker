@@ -1221,7 +1221,9 @@ async function assertAdminPointsPage(sessions: {
       .filter((name) => !hasNameProp(body, name));
     const result = {
       status: res.status,
-      form: body.includes("Add a Points Entry"),
+      form:
+        body.includes("Add a Points Entry") &&
+        body.includes('aria-label="Points Entry"'),
       missing: missing.join("|"),
       unscheduled: Number(unscheduled.count),
       ledger: Boolean(enteredBy) && body.includes(escapeHtml(enteredBy.email)),
