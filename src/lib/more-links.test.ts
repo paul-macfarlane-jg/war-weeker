@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { moreLinks } from "@/components/more-menu";
+import { moreLinks } from "@/lib/more-links";
 
 const base = {
   edition: "xi",

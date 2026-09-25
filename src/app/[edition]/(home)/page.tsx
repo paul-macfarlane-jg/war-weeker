@@ -15,7 +15,7 @@ import { getArchiveDetail } from "@/queries/archive";
 import { getSchedule } from "@/queries/schedule";
 import { getStandings } from "@/queries/standings";
 
-import { getWarWeekForEdition } from "./war-week";
+import { getWarWeekForEdition } from "../war-week";
 
 const HOME_INDIVIDUAL_ROWS = 5;
 

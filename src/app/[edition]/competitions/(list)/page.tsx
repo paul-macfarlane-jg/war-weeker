@@ -4,7 +4,7 @@ import { CompetitionList } from "@/components/competitions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getCompetitions } from "@/queries/competitions";
 
-import { getWarWeekForEdition } from "../war-week";
+import { getWarWeekForEdition } from "../../war-week";
 
 export default async function CompetitionsPage({
   params,
