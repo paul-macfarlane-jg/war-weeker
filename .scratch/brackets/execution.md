@@ -132,3 +132,18 @@ One fresh-context review (opus), both axes on the engine/schema and UI commits.
 Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3193 pnpm db:migrate && pnpm gate`; evidence `pnpm db:migrate && pnpm seed:all && pnpm build && pnpm tsx scripts/brackets-evidence.ts`.
 
 Isolation check: K2 and K3 ran in parallel from the Phase B head as planned. Their only overlap was the migration journal/snapshot (both generated 0005) plus `src/db/schema.ts`, `CONTEXT.md` and `scripts/smoke.ts` hunks. All of it was resolved at integration by regenerating the migrations in stack order.
+
+## Showcase (PR 4 of the brackets stack, 6 overall)
+
+Branch `feat/showcase` on `feat/brackets-core`. S1 (sonnet) updated the About page, `/admin/guide`, maintainer's guide, README, CONTEXT.md and llms.txt, and added `brackets` and `lifecycle` captures to `scripts/about-media.ts`. The orchestrator ran the media script on a private DB. Two orchestrator fixes:
+- `scrollToText` also matches Cards, since Phase C turned sections into Cards.
+- Smoke's About check counts `ABOUT_FEATURES.length` instead of a hard-coded six.
+
+The script had to run twice: files added after `next start` aren't served, so its final `/about` check failed on the new images until a rebuild.
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| About/splash, `/admin/guide`, maintainer's guide, README, CONTEXT.md, llms.txt match what was built | PASS | in this PR; stale-copy grep clean |
+| About media show the new UI, the Finale and a Bracket | PASS | `public/about/*` (10 files, incl. `brackets.png`, `lifecycle.png`, `finale.mp4`); `test-results/28-splash/` (390, desktop, reduced motion) |
+| Zero horizontal overflow | PASS | `test-results/showcase-overflow/overflow.txt` |
+| `pnpm gate` | PASS | `test-results/showcase-gate/gate.txt` (772 tests, smoke 145 ok) |

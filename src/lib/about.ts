@@ -23,7 +23,7 @@ export const CURRENT_EDITION = { label: "XI", href: "/xi" } as const;
 export const MAINTAINERS_GUIDE_URL = `${REPO_URL}/blob/main/docs/maintainers-guide.md`;
 
 /**
- * The six feature cards, in order. Each `slug` names a still at
+ * The eight feature cards, in order. Each `slug` names a still at
  * `public/about/<slug>.png`, written by `scripts/about-media.ts`; the
  * Finale is the video hero, not a card.
  */
@@ -51,6 +51,18 @@ export const ABOUT_FEATURES = [
     title: "Announcements with video",
     text: "Organizers post rich-text Announcements with video, pin one to the home screen, and everyone sees it on the next refresh.",
     alt: "War Week XI's Announcements feed with an embedded welcome video.",
+  },
+  {
+    slug: "brackets",
+    title: "Brackets for knockout Competitions",
+    text: "Set a Competition's Format to single elimination, pick its Entrants (Teams or Participants) and Generate a Bracket. Tap in each Heat's winner as it's played; Finalize turns the Bracket's placings straight into Points Entries.",
+    alt: "A Participant's Bracket view: Heats grouped by Round, with the champion card at the end.",
+  },
+  {
+    slug: "lifecycle",
+    title: "One War Week live at a time",
+    text: "Start, End (with the Winner and highlights) and Reopen move a War Week through its lifecycle. Only one is ever live; Create next War Week starts the next edition without disturbing this one.",
+    alt: "The Admin Setup screen's Lifecycle box: Start, End and Reopen.",
   },
   {
     slug: "archive",

@@ -24,8 +24,8 @@ describe("AboutPage", () => {
     expect(html).toContain('src="/about/finale-poster.png"');
   });
 
-  it("has the six feature cards, each with its still", () => {
-    expect(ABOUT_FEATURES).toHaveLength(6);
+  it("has the eight feature cards, each with its still", () => {
+    expect(ABOUT_FEATURES).toHaveLength(8);
     for (const feature of ABOUT_FEATURES) {
       expect(html).toContain(`data-feature="${feature.slug}"`);
       expect(html).toContain(`src="/about/${feature.slug}.png"`);
