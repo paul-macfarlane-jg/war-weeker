@@ -68,3 +68,78 @@ evidence (CDP script inserts a session).
 - 2026-09-25 ~02:10Z: D1 (shadcn components + `ThemeRoot`), D2a (time/date/range pickers, Days editor), D2b (`EntityCombobox`, `ColorField`, Points Entry form, You picker) and D3 (Award + Announcement forms, shadcn rule in `CLAUDE.md` and the maintainer's guide) accepted and integrated. Orchestrator fix `c54ba70`: the Award Team Select showed the raw id (Base UI needs `items`). Old evidence dirs `32-*`/`33-*` removed with Paul's OK.
 - Paused for the night: D4 (evidence script) stopped mid-run. Its partial `scripts/custom-inputs-evidence.ts` and `test-results/custom-inputs-a-*` stay uncommitted in the worktree. D5 waits for the admin-polish PRs to merge into `staging`.
 - Form pattern (Paul: "ideally best practice"): the wrappers post named hidden inputs, so they're ready for `useActionState`. The full `useActionState` migration stays in ticket 18 unless Paul pulls it in.
+- 2026-09-25 ~03:45Z: the repo was renamed to JG War Week and moved to `~/jg-code/jg-war-week` (ticket 37) mid-run; worktrees repaired. Admin polish (#54–#59) and the rename (#61) merged to `staging`, so D5 went into this same PR instead of a separate "A2". `staging` merged in as `66932f3`; this branch's `theme-root.tsx` and `ui/combobox.tsx` kept (staging held copies of D1 without the review fixes).
+- D5 (four shared forms + lint rule), D4 (evidence) accepted. Smoke's two admin-form checks updated to read the options from the page's props (`80fd221`), then tightened after review (`4230257`).
+
+## [SCOPE CHANGE]
+
+- Phase A shipped as one PR (the planned A1/A2 split was only a fallback if admin polish hadn't merged).
+- `scripts/smoke.ts`: the `/admin/points` and `/admin/awards/new` checks asserted native `<option>` markup. The shadcn controls render options only when opened, so the checks now assert the same Competitions, Teams and Participants reach the form as props (`hasNameProp`), and that the Points Entry form itself rendered.
+- `scripts/about-media.ts`: `selectCompetition` drives the Competition combobox instead of a `<select>` (not rerun).
+- Form handling stays controlled `useState` + typed server-action calls. Paul asked for best practice; the wrappers post named hidden inputs, so they're ready for `useActionState`, which stays ticket 18 (post-freeze).
+
+## [AI CODE REVIEW]
+
+Three fresh-context reviews (opus): both axes on `54aaae5..5100c93`, then both axes on D5 + the smoke change (`9452e5f`, `80fd221`). Adjudicated by the orchestrator.
+
+**Technical implementation and spec conformity**
+
+| Severity | Finding | Paths | Disposition |
+|---|---|---|---|
+| blocking | Range picker committed/refused after one tap (react-day-picker `addToRange`), so "tap start, then end" failed | `date-range-picker.tsx` | resolved `ef0f3e4`: pure `nextRangeSelection` in `src/lib/day-range.ts`, unit-tested |
+| blocking | Award Team Select showed the raw id (Base UI needs `items`) | `award-form.tsx` | resolved `c54ba70` (acceptance screen) |
+| blocking | Gate smoke failed 2 checks asserting `<option>` markup | `scripts/smoke.ts` | resolved `80fd221`, tightened `4230257` |
+| non-blocking | TimeCombobox Enter picked the highlighted option, disagreeing with blur | `time-combobox.tsx` | resolved `ef0f3e4` |
+| non-blocking | ColorField swatch grid overflowed its popover; duplicate keys | `color-field.tsx` | resolved `ef0f3e4` |
+| non-blocking | Points/Note inputs 32px; SelectItem, Switch, chip-remove hit areas < 44px; chip remove unnamed | several | resolved `ef0f3e4` |
+| non-blocking | Converted controls dropped posted `name`s | `points-entry-form.tsx`, `award-form.tsx` | resolved `ef0f3e4` |
+| non-blocking | `about-media.ts` queried the removed `<select>` | `scripts/about-media.ts` | resolved `ef0f3e4` |
+| non-blocking | Date value helpers untested in a component file; client imported `@/lib/setup` | `date-picker.tsx`, `date-range-picker.tsx` | resolved `ef0f3e4` (`src/lib/date-value.ts`, `src/lib/day-range.ts`) |
+| non-blocking | Lint rule missed shadcn `<Input type=…>` and `type={"…"}` | `eslint.config.mjs` | resolved `4230257` (spreads can't be seen; noted in the rule) |
+| non-blocking | Popups inside an `overflow-hidden` themed root would clip | `theme-root.tsx` | accepted: none exist today; the guide says so |
+| non-blocking | Competition detail only in the dropdown; `OptionSelect` placeholder unreachable; native `required` gone from dates/colors (server still validates); disabled Switch label not dimmed; Scoring select may show raw `team` in free-for-all | several | accepted |
+
+**Coding standards**
+
+| Severity | Finding | Paths | Disposition |
+|---|---|---|---|
+| non-blocking | "No matches." used a banned term | `entity-combobox.tsx` | resolved `ef0f3e4` ("Nothing found.") |
+| non-blocking | Duplicated hidden-input code, `cn()` on static strings, namespace React imports, `Ref<never>` cast, duplicated Team items, redundant Label classes | several | resolved `ef0f3e4` (`FormValueInput`, named imports, typed ref) |
+| non-blocking | Maintainer's-guide recipe inaccurate / out of voice | `docs/maintainers-guide.md` | resolved `ef0f3e4` |
+| non-blocking | Hex parsing duplicated with `theme.ts`; `useWide` duplicates a media-query hook; Team swatch mapping written twice | `color.ts`, `date-range-picker.tsx`, `teams-editor.tsx` | accepted (small; extract on next use) |
+| non-blocking | CLAUDE.md rule sits inside an Atlas-managed block | `CLAUDE.md` | accepted: next to the other repo rules; a setup rerun reports it as a preserved edit |
+| non-blocking | Lockfile landed one commit after `package.json` | `pnpm-lock.yaml` | accepted: squash-merge the PR |
+
+## [CLOSEOUT]
+
+**Deliverables**
+
+| ID | What | Worker | Commit |
+|---|---|---|---|
+| D1 | shadcn components (select, combobox, popover, calendar, switch, input, textarea, label, input-group), `ThemeRoot` portal container | sonnet | `2f37c91` + lockfile `7cc1324` |
+| D2a | `parseTime` / time options, `TimeCombobox`, `DatePicker`, `DateRangePicker`, Days editor | opus | `0ca4109` |
+| D2b | `EntityCombobox`, `ColorField`, Points Entry form, "Which one is you?" picker | sonnet | `2f0466d` |
+| D3 | Award + Announcement forms, shadcn rule in `CLAUDE.md` and the maintainer's guide | sonnet | `58d19fe` (+ orchestrator fix `c54ba70`) |
+| R1 | Aggregate review fixes | opus | `ef0f3e4` |
+| D5 | War Week settings, Schedule Item, Competitions, Teams forms; ESLint rule | opus | `9452e5f` (+ orchestrator `80fd221`, `4230257`) |
+| D4 | CDP evidence script, screenshots, round-trips, overflow sweep | sonnet (3 dispatches; two interrupted) | `420e091` |
+
+**Verdicts** (local run surface; no deploy in this slice)
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| A: no native select/date/time/color/checkbox in `src/` outside `ui/`; lint enforces it | PASS | grep finds only doc comments; `pnpm lint` 0 errors; `test-results/custom-inputs-a-lint/fixture-failing-run.txt` (7 errors on a throwaway fixture, exit 1) |
+| A: every admin form saves the same values; smoke's admin/seed checks pass | PASS | `test-results/custom-inputs-a-forms/round-trips.txt` (9 ok: Points Entry, Award, range refusal, Day, Schedule Item "7:30p"→19:30 + `other`, Team color, Leader switch, You pick/clear); smoke 148 ok in `test-results/custom-inputs-a-gate/gate.txt` |
+| A: `parseTime` tests; range picker refuses with the existing text | PASS | `src/lib/time-options.test.ts`, `src/lib/day-range.test.ts` in the gate's 614 tests; browser refusal in round-trips |
+| A: "Which one is you?" combobox and "Not me / clear" | PASS | round-trips (2 ok); `test-results/custom-inputs-a-pages/01-*`, `02-*` |
+| CLAUDE.md and maintainer's guide state the shadcn rule | PASS | `CLAUDE.md` Repository-specific rules; guide recipe "Add or change a form control" |
+| Screenshots: every converted form + Teams, Standings, More; 375 and 1280; XI and a dark past edition (IX); popups open | PASS | 60 in `test-results/custom-inputs-a-forms/`, 16 in `test-results/custom-inputs-a-pages/` |
+| Zero horizontal overflow at 375/768/812/1024/1280 | PASS | `test-results/custom-inputs-a-overflow/overflow.txt` (149/149 at 0px, incl. popups open at 375) |
+| `pnpm gate` | PASS | `test-results/custom-inputs-a-gate/gate.txt`, run at `4230257` on a private Postgres DB |
+| B, C criteria | not in this PR | Phases B and C are separate runs |
+
+Evidence commit `420e091` has the same `src/` as `4230257`; later commits touch only `eslint.config.mjs`, `scripts/smoke.ts` and evidence.
+
+Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg pnpm db:migrate && pnpm gate`; evidence: `pnpm build && pnpm tsx scripts/custom-inputs-evidence.ts` against a private DB.
+
+Isolation check: D2a and D2b ran in parallel in separate worktrees as predicted; their diffs touched disjoint files, so no merge conflict occurred.

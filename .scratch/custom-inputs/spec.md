@@ -1,7 +1,7 @@
 ---
 title: War Weeker — shadcn everywhere (custom inputs)
-status: in-progress
-owner: atlas orchestrator, branch feat/custom-inputs-phase-a (Phase A delivery)
+status: done
+phases: A done (branch feat/custom-inputs-phase-a); B and C not started
 labels: [ready-for-agent]
 created: 2026-09-24
 deadline: 2026-09-25T08:00-04:00 (staging freeze; whatever phases have merged by then ship)
