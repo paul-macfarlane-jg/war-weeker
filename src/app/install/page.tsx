@@ -9,10 +9,10 @@ import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Install app · War Weeker" };
+export const metadata: Metadata = { title: "Install app · JG War Week" };
 
 /**
- * How to add War Weeker to a phone's home screen, dressed in the current
+ * How to add JG War Week to a phone's home screen, dressed in the current
  * War Week's Appearance Theme. The steps themselves are picked on the client.
  */
 export default async function InstallPage() {
@@ -31,7 +31,7 @@ export default async function InstallPage() {
           <ChevronLeft aria-hidden className="size-4" />
           Back
         </Link>
-        <h1 className="text-2xl font-bold">Install War Weeker</h1>
+        <h1 className="text-2xl font-bold">Install JG War Week</h1>
         <InstallInstructions />
       </main>
       <SiteFooter className="mt-auto" />

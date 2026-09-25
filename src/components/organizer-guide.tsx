@@ -141,9 +141,9 @@ export function OrganizerGuide({
             Announcements
           </Link>{" "}
           support rich text and video, and one can be pinned to the home screen.
-          War Weeker doesn&apos;t post to Slack for you — it only stores the War
-          Week&apos;s Slack URL and links to it. Post the Announcement&apos;s
-          link in Slack yourself.
+          The JG War Week app doesn&apos;t post to Slack for you — it only
+          stores the War Week&apos;s Slack URL and links to it. Post the
+          Announcement&apos;s link in Slack yourself.
         </p>
       </section>
 

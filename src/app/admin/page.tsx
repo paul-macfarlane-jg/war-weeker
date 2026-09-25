@@ -7,7 +7,7 @@ import { loadAdminPage } from "./gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Admin · War Weeker" };
+export const metadata: Metadata = { title: "Admin · JG War Week" };
 
 export default async function AdminPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage("/admin");

@@ -9,7 +9,7 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Edit Award · War Weeker" };
+export const metadata: Metadata = { title: "Edit Award · JG War Week" };
 
 export default async function EditAwardPage({
   params,

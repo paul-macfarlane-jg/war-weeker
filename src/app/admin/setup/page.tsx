@@ -9,7 +9,7 @@ import { SETUP_SECTIONS } from "./sections";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Setup · War Weeker" };
+export const metadata: Metadata = { title: "Setup · JG War Week" };
 
 export default async function AdminSetupPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage("/admin/setup");

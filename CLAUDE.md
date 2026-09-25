@@ -1,8 +1,8 @@
-# war-weeker
+# jg-war-week
 
 ## Maintainer's guide
 
-When Jason (or any maintainer) asks how to change War Weeker, read and follow `docs/maintainers-guide.md`.
+When Jason (or any maintainer) asks how to change JG War Week, read and follow `docs/maintainers-guide.md`.
 
 ## Agent skills
 
@@ -34,7 +34,7 @@ repository keeps its own base SHA, branch, verification result, and pull request
 
 ## Repository framing
 
-**war-weeker** — War Weeker: one place for Jahnel Group organizers to run War Week (themes, schedule, teams, competitions, points, awards, announcements) and for participants to follow it, plus a curated War Week history. Built for the JG AI Connection Event; submission due Fri 2026-09-25 10:00 AM.
+**war-weeker** — JG War Week: one place for Jahnel Group organizers to run War Week (themes, schedule, teams, competitions, points, awards, announcements) and for participants to follow it, plus a curated War Week history. Built for the JG AI Connection Event; submission due Fri 2026-09-25 10:00 AM.
 
 ### Structure
 

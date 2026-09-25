@@ -9,7 +9,7 @@ import { loadAdminPage } from "../gate";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Standings visibility · War Weeker",
+  title: "Standings visibility · JG War Week",
 };
 
 export default async function AdminStandingsPage() {

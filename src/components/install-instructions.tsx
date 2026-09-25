@@ -83,7 +83,7 @@ export function InstallInstructions() {
       {shown === "android" && <AndroidSteps />}
       {shown === "other" && (
         <p className="text-foreground/80">
-          Open War Weeker on your phone to add it to your home screen. On a
+          Open JG War Week on your phone to add it to your home screen. On a
           computer, Chrome and Edge offer an install button in the address bar.
         </p>
       )}
@@ -120,7 +120,7 @@ function IosSteps() {
     <Steps
       title={`${PLATFORM_LABEL.ios} (Safari)`}
       steps={[
-        "Open War Weeker in Safari.",
+        "Open JG War Week in Safari.",
         <>
           Tap the <strong>Share</strong> button (the square with an arrow
           pointing up).
@@ -129,7 +129,7 @@ function IosSteps() {
           Scroll down and tap <strong>Add to Home Screen</strong>.
         </>,
         <>
-          Tap <strong>Add</strong>, then open War Weeker from your Home Screen.
+          Tap <strong>Add</strong>, then open JG War Week from your Home Screen.
         </>,
       ]}
     />
@@ -155,7 +155,7 @@ function AndroidSteps() {
           installPrompt ? "Or install it by hand (Chrome)" : "Android (Chrome)"
         }
         steps={[
-          "Open War Weeker in Chrome.",
+          "Open JG War Week in Chrome.",
           <>
             Tap the <strong>⋮</strong> menu in the top-right corner.
           </>,
@@ -164,7 +164,7 @@ function AndroidSteps() {
             <strong>Add to Home screen</strong>).
           </>,
           <>
-            Tap <strong>Install</strong>, then open War Weeker from your home
+            Tap <strong>Install</strong>, then open JG War Week from your home
             screen.
           </>,
         ]}

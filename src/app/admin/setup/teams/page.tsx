@@ -14,7 +14,7 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Teams & roster · War Weeker" };
+export const metadata: Metadata = { title: "Teams & roster · JG War Week" };
 
 export default async function SetupTeamsPage() {
   const { warWeek, email, isOrganizer } =

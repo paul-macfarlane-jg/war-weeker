@@ -1,10 +1,10 @@
-# war-weeker
+# jg-war-week
 
 War Week: themes, schedule, teams, competitions, points, awards, and
 announcements for Jahnel Group's annual War Week, plus a curated War Week
 history. See `CONTEXT.md` for the domain glossary.
 
-**Changing War Weeker?** Start with the
+**Changing the JG War Week app?** Start with the
 [maintainer's guide](./docs/maintainers-guide.md): access, where things
 live, the branch-to-production loop, and prompts to give Claude.
 
@@ -73,10 +73,10 @@ production build (`pnpm build`) before running `pnpm smoke`.
 lint, vitest, production build, then the smoke test —
 `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke`.
 
-## Connect Claude to War Weeker
+## Connect Claude to JG War Week
 
 The app exposes a read-only Model Context Protocol server over Streamable
-HTTP at `/api/mcp` (production: `https://war-weeker.vercel.app/api/mcp`).
+HTTP at `/api/mcp` (production: `https://jg-war-week.vercel.app/api/mcp`).
 Its tools are `get_current_war_week`, `get_leaderboard`, `get_schedule`,
 `get_announcements`, `get_awards`, `get_faq`, `list_history` and
 `get_history`. Every tool is read-only and returns only what a signed-in
@@ -100,12 +100,12 @@ pages and these tools for AI agents. Its tool list comes from
 (`openssl rand -base64 32`) in the environment, redeploy, then:
 
 ```bash
-claude mcp add --transport http war-weeker https://war-weeker.vercel.app/api/mcp --header "Authorization: Bearer <token>"
+claude mcp add --transport http jg-war-week https://jg-war-week.vercel.app/api/mcp --header "Authorization: Bearer <token>"
 ```
 
 **claude.ai / Claude Desktop custom connector.** Those connectors support
 only OAuth or no auth, so for a demo set `MCP_PUBLIC=true`, redeploy, and add
-`https://war-weeker.vercel.app/api/mcp` as a custom connector with no auth.
+`https://jg-war-week.vercel.app/api/mcp` as a custom connector with no auth.
 While it's on, anyone with the URL can read the current War Week, Standings
 (only once revealed), schedule, Announcements, Awards, FAQ and history.
 Unset it after the demo. MCP OAuth is post-hackathon.
@@ -134,12 +134,12 @@ allowlist can sign in but `/admin` refuses them.
 
 `/api/mcp` is locked too: without a session it answers 401 unless the
 request carries the `MCP_TOKEN` bearer token or `MCP_PUBLIC=true` is set; see
-"Connect Claude to War Weeker".
+"Connect Claude to JG War Week".
 
 ## Deployment (Vercel + Neon)
 
-Production: **https://war-weeker.vercel.app** (MCP at
-`https://war-weeker.vercel.app/api/mcp`).
+Production: **https://jg-war-week.vercel.app** (MCP at
+`https://jg-war-week.vercel.app/api/mcp`).
 
 - **Hosting:** the Vercel project is connected to this GitHub repo. A push to
   `main` builds and deploys to production; every other branch (including

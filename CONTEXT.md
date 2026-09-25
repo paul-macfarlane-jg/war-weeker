@@ -1,7 +1,10 @@
 # CONTEXT
 
-Domain glossary and vocabulary rules for War Weeker. Read this before naming
-domain concepts in code, tests, tickets, or specs.
+Domain glossary and vocabulary rules for the JG War Week app. Read this before
+naming domain concepts in code, tests, tickets, or specs.
+
+The product is **JG War Week** (in sentences, "the JG War Week app"; formerly
+War Weeker). **War Week** alone always means the event, never the app.
 
 ## Domain glossary
 

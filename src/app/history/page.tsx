@@ -9,7 +9,7 @@ import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "History · War Weeker" };
+export const metadata: Metadata = { title: "History · JG War Week" };
 
 /** The Archive: every past War Week, newest first, each in its own theme. */
 export default async function HistoryPage() {
