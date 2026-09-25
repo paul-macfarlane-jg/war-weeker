@@ -57,8 +57,9 @@ function warWeekValues(
 }
 
 /**
- * A live War Week with a Team, a Day, a Competition, an FAQ Item and a
- * Points Entry. Whatever the database already has live is set complete
+ * A live War Week with one of everything: a Team, a Participant, a Day with
+ * a Schedule Item, a Competition with a Points Entry, an FAQ Item, an Award
+ * and an Announcement. Whatever the database already has live is set complete
  * first (rolled back with the test), so the one-live index doesn't bite.
  */
 async function fixture(tx: DBTx) {
@@ -76,9 +77,28 @@ async function fixture(tx: DBTx) {
     .insert(schema.team)
     .values({ warWeekId: live.id, name: "Red", color: "#f00" })
     .returning();
-  await tx
+  await tx.insert(schema.participant).values({
+    warWeekId: live.id,
+    displayName: "Alice",
+    teamId: red.id,
+  });
+  const [kickoff] = await tx
     .insert(schema.day)
-    .values({ warWeekId: live.id, date: "2099-01-02", dayTheme: "Kickoff" });
+    .values({ warWeekId: live.id, date: "2099-01-02", dayTheme: "Kickoff" })
+    .returning();
+  await tx.insert(schema.scheduleItem).values({
+    dayId: kickoff.id,
+    startTime: "09:00",
+    title: "Opening",
+    category: "social",
+  });
+  await tx.insert(schema.award).values({ warWeekId: live.id, name: "MVP" });
+  await tx.insert(schema.announcement).values({
+    warWeekId: live.id,
+    title: "Welcome",
+    body: { type: "doc", content: [] },
+    authorEmail: "lead@jahnelgroup.com",
+  });
   const [chess] = await tx
     .insert(schema.competition)
     .values({
@@ -107,8 +127,84 @@ async function fixture(tx: DBTx) {
     (
       await tx.select().from(schema.warWeek).where(eq(schema.warWeek.id, id))
     )[0];
-  return { live, chess, byId, schema };
+  /** How many of each War Week-owned row `warWeekId` has. */
+  const counts = async (warWeekId: string) => {
+    const count = async (rows: Promise<unknown[]>): Promise<number> =>
+      (await rows).length;
+    const { day, competition } = schema;
+    return {
+      team: await count(
+        tx
+          .select()
+          .from(schema.team)
+          .where(eq(schema.team.warWeekId, warWeekId)),
+      ),
+      participant: await count(
+        tx
+          .select()
+          .from(schema.participant)
+          .where(eq(schema.participant.warWeekId, warWeekId)),
+      ),
+      day: await count(
+        tx.select().from(day).where(eq(day.warWeekId, warWeekId)),
+      ),
+      scheduleItem: await count(
+        tx
+          .select({ id: schema.scheduleItem.id })
+          .from(schema.scheduleItem)
+          .innerJoin(day, eq(day.id, schema.scheduleItem.dayId))
+          .where(eq(day.warWeekId, warWeekId)),
+      ),
+      competition: await count(
+        tx
+          .select()
+          .from(competition)
+          .where(eq(competition.warWeekId, warWeekId)),
+      ),
+      pointsEntry: await count(
+        tx
+          .select({ id: schema.pointsEntry.id })
+          .from(schema.pointsEntry)
+          .innerJoin(
+            competition,
+            eq(competition.id, schema.pointsEntry.competitionId),
+          )
+          .where(eq(competition.warWeekId, warWeekId)),
+      ),
+      faqItem: await count(
+        tx
+          .select()
+          .from(schema.faqItem)
+          .where(eq(schema.faqItem.warWeekId, warWeekId)),
+      ),
+      award: await count(
+        tx
+          .select()
+          .from(schema.award)
+          .where(eq(schema.award.warWeekId, warWeekId)),
+      ),
+      announcement: await count(
+        tx
+          .select()
+          .from(schema.announcement)
+          .where(eq(schema.announcement.warWeekId, warWeekId)),
+      ),
+    };
+  };
+  return { live, chess, byId, counts, schema };
 }
+
+const ONE_OF_EVERYTHING = {
+  team: 1,
+  participant: 1,
+  day: 1,
+  scheduleItem: 1,
+  competition: 1,
+  pointsEntry: 1,
+  faqItem: 1,
+  award: 1,
+  announcement: 1,
+};
 
 function next(overrides: Partial<NextWarWeekValues> = {}): NextWarWeekValues {
   return {
@@ -219,6 +315,30 @@ describe.skipIf(!isLocalDatabase)("Start, End and Reopen", () => {
     });
   });
 
+  it("won't let Start reopen an ended War Week, or Reopen start one", async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const { endWarWeek, reopenWarWeek, startWarWeek } =
+        await import("@/mutations/war-week-lifecycle");
+      const { live, schema, byId } = await fixture(tx);
+      const [upcoming] = await tx
+        .insert(schema.warWeek)
+        .values(warWeekValues(2, "upcoming"))
+        .returning();
+      await endWarWeek(live.id, { winner: null, highlights: [] }, tx);
+
+      expect(await startWarWeek(live.id, tx)).toEqual({
+        ok: false,
+        error: "This War Week has ended. Reopen it instead.",
+      });
+      expect(await reopenWarWeek(upcoming.id, tx)).toEqual({
+        ok: false,
+        error: "This War Week hasn't started. Start it instead.",
+      });
+      expect((await byId(live.id)).status).toBe("complete");
+      expect((await byId(upcoming.id)).status).toBe("upcoming");
+    });
+  });
+
   it("refuses moves that aren't Start, End or Reopen", async () => {
     await inRolledBackTransaction(async (tx) => {
       const { endWarWeek, startWarWeek } =
@@ -248,8 +368,9 @@ describe.skipIf(!isLocalDatabase)("createNextWarWeek", () => {
     await inRolledBackTransaction(async (tx) => {
       const { createNextWarWeek } =
         await import("@/mutations/war-week-lifecycle");
-      const { live, schema } = await fixture(tx);
+      const { live, schema, counts } = await fixture(tx);
       const { eq } = await import("drizzle-orm");
+      expect(await counts(live.id)).toEqual(ONE_OF_EVERYTHING);
 
       const result = await createNextWarWeek(live.id, next(), actorEmail, tx);
       expect(result).toEqual({ ok: true, edition: "tii" });
@@ -286,21 +407,17 @@ describe.skipIf(!isLocalDatabase)("createNextWarWeek", () => {
           actorEmail,
         ],
       });
-      for (const table of [
-        schema.team,
-        schema.participant,
-        schema.day,
-        schema.competition,
-        schema.faqItem,
-        schema.award,
-        schema.announcement,
-      ]) {
-        const rows = await tx
-          .select()
-          .from(table)
-          .where(eq(table.warWeekId, created.id));
-        expect(rows).toEqual([]);
-      }
+      expect(await counts(created.id)).toEqual({
+        team: 0,
+        participant: 0,
+        day: 0,
+        scheduleItem: 0,
+        competition: 0,
+        pointsEntry: 0,
+        faqItem: 0,
+        award: 0,
+        announcement: 0,
+      });
     });
   });
 
@@ -308,7 +425,7 @@ describe.skipIf(!isLocalDatabase)("createNextWarWeek", () => {
     await inRolledBackTransaction(async (tx) => {
       const { createNextWarWeek } =
         await import("@/mutations/war-week-lifecycle");
-      const { live, chess, schema } = await fixture(tx);
+      const { live, chess, schema, counts } = await fixture(tx);
       const { eq } = await import("drizzle-orm");
 
       await createNextWarWeek(
@@ -321,6 +438,19 @@ describe.skipIf(!isLocalDatabase)("createNextWarWeek", () => {
         .select({ id: schema.warWeek.id })
         .from(schema.warWeek)
         .where(eq(schema.warWeek.edition, "tii"));
+      // Teams, roster, Days, Schedule, Points Entries, Awards and
+      // Announcements are never copied, even with everything else on.
+      expect(await counts(created.id)).toEqual({
+        team: 0,
+        participant: 0,
+        day: 0,
+        scheduleItem: 0,
+        competition: 1,
+        pointsEntry: 0,
+        faqItem: 1,
+        award: 0,
+        announcement: 0,
+      });
       const competitions = await tx
         .select()
         .from(schema.competition)

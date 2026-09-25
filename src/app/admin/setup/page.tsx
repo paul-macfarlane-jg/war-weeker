@@ -3,8 +3,9 @@ import Link from "next/link";
 
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
+import { Badge } from "@/components/ui/badge";
 import { WarWeekLifecycleControls } from "@/components/war-week-lifecycle-controls";
-import { defaultWinner } from "@/lib/war-week-lifecycle";
+import { STATUS_LABELS, defaultWinner } from "@/lib/war-week-lifecycle";
 import { getStandings } from "@/queries/standings";
 
 import { loadAdminPage } from "../gate";
@@ -13,12 +14,6 @@ import { SETUP_SECTIONS } from "./sections";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = { title: "Setup · JG War Week" };
-
-const STATUS_LABELS = {
-  upcoming: "Upcoming",
-  live: "Live",
-  complete: "Complete",
-} as const;
 
 const STATUS_HELP = {
   upcoming: "Set it up in advance. Start it when the current War Week ends.",
@@ -58,9 +53,7 @@ export default async function AdminSetupPage() {
             <h2 id="lifecycle-heading" className="font-semibold">
               Lifecycle
             </h2>
-            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
-              {STATUS_LABELS[warWeek.status]}
-            </span>
+            <Badge variant="secondary">{STATUS_LABELS[warWeek.status]}</Badge>
           </div>
           <p className="text-foreground/70 text-sm">
             {STATUS_HELP[warWeek.status]}

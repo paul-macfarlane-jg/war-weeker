@@ -9,13 +9,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import type { AdminEdition } from "@/auth/organizer";
 import { AdminEditionSwitcher } from "@/components/admin-edition-switcher";
 import { SignOutButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeRoot } from "@/components/theme-root";
 import { Toaster } from "@/components/ui/sonner";
 import type { WarWeek } from "@/db/schema";
+import type { AdminEdition } from "@/lib/access";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [

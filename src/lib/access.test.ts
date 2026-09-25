@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   adminAccess,
+  adminEditions,
   canAdministerWarWeek,
   canUseMcp,
+  defaultAdminWarWeek,
   isJahnelGroupEmail,
   isOrganizer,
   isPublicPath,
@@ -73,14 +75,21 @@ describe("isOrganizer", () => {
 describe("canAdministerWarWeek", () => {
   const organizer = "pmacfarlane@jahnelgroup.com";
   const pastOnly = "past@jahnelgroup.com";
+  const nextOnly = "next@jahnelgroup.com";
   const current = { organizerEmails: [organizer], status: "live" as const };
   const complete = { organizerEmails: [pastOnly], status: "complete" as const };
-  const upcoming = { organizerEmails: [pastOnly], status: "upcoming" as const };
+  const upcoming = { organizerEmails: [nextOnly], status: "upcoming" as const };
 
-  it("lets an Organizer of the target change it", () => {
-    expect(canAdministerWarWeek(organizer, current, current)).toBe(true);
+  it("lets an Organizer of the target change it, whoever runs the current one", () => {
+    expect(
+      canAdministerWarWeek(
+        organizer,
+        { organizerEmails: [organizer], status: "live" },
+        { organizerEmails: ["lead@jahnelgroup.com"] },
+      ),
+    ).toBe(true);
     expect(canAdministerWarWeek(pastOnly, complete, current)).toBe(true);
-    expect(canAdministerWarWeek(pastOnly, upcoming, current)).toBe(true);
+    expect(canAdministerWarWeek(nextOnly, upcoming, current)).toBe(true);
   });
 
   it("refuses a non-Organizer on every edition, whatever id they send", () => {
@@ -92,8 +101,15 @@ describe("canAdministerWarWeek", () => {
     }
   });
 
-  it("refuses an Organizer of only a past edition on the current one", () => {
-    expect(canAdministerWarWeek(pastOnly, current, current)).toBe(false);
+  it("refuses an Organizer of only a past or upcoming edition on the current one", () => {
+    const live = { organizerEmails: [organizer], status: "live" as const };
+    expect(canAdministerWarWeek(pastOnly, live, current)).toBe(false);
+    expect(canAdministerWarWeek(nextOnly, live, current)).toBe(false);
+  });
+
+  it("refuses an Organizer of one past edition on another past edition", () => {
+    const older = { organizerEmails: [organizer], status: "complete" as const };
+    expect(canAdministerWarWeek(pastOnly, older, current)).toBe(false);
   });
 
   it("lets a current Organizer change a complete edition, not an upcoming one", () => {
@@ -115,6 +131,68 @@ describe("canAdministerWarWeek", () => {
   it("uses only the target's allowlist when there's no current War Week", () => {
     expect(canAdministerWarWeek(pastOnly, complete, undefined)).toBe(true);
     expect(canAdministerWarWeek(organizer, complete, undefined)).toBe(false);
+  });
+});
+
+describe("defaultAdminWarWeek and adminEditions", () => {
+  const lead = "lead@jahnelgroup.com";
+  const pastOnly = "past@jahnelgroup.com";
+  const nextOnly = "next@jahnelgroup.com";
+  const edition = (
+    n: number,
+    roman: string,
+    status: "upcoming" | "live" | "complete",
+    organizerEmails: string[],
+  ) => ({
+    id: roman,
+    edition: roman,
+    editionNumber: n,
+    status,
+    startDate: `20${n + 15}-02-21`,
+    organizerEmails,
+  });
+  const ix = edition(9, "ix", "complete", [pastOnly]);
+  const x = edition(10, "x", "complete", [pastOnly]);
+  const xi = edition(11, "xi", "live", [lead]);
+  const xii = edition(12, "xii", "upcoming", [nextOnly, pastOnly]);
+  const xiii = edition(13, "xiii", "upcoming", [nextOnly]);
+
+  it("is the current War Week for its Organizer", () => {
+    expect(defaultAdminWarWeek(lead, [ix, x, xi, xii], xi).edition).toBe("xi");
+  });
+
+  it("is the Organizer's earliest upcoming edition when they don't run the current one", () => {
+    expect(
+      defaultAdminWarWeek(nextOnly, [xiii, ix, xi, xii, x], xi).edition,
+    ).toBe("xii");
+    expect(defaultAdminWarWeek(pastOnly, [ix, x, xi, xii], xi).edition).toBe(
+      "xii",
+    );
+  });
+
+  it("is the newest past edition for an Organizer of only past ones", () => {
+    expect(defaultAdminWarWeek(pastOnly, [ix, x, xi], xi).edition).toBe("x");
+  });
+
+  it("stays on the current War Week for a non-Organizer, who sees the refusal", () => {
+    expect(
+      defaultAdminWarWeek("someone@jahnelgroup.com", [ix, x, xi, xii], xi)
+        .edition,
+    ).toBe("xi");
+  });
+
+  it("lists the editions an email may administer, newest first", () => {
+    expect(adminEditions(pastOnly, [ix, xii, x, xi], xi)).toEqual([
+      { edition: "xii", status: "upcoming", current: false },
+      { edition: "x", status: "complete", current: false },
+      { edition: "ix", status: "complete", current: false },
+    ]);
+    expect(adminEditions(lead, [ix, xii, x, xi], xi)).toEqual([
+      { edition: "xi", status: "live", current: true },
+      { edition: "x", status: "complete", current: false },
+      { edition: "ix", status: "complete", current: false },
+    ]);
+    expect(adminEditions("someone@jahnelgroup.com", [ix, xi], xi)).toEqual([]);
   });
 });
 

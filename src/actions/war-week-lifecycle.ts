@@ -1,49 +1,62 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
 
-import { ADMIN_EDITION_COOKIE, requireOrganizer } from "@/auth/organizer";
+import { ADMIN_EDITION_COOKIE } from "@/auth/organizer";
 import { getSessionEmail } from "@/auth/server";
-import { db } from "@/db";
-import { type WarWeek, warWeek as warWeekTable } from "@/db/schema";
+import type { WarWeek } from "@/db/schema";
 import { canAdministerWarWeek } from "@/lib/access";
 import {
   type ClosingInput,
+  type LifecycleAction,
   type NextWarWeekInput,
+  lifecycleActionError,
   parseClosingInput,
   parseNextWarWeekInput,
 } from "@/lib/war-week-lifecycle";
 import type { MutationResult } from "@/mutations/types";
 import * as mutations from "@/mutations/war-week-lifecycle";
-import { getCurrentWarWeek, getWarWeekByEdition } from "@/queries/war-weeks";
+import {
+  getCurrentWarWeek,
+  getWarWeekByEdition,
+  getWarWeeks,
+  selectCurrentWarWeek,
+} from "@/queries/war-weeks";
 
 export type LifecycleActionResult = MutationResult;
 
 const NOT_FOUND = "That War Week no longer exists.";
 
 /**
- * The War Week named by the id in the request, when the caller may
- * administer it. The access check is for that War Week, re-done here.
+ * The War Week named by the id in the request, when the caller may run
+ * `action` on it (`lifecycleActionError`, re-done here on the server with
+ * every War Week and the current one).
  */
-async function organizerWarWeek(
+async function lifecycleWarWeek(
+  action: LifecycleAction,
   warWeekId: string,
 ): Promise<
   { ok: true; warWeek: WarWeek; email: string } | { ok: false; error: string }
 > {
+  const email = await getSessionEmail();
+  if (!email) return { ok: false, error: "Sign in to continue." };
   if (!z.uuid().safeParse(warWeekId).success) {
     return { ok: false, error: NOT_FOUND };
   }
-  const [found] = await db
-    .select()
-    .from(warWeekTable)
-    .where(eq(warWeekTable.id, warWeekId));
-  if (!found) return { ok: false, error: NOT_FOUND };
-  const organizer = await requireOrganizer(found);
-  if (!organizer.ok) return organizer;
-  return { ok: true, warWeek: found, email: organizer.email };
+  const warWeeks = await getWarWeeks();
+  const target = warWeeks.find((w) => w.id === warWeekId);
+  if (!target) return { ok: false, error: NOT_FOUND };
+  const refusal = lifecycleActionError({
+    action,
+    target,
+    current: selectCurrentWarWeek(warWeeks),
+    warWeeks,
+    email,
+  });
+  if (refusal) return { ok: false, error: refusal };
+  return { ok: true, warWeek: target, email };
 }
 
 // Status decides the current War Week, the home redirect and the Archive,
@@ -56,7 +69,7 @@ function revalidateSite() {
 export async function startWarWeek(
   warWeekId: string,
 ): Promise<LifecycleActionResult> {
-  const organizer = await organizerWarWeek(warWeekId);
+  const organizer = await lifecycleWarWeek("start", warWeekId);
   if (!organizer.ok) return organizer;
   const result = await mutations.startWarWeek(organizer.warWeek.id);
   if (result.ok) revalidateSite();
@@ -68,7 +81,7 @@ export async function endWarWeek(
   warWeekId: string,
   input: ClosingInput,
 ): Promise<LifecycleActionResult> {
-  const organizer = await organizerWarWeek(warWeekId);
+  const organizer = await lifecycleWarWeek("end", warWeekId);
   if (!organizer.ok) return organizer;
   const parsed = parseClosingInput(input);
   if (!parsed.ok) return parsed;
@@ -77,11 +90,15 @@ export async function endWarWeek(
   return result;
 }
 
-/** Reopen: `complete → live`, for corrections. Refused while another is live. */
+/**
+ * Reopen: `complete → live`, for corrections. Only a current-War-Week
+ * Organizer, only the most recently ended edition, and refused while
+ * another is live or a later edition is upcoming.
+ */
 export async function reopenWarWeek(
   warWeekId: string,
 ): Promise<LifecycleActionResult> {
-  const organizer = await organizerWarWeek(warWeekId);
+  const organizer = await lifecycleWarWeek("reopen", warWeekId);
   if (!organizer.ok) return organizer;
   const result = await mutations.reopenWarWeek(organizer.warWeek.id);
   if (result.ok) revalidateSite();
@@ -104,14 +121,15 @@ async function setAdminEditionCookie(edition: string, isCurrent: boolean) {
 }
 
 /**
- * Create next War Week from the War Week `fromWarWeekId` (the caller must
- * be able to administer it), then selects the new edition in `/admin`.
+ * Create next War Week from the War Week `fromWarWeekId`: the caller must
+ * organize the current War Week and be able to administer the source. Then
+ * selects the new edition in `/admin`.
  */
 export async function createNextWarWeek(
   fromWarWeekId: string,
   input: NextWarWeekInput,
 ): Promise<{ ok: true; edition: string } | { ok: false; error: string }> {
-  const organizer = await organizerWarWeek(fromWarWeekId);
+  const organizer = await lifecycleWarWeek("create-next", fromWarWeekId);
   if (!organizer.ok) return organizer;
   const parsed = parseNextWarWeekInput(input);
   if (!parsed.ok) return parsed;

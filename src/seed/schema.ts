@@ -223,12 +223,11 @@ export const warWeekSeedSchema = z
       .regex(/^[a-z]+$/, "must be a lowercase roman numeral"),
     editionNumber: z.number().int().positive(),
     year: z.number().int(),
-    // Seed-initialized only: `status`, `winner` and `highlights` are set
-    // when the War Week is first inserted, never on a reload.
+    // Seed-initialized only: `status`, `winner` and `highlights` (from the
+    // settings shape) are set when the War Week is first inserted, never on
+    // a reload.
     status: z.enum(["upcoming", "live", "complete"]),
     ...warWeekSettingsSeedShape,
-    winner: z.string().max(200).nullish(),
-    highlights: z.array(z.string().max(500)).default([]),
     days: z.array(daySeedSchema),
     teams: z.array(teamSeedSchema).default([]),
     participants: z.array(participantSeedSchema).default([]),

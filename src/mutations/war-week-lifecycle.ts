@@ -5,6 +5,7 @@ import { type WarWeek, competition, faqItem, warWeek } from "@/db/schema";
 import {
   type ClosingValues,
   type NextWarWeekValues,
+  moveError,
   transitionError,
 } from "@/lib/war-week-lifecycle";
 import { isUniqueViolation } from "@/mutations/setup";
@@ -26,7 +27,8 @@ async function liveEdition(
 }
 
 /**
- * Moves a War Week to `to` when `transitionError` allows it. A second
+ * Moves a War Week to `to` when `transitionError` (and, for Start or
+ * Reopen, `moveError`) allows it. A second
  * `live` War Week is refused by the check and, for a concurrent Start that
  * slipped past it, by the `war_week_one_live` index: both read
  * "End <EDITION> first."
@@ -36,6 +38,7 @@ async function transition(
   to: WarWeek["status"],
   set: Partial<ClosingValues>,
   dbOrTx: DBOrTx,
+  action?: "start" | "reopen",
 ): Promise<MutationResult> {
   try {
     return await dbOrTx.transaction(async (tx): Promise<MutationResult> => {
@@ -45,9 +48,11 @@ async function transition(
         .where(eq(warWeek.id, warWeekId))
         .for("update");
       if (!row) return { ok: false, error: WAR_WEEK_NOT_FOUND };
-      const refusal = transitionError(row.status, to, {
-        liveEdition: await liveEdition(tx, warWeekId),
-      });
+      const refusal =
+        (action && moveError(action, row.status)) ||
+        transitionError(row.status, to, {
+          liveEdition: await liveEdition(tx, warWeekId),
+        });
       if (refusal) return { ok: false, error: refusal };
       await tx
         .update(warWeek)
@@ -72,7 +77,7 @@ export function startWarWeek(
   warWeekId: string,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  return transition(warWeekId, "live", {}, dbOrTx);
+  return transition(warWeekId, "live", {}, dbOrTx, "start");
 }
 
 /** End War Week: `live → complete`, recording the Winner and highlights. */
@@ -89,7 +94,7 @@ export function reopenWarWeek(
   warWeekId: string,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
-  return transition(warWeekId, "live", {}, dbOrTx);
+  return transition(warWeekId, "live", {}, dbOrTx, "reopen");
 }
 
 /** Settings a new War Week gets when they aren't copied. */

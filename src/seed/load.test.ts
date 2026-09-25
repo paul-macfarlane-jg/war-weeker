@@ -42,7 +42,6 @@ async function seed(edition: string, n: number, status: string) {
     foreground: "#000000",
     fontPreset: "sans",
     organizerEmails: ["o@jahnelgroup.com"],
-    standingsHidden: false,
     winner: null,
     highlights: [],
     days: [],

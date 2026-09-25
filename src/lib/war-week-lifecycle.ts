@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { WarWeek } from "@/db/schema";
+import { canAdministerWarWeek, isOrganizer } from "@/lib/access";
 import {
   type Parsed,
   optional,
@@ -12,6 +13,13 @@ import type { Standings } from "@/lib/standings";
 import { warWeekSettingsSeedShape as seed } from "@/seed/schema";
 
 type Status = WarWeek["status"];
+
+/** How the admin names each status (the edition switcher, `/admin/setup`). */
+export const STATUS_LABELS: Record<Status, string> = {
+  upcoming: "Upcoming",
+  live: "Live",
+  complete: "Archive",
+};
 
 /**
  * Why a War Week can't move from `from` to `to`, or null when it can. The
@@ -32,6 +40,106 @@ export function transitionError(
   }
   // to === "live", from upcoming (Start) or complete (Reopen).
   return liveEdition ? `End ${liveEdition.toUpperCase()} first.` : null;
+}
+
+/**
+ * Why Start or Reopen can't move a War Week that is `from`, or null. Both
+ * make a War Week live, so each refuses the other's starting point:
+ * Start never reopens an ended edition and Reopen never starts one.
+ */
+export function moveError(
+  action: "start" | "reopen",
+  from: Status,
+): string | null {
+  if (action === "start" && from === "complete") {
+    return "This War Week has ended. Reopen it instead.";
+  }
+  if (action === "reopen" && from === "upcoming") {
+    return "This War Week hasn't started. Start it instead.";
+  }
+  return null;
+}
+
+export type LifecycleAction = "start" | "end" | "reopen" | "create-next";
+
+type LifecycleWarWeek = Pick<
+  WarWeek,
+  | "id"
+  | "edition"
+  | "editionNumber"
+  | "status"
+  | "startDate"
+  | "organizerEmails"
+>;
+
+const warWeekName = (w: Pick<WarWeek, "edition">) =>
+  `War Week ${w.edition.toUpperCase()}`;
+
+/**
+ * Why `email` can't run a lifecycle action on `target`, or null when it
+ * can. `current` is the current War Week and `warWeeks` every edition.
+ * - End: whoever may administer the target (`canAdministerWarWeek`).
+ * - Create next War Week: an Organizer of the current War Week, from any
+ *   edition they may administer.
+ * - Start (an `upcoming` target): an Organizer of the target or of the
+ *   current War Week.
+ * - Reopen (a `complete` target, whichever button asked): an Organizer of
+ *   the current War Week who may administer the target, and only for the
+ *   most recently ended edition while no later edition is upcoming.
+ * So an Organizer of only a past edition can never make it current again.
+ * The one-live rule (`transitionError`) is checked after this.
+ */
+export function lifecycleActionError({
+  action,
+  target,
+  current,
+  warWeeks,
+  email,
+}: {
+  action: LifecycleAction;
+  target: LifecycleWarWeek;
+  current: LifecycleWarWeek | undefined;
+  warWeeks: LifecycleWarWeek[];
+  email: string | null | undefined;
+}): string | null {
+  const notOrganizer = `You're not an Organizer for ${warWeekName(target)}.`;
+  const administers = canAdministerWarWeek(email, target, current);
+  const organizesCurrent = current !== undefined && isOrganizer(email, current);
+  const currentOnly = (what: string) =>
+    current
+      ? `Only an Organizer of ${warWeekName(current)}, the current War Week, can ${what}.`
+      : notOrganizer;
+
+  if (action === "end") return administers ? null : notOrganizer;
+  if (action === "create-next") {
+    if (!administers) return notOrganizer;
+    return organizesCurrent ? null : currentOnly("create the next War Week");
+  }
+  if (target.status === "upcoming") {
+    if (!isOrganizer(email, target) && !organizesCurrent) return notOrganizer;
+    return action === "reopen" ? moveError("reopen", "upcoming") : null;
+  }
+  // Already live: the transition itself says so.
+  if (target.status === "live") return administers ? null : notOrganizer;
+
+  // A complete target: the move is Reopen, whichever button asked.
+  if (!administers) return notOrganizer;
+  if (action === "start") return moveError("start", "complete");
+  if (!organizesCurrent) return currentOnly("reopen a War Week");
+  const latest = warWeeks
+    .filter((w) => w.status === "complete")
+    .reduce<LifecycleWarWeek | undefined>(
+      (best, w) => (!best || w.editionNumber > best.editionNumber ? w : best),
+      undefined,
+    );
+  if (latest && latest.id !== target.id) {
+    return `Only ${warWeekName(latest)}, the most recently ended War Week, can be reopened.`;
+  }
+  const next = warWeeks
+    .filter((w) => w.status === "upcoming" && w.startDate > target.startDate)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+  if (next) return `${warWeekName(next)} is next; reopen isn't available.`;
+  return null;
 }
 
 const NUMERALS: [number, string][] = [
@@ -66,11 +174,11 @@ export function toRoman(n: number): string {
 /**
  * The next edition after every existing War Week: the highest edition
  * number + 1 as a Roman numeral, and the latest year + 1. With no War Week,
- * edition I in `fallbackYear`.
+ * edition I in `fallbackYear` (the caller's clock, never read here).
  */
 export function nextEditionDefaults(
   warWeeks: Pick<WarWeek, "editionNumber" | "year">[],
-  fallbackYear = new Date().getFullYear(),
+  fallbackYear: number,
 ): { edition: string; editionNumber: number; year: number } {
   if (warWeeks.length === 0) {
     return { edition: "i", editionNumber: 1, year: fallbackYear };

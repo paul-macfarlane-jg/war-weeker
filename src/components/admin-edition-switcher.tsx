@@ -5,14 +5,9 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 
 import { selectAdminEdition } from "@/actions/war-week-lifecycle";
-import type { AdminEdition } from "@/auth/organizer";
 import { OptionSelect } from "@/components/option-select";
-
-const STATUS_LABELS: Record<AdminEdition["status"], string> = {
-  upcoming: "upcoming",
-  live: "live",
-  complete: "Archive",
-};
+import type { AdminEdition } from "@/lib/access";
+import { STATUS_LABELS } from "@/lib/war-week-lifecycle";
 
 /**
  * The admin header's edition switcher: which War Week `/admin` works on.
@@ -31,7 +26,7 @@ export function AdminEditionSwitcher({
   const options = editions.map((e) => ({
     value: e.edition,
     label: `War Week ${e.edition.toUpperCase()} · ${
-      e.current ? "current" : STATUS_LABELS[e.status]
+      e.current ? "Current" : STATUS_LABELS[e.status]
     }`,
   }));
 

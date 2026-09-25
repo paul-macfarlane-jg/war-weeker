@@ -2483,25 +2483,24 @@ async function assertAwardAdminPages(sessions: {
 }
 
 /**
- * /admin/setup: the landing, settings and Days pages, and one settings save
- * and one Day Theme edit that the War Week's own pages reflect. Restores XI
- * after.
- */
-/**
  * Creates XII from XI, ends XI with a Winner and starts XII through the
- * lifecycle actions, checks the site follows, then puts XI back (`live`,
- * no Winner) and deletes XII by SQL so the smoke can run again.
+ * lifecycle actions, checks the site follows, and that an Organizer of
+ * only XI can still pick and edit XI but can't reopen it or create the
+ * next War Week. Then puts XI back (`live`, no Winner, its own Organizers)
+ * and deletes XII by SQL so the smoke can run again.
  */
 async function assertWarWeekLifecycle(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;
 }) {
   const check =
-    "lifecycle: create XII, end XI with a Winner, start XII, then restore";
+    "lifecycle: create XII, end XI with a Winner, start XII; an XI-only Organizer edits XI but can't reopen it; then restore";
+  const xiOnlyEmail = "smoke-xi-only@jahnelgroup.com";
   const restore = async () => {
-    await runQuery("delete from war_week where edition = 'xii'");
+    await runQuery("delete from war_week where edition in ('xii', 'xiii')");
     await runQuery(
-      "update war_week set status = 'live', winner = null, highlights = '{}' where edition = 'xi'",
+      "update war_week set status = 'live', winner = null, highlights = '{}', organizer_emails = array_remove(organizer_emails, $1) where edition = 'xi'",
+      [xiOnlyEmail],
     );
   };
   try {
@@ -2511,6 +2510,8 @@ async function assertWarWeekLifecycle(sessions: {
       "endWarWeek",
       "startWarWeek",
       "reopenWarWeek",
+      "selectAdminEdition",
+      "updateWarWeekSettings",
     ].filter((name) => !ids[name]);
     if (missing.length > 0) {
       fail(check, `missing action ids: ${missing.join(", ")}`);
@@ -2602,6 +2603,109 @@ async function assertWarWeekLifecycle(sessions: {
       problems.push("the switcher can't edit XI");
     }
 
+    // A current (XII) Organizer may reopen XI, the latest ended edition,
+    // but the one-live rule still waits for XII to end.
+    const reopenWhileLive = await callAction(
+      ids.reopenWarWeek,
+      [xiId],
+      sessions.organizer,
+    );
+    if (reopenWhileLive.ok || reopenWhileLive.error !== "End XII first.") {
+      problems.push(
+        `XII Organizer reopens XI while XII is live: ${JSON.stringify(reopenWhileLive)}`,
+      );
+    }
+
+    // An Organizer of only XI, added after XII was created from it.
+    await runQuery(
+      "update war_week set organizer_emails = array_append(organizer_emails, $1) where edition = 'xi'",
+      [xiOnlyEmail],
+    );
+    const xiOnly = await createSmokeSession(xiOnlyEmail);
+    const xiOnlyDefault = await (
+      await fetch(`${BASE_URL}/admin/setup`, {
+        headers: { cookie: xiOnly.cookie },
+      })
+    ).text();
+    if (!xiOnlyDefault.includes("Editing the Archive: War Week XI")) {
+      problems.push("/admin doesn't open on XI for an XI-only Organizer");
+    }
+    const selected = await callAction(ids.selectAdminEdition, ["xi"], xiOnly);
+    if (!selected.ok) {
+      problems.push(
+        `XI-only Organizer selects XI: ${JSON.stringify(selected)}`,
+      );
+    }
+    const [xi] = await runQuery<Record<string, string | string[] | null>>(
+      `select story_theme, start_date::text, end_date::text, mode,
+         team_label, leader_title, slack_channel_url, wiki_url,
+         organizer_emails, primary_color, primary_foreground_color,
+         accent_color, background_color, foreground_color, logo_url,
+         banner_url, font_preset, winner
+       from war_week where edition = 'xi'`,
+    );
+    const saved = await callAction(
+      ids.updateWarWeekSettings,
+      [
+        {
+          storyTheme: xi.story_theme,
+          startDate: xi.start_date,
+          endDate: xi.end_date,
+          mode: xi.mode,
+          teamLabel: xi.team_label,
+          leaderTitle: xi.leader_title,
+          slackChannelUrl: xi.slack_channel_url,
+          wikiUrl: xi.wiki_url ?? "",
+          organizerEmails: (xi.organizer_emails as string[]).join("\n"),
+          primaryColor: xi.primary_color,
+          primaryForegroundColor: xi.primary_foreground_color,
+          accentColor: xi.accent_color,
+          backgroundColor: xi.background_color,
+          foregroundColor: xi.foreground_color,
+          logoUrl: xi.logo_url ?? "",
+          bannerUrl: xi.banner_url ?? "",
+          fontPreset: xi.font_preset,
+          winner: xi.winner ?? "",
+          highlights: "Smoke XI highlight",
+        },
+      ],
+      { cookie: `${xiOnly.cookie}; admin_edition=xi` },
+    );
+    const [xiAfter] = await runQuery<{ highlights: string[] }>(
+      "select highlights from war_week where edition = 'xi'",
+    );
+    if (!saved.ok || xiAfter.highlights.join() !== "Smoke XI highlight") {
+      problems.push(
+        `XI-only Organizer saves XI highlights: ${JSON.stringify(saved)} ${JSON.stringify(xiAfter.highlights)}`,
+      );
+    }
+    const takeover = await callAction(ids.reopenWarWeek, [xiId], xiOnly);
+    if (takeover.ok || !/the current War Week/.test(takeover.error)) {
+      problems.push(
+        `XI-only Organizer reopens XI while XII is live: ${JSON.stringify(takeover)}`,
+      );
+    }
+    const createFromXi = await callAction(
+      ids.createNextWarWeek,
+      [
+        xiId,
+        {
+          edition: "XIII",
+          editionNumber: "13",
+          year: "2028",
+          startDate: "2028-02-21",
+          endDate: "2028-02-26",
+          storyTheme: "Smoke XIII",
+        },
+      ],
+      xiOnly,
+    );
+    if (createFromXi.ok || !/the current War Week/.test(createFromXi.error)) {
+      problems.push(
+        `XI-only Organizer creates XIII: ${JSON.stringify(createFromXi)}`,
+      );
+    }
+
     if (problems.length === 0) ok(check);
     else fail(check, problems.join("; "));
   } catch (error) {
@@ -2613,6 +2717,11 @@ async function assertWarWeekLifecycle(sessions: {
   }
 }
 
+/**
+ * /admin/setup: the landing, settings and Days pages, and one settings save
+ * and one Day Theme edit that the War Week's own pages reflect. Restores XI
+ * after.
+ */
 async function assertSetup(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;

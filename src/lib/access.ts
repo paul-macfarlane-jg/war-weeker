@@ -36,7 +36,7 @@ export function isOrganizer(
  * Who may change a War Week (`target`): an Organizer of that War Week, or,
  * when it's `complete`, an Organizer of the current War Week, so past
  * results can be corrected. Every admin page and Organizer action goes
- * through this (via `requireOrganizer` / `getAdminAccess`).
+ * through this (via `loadAdminPage` / `requireOrganizer`).
  */
 export function canAdministerWarWeek(
   email: string | null | undefined,
@@ -49,6 +49,68 @@ export function canAdministerWarWeek(
     current !== undefined &&
     isOrganizer(email, current)
   );
+}
+
+type AdminWarWeek = Pick<
+  WarWeek,
+  "organizerEmails" | "status" | "editionNumber" | "startDate"
+>;
+
+/**
+ * The edition `/admin` opens on with no (valid) edition selected: the
+ * current War Week for its Organizers; otherwise the email's earliest
+ * `upcoming` edition, then their newest `complete` one. Falls back to the
+ * current War Week, where a non-Organizer sees the refusal.
+ */
+export function defaultAdminWarWeek<T extends AdminWarWeek>(
+  email: string | null | undefined,
+  warWeeks: T[],
+  current: T,
+): T {
+  if (isOrganizer(email, current)) return current;
+  const upcoming = warWeeks
+    .filter((w) => w.status === "upcoming" && isOrganizer(email, w))
+    .sort(
+      (a, b) =>
+        a.startDate.localeCompare(b.startDate) ||
+        a.editionNumber - b.editionNumber,
+    );
+  if (upcoming[0]) return upcoming[0];
+  const complete = warWeeks
+    .filter(
+      (w) => w.status === "complete" && canAdministerWarWeek(email, w, current),
+    )
+    .sort((a, b) => b.editionNumber - a.editionNumber);
+  return complete[0] ?? current;
+}
+
+/** One entry in the admin edition switcher. */
+export type AdminEdition = {
+  edition: string;
+  status: WarWeek["status"];
+  current: boolean;
+};
+
+/**
+ * The editions `email` may administer, newest first: their own editions,
+ * plus every `complete` one when they organize the current War Week.
+ */
+export function adminEditions(
+  email: string | null | undefined,
+  warWeeks: Pick<
+    WarWeek,
+    "id" | "edition" | "editionNumber" | "status" | "organizerEmails"
+  >[],
+  current: Pick<WarWeek, "id" | "organizerEmails">,
+): AdminEdition[] {
+  return warWeeks
+    .filter((w) => canAdministerWarWeek(email, w, current))
+    .sort((a, b) => b.editionNumber - a.editionNumber)
+    .map((w) => ({
+      edition: w.edition,
+      status: w.status,
+      current: w.id === current.id,
+    }));
 }
 
 export type AdminAccess = "anonymous" | "not-organizer" | "organizer";

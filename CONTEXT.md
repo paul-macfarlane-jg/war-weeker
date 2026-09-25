@@ -116,12 +116,15 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   `jahnelgroup.com` is refused: better-auth never creates a user for it,
   and a session with such an email counts as anonymous.
 - An **Organizer** is a signed-in JG email on that War Week's
-  `organizerEmails` (case-insensitive). `isOrganizer` in `src/lib/access.ts`
-  is the one check; admin pages use `getAdminAccess` and server actions use
-  `requireOrganizer` (both in `src/auth/organizer.ts`).
-- `/admin` manages the current War Week by default. Its header's edition
-  switcher (the `admin_edition` cookie) picks another edition the email may
-  administer, and a banner says so ("Editing the Archive: War Week X").
+  `organizerEmails` (case-insensitive), checked by `isOrganizer` in
+  `src/lib/access.ts`. Writes go through `canAdministerWarWeek` (below):
+  admin pages via `loadAdminPage` (`src/app/admin/gate.ts`), server actions
+  via `requireOrganizer` (`src/auth/organizer.ts`).
+- `/admin` manages the current War Week by default. An email that doesn't
+  organize the current War Week opens on its own earliest upcoming edition,
+  else its newest past one. The header's edition switcher (the
+  `admin_edition` cookie) picks another edition the email may administer,
+  and a banner says so ("Editing the Archive: War Week X").
   Anonymous visitors are sent to sign-in; signed-in non-Organizers see
   "Organizers only".
 - `canAdministerWarWeek` in `src/lib/access.ts` is the write rule: the email
@@ -164,6 +167,18 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - At most one War Week is `live`. Start or Reopen while another is live is
   refused ("End XI first"); the `war_week_one_live` partial unique index
   refuses it in the database too.
+- Who may move a War Week (`lifecycleActionError` in
+  `src/lib/war-week-lifecycle.ts`, re-checked by every lifecycle action):
+  - **End**: anyone who may administer it.
+  - **Start**: an Organizer of that upcoming edition or of the current War
+    Week. Start never reopens an ended edition.
+  - **Reopen**: only an Organizer of the current War Week (who may
+    administer the edition), only for the most recently ended edition, and
+    not while a later edition is upcoming ("War Week XII is next; reopen
+    isn't available"). So an Organizer of only a past edition can never
+    make it current again.
+  - **Create next War Week**: only an Organizer of the current War Week,
+    copying from any edition they may administer.
 - **Create next War Week** (`/admin/setup/next`) makes an `upcoming` edition
   prefilled with the next Roman numeral, edition number and year. It can
   copy Organizers (on; the creator is always one), settings with the

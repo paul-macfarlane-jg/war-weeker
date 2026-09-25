@@ -1,30 +1,18 @@
 import { cookies } from "next/headers";
 
 import { getSessionEmail } from "@/auth/server";
-import { db } from "@/db";
-import { type WarWeek, warWeek as warWeekTable } from "@/db/schema";
+import type { WarWeek } from "@/db/schema";
+import { canAdministerWarWeek, defaultAdminWarWeek } from "@/lib/access";
 import {
-  type AdminAccess,
-  adminAccess,
-  canAdministerWarWeek,
-} from "@/lib/access";
-import { getCurrentWarWeek, getWarWeekByEdition } from "@/queries/war-weeks";
+  getCurrentWarWeek,
+  getWarWeeks,
+  selectCurrentWarWeek,
+} from "@/queries/war-weeks";
 
 type OrganizerWarWeek = Pick<WarWeek, "organizerEmails" | "edition" | "status">;
 
 /** The cookie the admin edition switcher sets (see `selectAdminEdition`). */
 export const ADMIN_EDITION_COOKIE = "admin_edition";
-
-/** Who is looking at an admin page for this War Week. */
-export async function getAdminAccess(
-  warWeek: OrganizerWarWeek,
-): Promise<{ access: AdminAccess; email: string | null }> {
-  const [email, current] = await Promise.all([
-    getSessionEmail(),
-    getCurrentWarWeek(),
-  ]);
-  return { access: adminAccess(email, warWeek, current), email };
-}
 
 /**
  * The Organizer check for server actions: the signed-in email when it may
@@ -51,55 +39,27 @@ export async function requireOrganizer(
 
 /**
  * The War Week `/admin` works on: the edition in the `admin_edition`
- * cookie when `email` may still administer it, otherwise the current War
- * Week. Undefined only when there's no War Week at all.
+ * cookie when `email` may still administer it, otherwise
+ * `defaultAdminWarWeek` (the current War Week for its Organizers, else the
+ * email's own upcoming or newest past edition). Pass `loaded` when the
+ * caller already has every War Week. Undefined only when there's no War
+ * Week at all.
  */
 export async function getAdminWarWeek(
   email: string | null,
-  current?: WarWeek,
+  loaded?: { warWeeks: WarWeek[]; current: WarWeek | undefined },
 ): Promise<WarWeek | undefined> {
-  const currentWarWeek = current ?? (await getCurrentWarWeek());
-  if (!currentWarWeek) return undefined;
+  const warWeeks = loaded?.warWeeks ?? (await getWarWeeks());
+  const current = loaded ? loaded.current : selectCurrentWarWeek(warWeeks);
+  if (!current) return undefined;
   const edition = (await cookies()).get(ADMIN_EDITION_COOKIE)?.value;
-  if (!edition || edition === currentWarWeek.edition) return currentWarWeek;
-  const selected = await getWarWeekByEdition(edition);
-  return selected && canAdministerWarWeek(email, selected, currentWarWeek)
-    ? selected
-    : currentWarWeek;
-}
-
-/** One entry in the admin edition switcher. */
-export type AdminEdition = {
-  edition: string;
-  status: WarWeek["status"];
-  current: boolean;
-};
-
-/**
- * The editions `email` may administer, newest first: their own editions,
- * plus every `complete` one when they organize the current War Week.
- */
-export async function getAdminEditions(
-  email: string,
-  current: WarWeek,
-): Promise<AdminEdition[]> {
-  const rows = await db
-    .select({
-      id: warWeekTable.id,
-      edition: warWeekTable.edition,
-      editionNumber: warWeekTable.editionNumber,
-      status: warWeekTable.status,
-      organizerEmails: warWeekTable.organizerEmails,
-    })
-    .from(warWeekTable);
-  return rows
-    .filter((row) => canAdministerWarWeek(email, row, current))
-    .sort((a, b) => b.editionNumber - a.editionNumber)
-    .map((row) => ({
-      edition: row.edition,
-      status: row.status,
-      current: row.id === current.id,
-    }));
+  const selected = edition
+    ? warWeeks.find((w) => w.edition === edition)
+    : undefined;
+  if (selected && canAdministerWarWeek(email, selected, current)) {
+    return selected;
+  }
+  return defaultAdminWarWeek(email, warWeeks, current);
 }
 
 /**

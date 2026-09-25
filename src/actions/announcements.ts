@@ -38,19 +38,16 @@ export async function createAnnouncement(
   input: AnnouncementInput,
 ): Promise<AnnouncementActionResult> {
   // No row to derive it from: the War Week selected in `/admin`.
+  // requireAdminWarWeek has already done the Organizer check.
   const selected = await requireAdminWarWeek();
   if (!selected.ok) return selected;
   const { warWeek } = selected;
-  const organizer = await organizerContext(warWeek);
-  if (!organizer.ok) return organizer;
+  const ctx = { warWeekId: warWeek.id, actorEmail: selected.email };
 
   const parsed = parseAnnouncementInput(input);
   if (!parsed.ok) return parsed;
 
-  const result = await mutations.createAnnouncement(
-    parsed.value,
-    organizer.ctx,
-  );
+  const result = await mutations.createAnnouncement(parsed.value, ctx);
   if (result.ok) revalidateWarWeek(warWeek.edition);
   return result;
 }
