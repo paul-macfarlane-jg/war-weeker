@@ -185,50 +185,6 @@ Resolved decisions:
 | B4 | evidence script, screenshots, round-trips, overflow sweep | `scripts/custom-inputs-b-evidence.ts`, `test-results/custom-inputs-b-*/` | sonnet |
 
 Structure: B0 → (B1 ∥ B2 ∥ B3) → B4 → gate.
-# Execution record — custom-inputs (Phase C)
-
-Contract: [spec.md](./spec.md), Phase C (participant-page building blocks).
-Presentation only. Overnight run 2026-09-25; decisions by the orchestrator.
-
-## [EXECUTION PLAN]
-
-Branch `feat/custom-inputs-phase-c`, stacked on `feat/custom-inputs-phase-b`
-(merge B first). Worked in `.claude/worktrees/custom-inputs-c/war-weeker`;
-C1 and C2 in parallel detached worktrees (disjoint files), cherry-picked.
-
-Resolved decisions:
-
-- **C0 (orchestrator):** shadcn `card`, `tabs`, `badge` (already present),
-  `avatar`, `sheet`, `skeleton`; the Sheet portals into `ThemeRoot`.
-- **Cards** keep list semantics (`<li>` wrapping a `Card`); the Reveal's
-  animated classes stay on the `<li>`. Every smoke-checked string, href,
-  anchor and inline theme style is unchanged.
-- **Tabs** only on `/[edition]/competitions` with 2+ Competition Groups,
-  `keepMounted` so the HTML still holds every group.
-- **More on phones:** the bottom-bar "More" tab is a `SheetTrigger`; the
-  Sheet lists `moreLinks()` (shared with the `/more` page, which stays as the
-  desktop route and deep link).
-- **Skeletons:** `loading.tsx` per edition route, `/history` and `/admin`,
-  built from `page-skeleton.tsx`.
-
-| ID | Slice | Model | Commit |
-|---|---|---|---|
-| C0 | shadcn pieces | orchestrator | `f57a534` |
-| C1 | Standings, Competitions, Announcements, Awards, roster, Archive, hero, Now/Next on Card/Badge/Avatar/Tabs | opus | `1121713` |
-| C2 | More Sheet + `moreLinks` (tested) + Skeleton loading states | sonnet | `33fb8bf` |
-| C3 | evidence script, screenshots, checks, overflow sweep | sonnet | — |
-
-### Verification map
-
-| Criterion | Command / action | Evidence | Earliest |
-|---|---|---|---|
-| B: every destructive action in an AlertDialog; refusals show the server's text | `grep window.confirm/alert src` empty; round-trips (cancel keeps, confirm deletes) | `test-results/custom-inputs-b-forms/round-trips.txt` | after B4 |
-| B: save/fail toasts | round-trips + screenshots with a toast visible | same dir | after B4 |
-| B: Field layout on every form | grep `FieldLabel`; screenshots | same dir | after B4 |
-| screenshots 375/1280, XI + IX, dialog open | evidence script | `test-results/custom-inputs-b-forms/` | after B4 |
-| overflow 375/768/812/1024/1280 | evidence script | `test-results/custom-inputs-b-overflow/overflow.txt` | after B4 |
-| `pnpm gate` | on a private DB | `test-results/custom-inputs-b-gate/gate.txt` | before PR |
-
 ## [PROGRESS]
 
 - 2026-09-25 05:20Z: branch and worktrees created; B0 committed (`41c9db9`, `296e158`); B1–B3 dispatched in parallel.
@@ -297,6 +253,50 @@ Isolation check: B1, B2, B3 ran in parallel worktrees on disjoint files as predi
 | screenshots 375/1280 XI + IX | evidence script | `custom-inputs-c-pages/` | after C3 |
 | overflow sweep | evidence script | `custom-inputs-c-overflow/overflow.txt` | after C3 |
 | `pnpm gate` | private DB | `custom-inputs-c-gate/gate.txt` | before PR |
+
+# Execution record — custom-inputs (Phase C)
+
+Contract: [spec.md](./spec.md), Phase C (participant-page building blocks).
+Presentation only. Overnight run 2026-09-25; decisions by the orchestrator.
+
+## [EXECUTION PLAN]
+
+Branch `feat/custom-inputs-phase-c`, stacked on `feat/custom-inputs-phase-b`
+(merge B first). Worked in `.claude/worktrees/custom-inputs-c/war-weeker`;
+C1 and C2 in parallel detached worktrees (disjoint files), cherry-picked.
+
+Resolved decisions:
+
+- **C0 (orchestrator):** shadcn `card`, `tabs`, `badge` (already present),
+  `avatar`, `sheet`, `skeleton`; the Sheet portals into `ThemeRoot`.
+- **Cards** keep list semantics (`<li>` wrapping a `Card`); the Reveal's
+  animated classes stay on the `<li>`. Every smoke-checked string, href,
+  anchor and inline theme style is unchanged.
+- **Tabs** only on `/[edition]/competitions` with 2+ Competition Groups,
+  `keepMounted` so the HTML still holds every group.
+- **More on phones:** the bottom-bar "More" tab is a `SheetTrigger`; the
+  Sheet lists `moreLinks()` (shared with the `/more` page, which stays as the
+  desktop route and deep link).
+- **Skeletons:** `loading.tsx` per edition route, `/history` and `/admin`,
+  built from `page-skeleton.tsx`.
+
+| ID | Slice | Model | Commit |
+|---|---|---|---|
+| C0 | shadcn pieces | orchestrator | `f57a534` |
+| C1 | Standings, Competitions, Announcements, Awards, roster, Archive, hero, Now/Next on Card/Badge/Avatar/Tabs | opus | `1121713` |
+| C2 | More Sheet + `moreLinks` (tested) + Skeleton loading states | sonnet | `33fb8bf` |
+| C3 | evidence script, screenshots, checks, overflow sweep | sonnet | — |
+
+### Verification map
+
+| Criterion | Command / action | Evidence | Earliest |
+|---|---|---|---|
+| B: every destructive action in an AlertDialog; refusals show the server's text | `grep window.confirm/alert src` empty; round-trips (cancel keeps, confirm deletes) | `test-results/custom-inputs-b-forms/round-trips.txt` | after B4 |
+| B: save/fail toasts | round-trips + screenshots with a toast visible | same dir | after B4 |
+| B: Field layout on every form | grep `FieldLabel`; screenshots | same dir | after B4 |
+| screenshots 375/1280, XI + IX, dialog open | evidence script | `test-results/custom-inputs-b-forms/` | after B4 |
+| overflow 375/768/812/1024/1280 | evidence script | `test-results/custom-inputs-b-overflow/overflow.txt` | after B4 |
+| `pnpm gate` | on a private DB | `test-results/custom-inputs-b-gate/gate.txt` | before PR |
 
 ## [PROGRESS]
 
