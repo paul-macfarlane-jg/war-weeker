@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Teams & roster · JG War Week" };
 
 export default async function SetupTeamsPage() {
-  const { warWeek, email, isOrganizer } =
+  const { warWeek, email, isOrganizer, editions } =
     await loadAdminPage("/admin/setup/teams");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
@@ -31,7 +31,12 @@ export default async function SetupTeamsPage() {
   const isTeams = warWeek.mode === "teams";
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-5xl flex-col gap-4">
         <Link
           href="/admin/setup"

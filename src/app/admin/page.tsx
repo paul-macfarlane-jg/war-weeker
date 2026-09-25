@@ -10,11 +10,17 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin · JG War Week" };
 
 export default async function AdminPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage("/admin");
+  const { warWeek, email, isOrganizer, editions } =
+    await loadAdminPage("/admin");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Overview">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Overview"
+    >
       <div className="flex max-w-2xl flex-col gap-3">
         <h1 className="text-2xl font-bold">Organizer overview</h1>
         <p className="text-foreground/70">

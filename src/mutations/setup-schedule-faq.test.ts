@@ -52,7 +52,7 @@ async function fixture(tx: DBTx) {
         storyTheme: "Schedule test",
         startDate: "2099-02-01",
         endDate: "2099-02-05",
-        status: "live",
+        status: "upcoming",
         mode: "teams",
         teamLabel: "Team",
         leaderTitle: "Captain",

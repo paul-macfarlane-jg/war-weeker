@@ -23,7 +23,6 @@ const input: WarWeekSettingsInput = {
   storyTheme: "  The Matrix ",
   startDate: "2026-02-22",
   endDate: "2026-02-27",
-  status: "live",
   mode: "teams",
   teamLabel: "Team",
   leaderTitle: "Captain",
@@ -38,6 +37,8 @@ const input: WarWeekSettingsInput = {
   logoUrl: "/themes/xi/logo.svg",
   bannerUrl: " ",
   fontPreset: "mono",
+  winner: " ",
+  highlights: "",
 };
 
 function parsed(overrides: Partial<WarWeekSettingsInput> = {}) {
@@ -52,7 +53,6 @@ describe("parseWarWeekSettingsInput", () => {
         storyTheme: "The Matrix",
         startDate: "2026-02-22",
         endDate: "2026-02-27",
-        status: "live",
         mode: "teams",
         teamLabel: "Team",
         leaderTitle: "Captain",
@@ -70,8 +70,28 @@ describe("parseWarWeekSettingsInput", () => {
         logoUrl: "/themes/xi/logo.svg",
         bannerUrl: null,
         fontPreset: "mono",
+        winner: null,
+        highlights: [],
       },
     });
+  });
+
+  it("takes the Winner and one highlight per line, skipping blank lines", () => {
+    const result = parsed({
+      winner: " Red & Blue ",
+      highlights: " Red won Captain Clash \n\n  Blue took the trivia crown\r\n",
+    });
+    expect(result.ok && [result.value.winner, result.value.highlights]).toEqual(
+      ["Red & Blue", ["Red won Captain Clash", "Blue took the trivia crown"]],
+    );
+  });
+
+  it("never carries a status, so a settings save can't change it", () => {
+    const result = parseWarWeekSettingsInput({
+      ...input,
+      status: "complete",
+    } as WarWeekSettingsInput);
+    expect(result.ok && "status" in result.value).toBe(false);
   });
 
   it("drops duplicate organizer emails", () => {
@@ -100,7 +120,11 @@ describe("parseWarWeekSettingsInput", () => {
       "Logo URL must be a root-relative path or an https URL.",
     ],
     [{ startDate: "2026-02-30" }, "Start date must be a date."],
-    [{ status: "paused" }, "Status must be one of upcoming, live, complete."],
+    [{ winner: "x".repeat(201) }, "Winner must be at most 200 characters."],
+    [
+      { highlights: `ok\n${"x".repeat(501)}` },
+      "Highlights must be at most 500 characters.",
+    ],
     [{ fontPreset: "comic" }, "Font must be one of sans, serif, mono."],
     [{ organizerEmails: " " }, "Add at least one organizer email."],
     [
@@ -162,7 +186,7 @@ describe("settingsGuardError", () => {
   it("allows a save that keeps the Organizer, Teams and Days consistent", () => {
     expect(settingsGuardError(value(), ctx)).toBeNull();
     expect(settingsGuardError(value({ mode: "free-for-all" }), ctx)).toBeNull();
-    expect(settingsGuardError(value({ status: "complete" }), ctx)).toBeNull();
+    expect(settingsGuardError(value({ winner: "Red" }), ctx)).toBeNull();
   });
 
   it("refuses switching to free-for-all while Teams exist", () => {

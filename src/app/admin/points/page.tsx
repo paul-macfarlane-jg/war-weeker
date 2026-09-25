@@ -23,7 +23,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Points Entries · JG War Week" };
 
 export default async function AdminPointsPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage("/admin/points");
+  const { warWeek, email, isOrganizer, editions } =
+    await loadAdminPage("/admin/points");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
   const [options, ledger, standings] = await Promise.all([
@@ -33,7 +34,12 @@ export default async function AdminPointsPage() {
   ]);
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Points Entries">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Points Entries"
+    >
       <div className="grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,24rem)_1fr]">
         <section className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold">Add a Points Entry</h1>

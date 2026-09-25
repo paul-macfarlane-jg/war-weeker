@@ -30,7 +30,6 @@ const settings: WarWeekSettingsValues = {
   storyTheme: "Setup test",
   startDate: "2099-01-01",
   endDate: "2099-01-05",
-  status: "live",
   mode: "teams",
   teamLabel: "House",
   leaderTitle: "Captain",
@@ -45,6 +44,8 @@ const settings: WarWeekSettingsValues = {
   logoUrl: null,
   bannerUrl: null,
   fontPreset: "serif",
+  winner: null,
+  highlights: [],
 };
 
 /** Two War Weeks; home has two Days, one with a Schedule Item. */
@@ -55,6 +56,7 @@ async function fixture(tx: DBTx) {
       .insert(schema.warWeek)
       .values({
         ...settings,
+        status: "upcoming" as const,
         edition: `s${n}`,
         editionNumber: 9200 + n,
         year: 9200 + n,

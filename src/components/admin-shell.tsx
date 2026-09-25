@@ -9,11 +9,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { AdminEditionSwitcher } from "@/components/admin-edition-switcher";
 import { SignOutButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeRoot } from "@/components/theme-root";
 import { Toaster } from "@/components/ui/sonner";
 import type { WarWeek } from "@/db/schema";
+import type { AdminEdition } from "@/lib/access";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [
@@ -33,20 +35,41 @@ export type AdminSection = Extract<
 >["label"];
 
 /**
- * Frame for every Organizer page: header, nav and content. The nav is a
- * side column on desktop and a scrolling row on a phone.
+ * The banner under the admin header when the War Week being administered
+ * isn't the current one, or null.
+ */
+export function editingBanner(
+  warWeek: Pick<WarWeek, "edition" | "status">,
+  editions: AdminEdition[],
+): string | null {
+  const selected = editions.find((e) => e.edition === warWeek.edition);
+  if (!selected || selected.current) return null;
+  const name = `War Week ${warWeek.edition.toUpperCase()}`;
+  return warWeek.status === "complete"
+    ? `Editing the Archive: ${name}`
+    : `Editing ${warWeek.status} ${name}`;
+}
+
+/**
+ * Frame for every Organizer page: header (with the edition switcher), nav
+ * and content. The nav is a side column on desktop and a scrolling row on a
+ * phone.
  */
 export function AdminShell({
   warWeek,
   email,
+  editions = [],
   current,
   children,
 }: {
   warWeek: WarWeek;
   email: string;
+  /** Editions the Organizer may administer, for the switcher. */
+  editions?: AdminEdition[];
   current: AdminSection;
   children: React.ReactNode;
 }) {
+  const banner = editingBanner(warWeek, editions);
   return (
     <ThemeRoot
       style={warWeekThemeStyle(warWeek)}
@@ -57,6 +80,12 @@ export function AdminShell({
           War Week {warWeek.edition.toUpperCase()} admin
         </Link>
         <span className="text-foreground/60 text-sm">{warWeek.storyTheme}</span>
+        {editions.length > 1 && (
+          <AdminEditionSwitcher
+            editions={editions}
+            selected={warWeek.edition}
+          />
+        )}
         <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm md:ml-auto">
           <Link
             href={`/${warWeek.edition}`}
@@ -68,6 +97,14 @@ export function AdminShell({
           <SignOutButton />
         </div>
       </header>
+      {banner && (
+        <p
+          role="status"
+          className="bg-accent text-accent-foreground px-4 py-2 text-sm font-medium md:px-6"
+        >
+          {banner}
+        </p>
+      )}
       <div className="flex flex-1 flex-col md:flex-row">
         <nav
           aria-label="Admin sections"

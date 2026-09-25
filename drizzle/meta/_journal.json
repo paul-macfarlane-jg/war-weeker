@@ -43,6 +43,13 @@
       "when": 1790314497869,
       "tag": "0005_drop_standings_hidden",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790315456994,
+      "tag": "0006_war_week_one_live",
+      "breakpoints": true
     }
   ]
 }

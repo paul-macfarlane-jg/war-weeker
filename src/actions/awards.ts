@@ -2,12 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireOrganizer } from "@/auth/organizer";
+import { requireAdminWarWeek, requireOrganizer } from "@/auth/organizer";
 import { type AwardInput, parseAwardInput } from "@/lib/awards";
 import * as mutations from "@/mutations/awards";
 import type { MutationResult } from "@/mutations/types";
 import { getAwardWarWeek } from "@/queries/awards";
-import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type AwardActionResult = MutationResult;
 
@@ -37,15 +36,17 @@ function revalidateWarWeek(edition: string) {
 export async function createAward(
   input: AwardInput,
 ): Promise<AwardActionResult> {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: "There's no current War Week." };
-  const organizer = await organizerContext(warWeek);
-  if (!organizer.ok) return organizer;
+  // No row to derive it from: the War Week selected in `/admin`.
+  // requireAdminWarWeek has already done the Organizer check.
+  const selected = await requireAdminWarWeek();
+  if (!selected.ok) return selected;
+  const { warWeek } = selected;
+  const ctx = { warWeekId: warWeek.id, actorEmail: selected.email };
 
   const parsed = parseAwardInput(input);
   if (!parsed.ok) return parsed;
 
-  const result = await mutations.createAward(parsed.value, organizer.ctx);
+  const result = await mutations.createAward(parsed.value, ctx);
   if (result.ok) revalidateWarWeek(warWeek.edition);
   return result;
 }

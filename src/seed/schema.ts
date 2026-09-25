@@ -196,7 +196,6 @@ export const warWeekSettingsSeedShape = {
   storyTheme: z.string().min(1).max(120),
   startDate: z.iso.date(),
   endDate: z.iso.date(),
-  status: z.enum(["upcoming", "live", "complete"]),
   mode: z.enum(["teams", "free-for-all"]),
   teamLabel: z.string().min(1).max(40),
   leaderTitle: z.string().min(1).max(40),
@@ -211,6 +210,8 @@ export const warWeekSettingsSeedShape = {
   bannerUrl: themeUrl.nullish(),
   wikiUrl: themeUrl.nullish(),
   organizerEmails: z.array(z.email().max(254).toLowerCase()),
+  winner: z.string().max(200).nullish(),
+  highlights: z.array(z.string().max(500)).default([]),
 };
 
 export const warWeekSeedSchema = z
@@ -222,9 +223,11 @@ export const warWeekSeedSchema = z
       .regex(/^[a-z]+$/, "must be a lowercase roman numeral"),
     editionNumber: z.number().int().positive(),
     year: z.number().int(),
+    // Seed-initialized only: `status`, `winner` and `highlights` (from the
+    // settings shape) are set when the War Week is first inserted, never on
+    // a reload.
+    status: z.enum(["upcoming", "live", "complete"]),
     ...warWeekSettingsSeedShape,
-    winner: z.string().max(200).nullish(),
-    highlights: z.array(z.string().max(500)).default([]),
     days: z.array(daySeedSchema),
     teams: z.array(teamSeedSchema).default([]),
     participants: z.array(participantSeedSchema).default([]),

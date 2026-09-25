@@ -19,14 +19,19 @@ export const metadata: Metadata = {
  * add them to the list below.
  */
 export default async function AdminFinalePage() {
-  const { warWeek, email, isOrganizer } =
+  const { warWeek, email, isOrganizer, editions } =
     await loadAdminPage("/admin/standings");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
   const edition = warWeek.edition;
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Finale">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Finale"
+    >
       <div className="flex max-w-2xl flex-col gap-4">
         <h1 className="text-2xl font-bold">Finale</h1>
         <p className="text-foreground/70">

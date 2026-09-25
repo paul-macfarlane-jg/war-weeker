@@ -135,28 +135,37 @@ Words must follow `CONTEXT.md`. If Claude refuses a word, that's why.
 
 ### Run a new War Week or change this year's theme (no code first)
 
-Organizer screens already cover most of it. Sign in and go to `/admin`:
+Organizer screens cover it. Sign in and go to `/admin`:
 
-- **`/admin/setup`**: War Week settings (Story Theme, dates, status, mode,
-  Team Label, Leader Title, links, Organizers), the Appearance Theme
-  (colors, font, logo, banner) and Days with their Day Themes.
+- **`/admin/setup`**: the **Lifecycle** box (Start, End with the Winner and
+  highlights, Reopen), War Week settings (Story Theme, dates, mode, Team
+  Label, Leader Title, links, Organizers, Winner and highlights), the
+  Appearance Theme (colors, font, logo, banner), Days, Teams and roster,
+  Competitions, Schedule and FAQ.
 - **`/admin/points`**, **`/admin/standings`** (Run the Finale: "Open Finale" at closing ceremonies),
   **`/admin/announcements`**, **`/admin/awards`**.
 
-Teams and roster, Competitions, Schedule and FAQ screens show "Soon" until
-they're built; until then those live in the seed file. A brand-new edition
-starts as a seed too:
+To start next year's edition in the app:
 
-```text
-/implement Create seeds/xii.json for War Week XII (<year>, "<Story Theme>",
-status upcoming), modelled on seeds/xi.json but without the demo points,
-awards and announcements. Organizers: <emails>.
-```
+1. In `/admin/setup`, press **Create next War Week**. The edition, number
+   and year are prefilled (XII, 12, next year); add the dates and Story
+   Theme, and choose what to copy (Organizers and settings are on;
+   Competitions and FAQ are off). It starts `upcoming`, and the admin
+   switches to it so you can set it up while XI stays current.
+2. When XI is over, switch back to XI in the header's edition switcher and
+   press **End War Week**: confirm the Winner (prefilled from first place)
+   and any highlights. XI moves to the Archive.
+3. Switch to XII and press **Start War Week**. `/` and `/admin` now go to
+   XII. Only one War Week can be live, so XI must end first.
 
-Then load it on a deployed environment with the **Seed** workflow in the
-GitHub Actions tab (pick the environment and the file). When XI is over, set
-its status to `complete` in `/admin/setup`. Once organizers edit a War Week
-in the app, stop reloading its seed: a reload overwrites their edits.
+Organizers of the current War Week can still pick any Archive edition in
+the switcher to correct its results.
+
+A seed file for a new edition is optional (for demo data or a bulk
+import). If you use one, load it with the **Seed** workflow in the GitHub
+Actions tab (pick the environment and the file). A reload never changes a
+War Week's status, Winner or highlights. Once organizers edit a War Week in
+the app, stop reloading its seed: a reload overwrites their other edits.
 
 ### Add a field
 

@@ -15,7 +15,7 @@ export default async function EditAwardPage({
   params,
 }: PageProps<"/admin/awards/[id]">) {
   const { id } = await params;
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     `/admin/awards/${id}`,
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
@@ -27,7 +27,12 @@ export default async function EditAwardPage({
   if (!award) notFound();
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Awards">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Awards"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <h1 className="text-2xl font-bold">Edit Award</h1>
         <AwardForm

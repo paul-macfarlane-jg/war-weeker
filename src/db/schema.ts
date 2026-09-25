@@ -19,6 +19,7 @@ import {
   time,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -49,42 +50,51 @@ export const competitionScoring = pgEnum("competition_scoring", [
   "individual",
 ]);
 
-export const warWeek = pgTable("war_week", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  edition: varchar("edition", { length: 8 }).notNull().unique(),
-  editionNumber: integer("edition_number").notNull().unique(),
-  year: integer("year").notNull().unique(),
-  startDate: date("start_date").notNull(),
-  endDate: date("end_date").notNull(),
-  storyTheme: varchar("story_theme", { length: 120 }).notNull(),
-  status: warWeekStatus("status").notNull(),
-  mode: warWeekMode("mode").notNull(),
-  teamLabel: varchar("team_label", { length: 40 }).notNull(),
-  leaderTitle: varchar("leader_title", { length: 40 }).notNull(),
-  slackChannelUrl: varchar("slack_channel_url", { length: 500 }).notNull(),
-  primaryColor: varchar("primary_color", { length: 32 }).notNull(),
-  primaryForegroundColor: varchar("primary_foreground_color", {
-    length: 32,
-  }).notNull(),
-  accentColor: varchar("accent_color", { length: 32 }).notNull(),
-  backgroundColor: varchar("background_color", { length: 32 }).notNull(),
-  foregroundColor: varchar("foreground_color", { length: 32 }).notNull(),
-  logoUrl: varchar("logo_url", { length: 500 }),
-  bannerUrl: varchar("banner_url", { length: 500 }),
-  fontPreset: fontPreset("font_preset").notNull(),
-  wikiUrl: varchar("wiki_url", { length: 500 }),
-  organizerEmails: varchar("organizer_emails", { length: 254 })
-    .array()
-    .notNull()
-    .default([]),
-  winner: varchar("winner", { length: 200 }),
-  highlights: varchar("highlights", { length: 500 })
-    .array()
-    .notNull()
-    .default([]),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const warWeek = pgTable(
+  "war_week",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    edition: varchar("edition", { length: 8 }).notNull().unique(),
+    editionNumber: integer("edition_number").notNull().unique(),
+    year: integer("year").notNull().unique(),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    storyTheme: varchar("story_theme", { length: 120 }).notNull(),
+    status: warWeekStatus("status").notNull(),
+    mode: warWeekMode("mode").notNull(),
+    teamLabel: varchar("team_label", { length: 40 }).notNull(),
+    leaderTitle: varchar("leader_title", { length: 40 }).notNull(),
+    slackChannelUrl: varchar("slack_channel_url", { length: 500 }).notNull(),
+    primaryColor: varchar("primary_color", { length: 32 }).notNull(),
+    primaryForegroundColor: varchar("primary_foreground_color", {
+      length: 32,
+    }).notNull(),
+    accentColor: varchar("accent_color", { length: 32 }).notNull(),
+    backgroundColor: varchar("background_color", { length: 32 }).notNull(),
+    foregroundColor: varchar("foreground_color", { length: 32 }).notNull(),
+    logoUrl: varchar("logo_url", { length: 500 }),
+    bannerUrl: varchar("banner_url", { length: 500 }),
+    fontPreset: fontPreset("font_preset").notNull(),
+    wikiUrl: varchar("wiki_url", { length: 500 }),
+    organizerEmails: varchar("organizer_emails", { length: 254 })
+      .array()
+      .notNull()
+      .default([]),
+    winner: varchar("winner", { length: 200 }),
+    highlights: varchar("highlights", { length: 500 })
+      .array()
+      .notNull()
+      .default([]),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  // At most one War Week is `live` (CONTEXT.md, "War Week lifecycle rules").
+  () => [
+    uniqueIndex("war_week_one_live")
+      .on(sql`(true)`)
+      .where(sql`status = 'live'`),
+  ],
+);
 
 export const day = pgTable(
   "day",

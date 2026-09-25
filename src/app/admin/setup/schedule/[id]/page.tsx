@@ -22,7 +22,7 @@ export default async function EditScheduleItemPage({
   params,
 }: PageProps<"/admin/setup/schedule/[id]">) {
   const { id } = await params;
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     `/admin/setup/schedule/${id}`,
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
@@ -38,7 +38,12 @@ export default async function EditScheduleItemPage({
   const description = item.description && sanitizeContent(item.description);
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <Link
           href="/admin/setup/schedule"

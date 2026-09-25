@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireOrganizer } from "@/auth/organizer";
+import { requireAdminWarWeek } from "@/auth/organizer";
 import {
   type FaqItemInput,
   type ScheduleItemInput,
@@ -12,23 +12,21 @@ import {
 } from "@/lib/setup-schedule-faq";
 import * as mutations from "@/mutations/setup-schedule-faq";
 import type { MutationResult } from "@/mutations/types";
-import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type SetupScheduleFaqActionResult = MutationResult;
 
-const NO_WAR_WEEK = "There's no current War Week.";
 const SCHEDULE_ITEM_NOT_FOUND = "That Schedule Item no longer exists.";
 const FAQ_ITEM_NOT_FOUND = "That FAQ Item no longer exists.";
 
 /**
- * The mutation context when the caller is an Organizer of the current War
- * Week. Only the current War Week: the mutations refuse any other's rows.
+ * The mutation context when the caller is an Organizer of the War Week
+ * selected in `/admin`. Only that War Week: the mutations refuse any other's
+ * rows.
  */
 async function organizerContext() {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false as const, error: NO_WAR_WEEK };
-  const organizer = await requireOrganizer(warWeek);
+  const organizer = await requireAdminWarWeek();
   if (!organizer.ok) return organizer;
+  const { warWeek } = organizer;
   return {
     ok: true as const,
     edition: warWeek.edition,
