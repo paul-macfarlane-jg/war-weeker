@@ -8,7 +8,7 @@ Status: done
 
 - Display name `JG War Week` (fits the iOS home-screen label); prose that starts a sentence or could be read as the event says "the JG War Week app".
 - Favicon / PWA icons unchanged: the "WW" shield still reads as War Week.
-- Full URL switch to `jg-war-week.vercel.app` (staging `staging-jg-war-week.vercel.app`); GitHub repo renamed to `paul-macfarlane/jg-war-week`.
+- Full URL switch to `jg-war-week.vercel.app` (staging `jg-war-week-staging.vercel.app`); GitHub repo renamed to `paul-macfarlane/jg-war-week`.
 - MCP server name and `claude mcp add` example become `jg-war-week`.
 - Internal identifiers stay: package name, `war_weeker` DB, compose, CI, `.scratch/war-weeker/`, Atlas ids, historical tickets.
 
