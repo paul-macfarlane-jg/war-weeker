@@ -1121,6 +1121,18 @@ async function callAction(
   return JSON.parse(line.slice(line.indexOf(":") + 1)) as ActionResult;
 }
 
+/**
+ * Whether a client component on the page was given `name` as a prop: the
+ * shadcn comboboxes and selects render their options only when opened, so
+ * the options reach the HTML as the page's serialized props instead.
+ */
+function hasNameProp(body: string, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\\\?"(?:name|label)\\\\?":\\\\?"${escaped}\\\\?"`).test(
+    body,
+  );
+}
+
 function escapeHtml(text: string) {
   return text
     .replace(/&/g, "&amp;")
@@ -1206,7 +1218,7 @@ async function assertAdminPointsPage(sessions: {
     const body = await res.text();
     const missing = competitions
       .map((c) => c.name)
-      .filter((name) => !body.includes(`>${escapeHtml(name)} · `));
+      .filter((name) => !hasNameProp(body, name));
     const result = {
       status: res.status,
       form: body.includes("Add a Points Entry"),
@@ -2589,8 +2601,8 @@ async function assertAwardAdminPages(sessions: {
     if (
       res.status === 200 &&
       body.includes('aria-label="Award"') &&
-      body.includes(">Red</option>") &&
-      body.includes("Anthony Conway")
+      hasNameProp(body, "Red") &&
+      hasNameProp(body, "Anthony Conway")
     ) {
       ok(newCheck);
     } else {
