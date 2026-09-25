@@ -1,20 +1,26 @@
 ---
-title: War Weeker — Brackets, and hiding replaced by the Finale
+title: War Weeker — Brackets, War Week lifecycle, and hiding replaced by the Finale
 status: ready-for-agent
 labels: [ready-for-agent]
 created: 2026-09-24
 deadline: none. Only a complete, gate-passing vertical slice may merge before the 2026-09-25 08:00 ET staging freeze (ticket 1 is the likely candidate); the rest merges after submission.
-source: Paul's first-use feedback and grilling session, 2026-09-24 (Q14–Q19, Q24–Q34, Q36)
+source: Paul's first-use feedback and grilling session, 2026-09-24 (Q14–Q19, Q24–Q34, Q36); War Week lifecycle added 2026-09-25
 order: 3 of 3 (after .scratch/admin-polish and .scratch/custom-inputs; built with shadcn per spec 2)
 ---
 
-# Brackets, and hiding replaced by the Finale
+# Brackets, War Week lifecycle, and hiding replaced by the Finale
 
 ## Problem Statement
 
 War Week is full of head-to-head and heat-based games: 1v1 chess, Captain Clash, drafted 2v2s, group games with several teams at once. Competiscore had bracket support. War Weeker only has Points Entries, so Organizers have to run brackets on paper or a whiteboard and then type the final points in by hand. Participants can't see who they play next or when.
 
 Separately, hiding Standings turned out not to be useful. It adds a whole rule set (hidden pages, hidden MCP, hidden Competition entries) for little value. The Reveal animation itself is the best part of it and deserves to live on as a closing-ceremony screen.
+
+Finally, the app can't move from one War Week to the next:
+- Status is a free dropdown in `/admin/setup`, and nothing stops two War Weeks being `live` at once.
+- A new edition can only be created by hand-writing a seed file and running the Seed workflow.
+- Nothing in the app records a Winner or highlights, so a finished War Week can't be closed out properly.
+- `/admin` always resolves to the current War Week. Once XII exists, XI can't be edited, so the "manual entry through the admin works for any edition" promise for past Brackets (Surfaces) can't be kept.
 
 ## Solution
 
@@ -36,7 +42,13 @@ Separately, hiding Standings turned out not to be useful. It adds a whole rule s
      - Slack can announce a champion.
      - The Archive shows past brackets.
 
-Mobile first: the bracket view is designed from a phone prototype (ticket 2) before it's built.
+3. **War Week lifecycle** (ticket 2).
+   - Organizers **Start**, **End** and **Reopen** a War Week instead of picking a status, and at most one War Week is `live`.
+   - **End War Week** records the Winner and highlights.
+   - **Create next War Week** makes the next edition in the app, optionally copying Organizers, settings, the Appearance Theme and Competitions.
+   - An admin **edition switcher** lets Organizers work on any edition, including the Archive.
+
+Mobile first: the bracket view is designed from a phone prototype (ticket 3) before it's built.
 
 ## Vocabulary (add to CONTEXT.md)
 
@@ -116,7 +128,7 @@ Remove **Reveal** and the "Reveal rules" section. Remove "Standings hidden" from
 21. As an Organizer, I can always overwrite or confirm any Result, and I see the pending and disputed Results in admin.
 
 ### Following a Bracket (Participant)
-22. As a Participant on my phone, I see the Bracket in the layout chosen from the ticket 2 prototype:
+22. As a Participant on my phone, I see the Bracket in the layout chosen from the ticket 3 prototype:
     - Your Entrant highlighted (**You** rules).
     - Your next Heat pinned at the top: opponent, time, location.
 23. As a Participant, round-robin and group Stages show a Group table (wins, ties, losses, score difference), with the Heats beneath.
@@ -127,6 +139,37 @@ Remove **Reveal** and the "Reveal rules" section. Remove "Standings hidden" from
 
 ### Seeds
 28. As a developer, a seed file can declare a Competition's Format, Entrants (including Squads), config and Heat Results. The XI demo seed ships one finished single-elimination Bracket and one in-progress round robin.
+
+### War Week lifecycle (ticket 2)
+29. As an Organizer, `/admin/setup` replaces the status dropdown with lifecycle actions, each behind a confirmation that says what changes (e.g. "XI moves to the Archive. XII becomes current."):
+    - **Start War Week**: `upcoming` → `live`
+    - **End War Week**: `live` → `complete`
+    - **Reopen**: `complete` → `live`, for corrections made in the live view
+30. As an Organizer, starting a War Week while another is `live` is refused ("End XI first"). There is never more than one `live` War Week.
+31. As an Organizer ending a War Week, I confirm the **Winner** and can add highlights (short lines, like the seeded past editions). The Winner is prefilled from first place in Team Standings, or individual Standings in free-for-all, and I can edit it (a tie can be "Red & Blue"). Both show in `/history`. Ending lists, without blocking:
+    - unfinalized Brackets
+    - pending or disputed Heat Results
+
+    This warning arrives with ticket 6.
+32. As an Organizer, I press **Create next War Week** and enter:
+    - edition (prefilled with the next Roman numeral)
+    - edition number and year (prefilled with the next ones)
+    - dates
+    - Story Theme
+
+    It starts `upcoming`. I choose what to copy from the War Week I'm on:
+    - Organizers: on by default, and I'm always included
+    - settings (mode, Team Label, Leader Title, Slack link, wiki link) and the Appearance Theme: on
+    - Competitions with their Placement Points, scoring and Format config, but no Entrants, Bracket or Points Entries: off
+    - FAQ: off
+
+    Teams, roster, Days, Schedule, Points Entries, Awards and Announcements are never copied. Teams are re-drafted every year.
+33. As an Organizer, an `upcoming` next War Week doesn't change what's current while this one is `live` (the MVP rule is unchanged). I can set XII up in advance, and `/` and `/admin` move to XII when XI ends.
+34. As an Organizer, an **edition switcher** in the admin header lets me choose which War Week I'm administering. It defaults to the current one, and a banner shows when I'm on another ("Editing the Archive: War Week X"). It lists:
+    - editions where I'm an Organizer
+    - every `complete` edition, when I'm an Organizer of the current War Week, so that past Brackets (story 27) and old results can be entered or corrected
+35. As an Organizer on a `complete` edition, I can edit its Winner and highlights in `/admin/setup`. Announcements there can't post to Slack.
+36. As a maintainer, the maintainers guide describes the in-app flow. A seed file for a new edition becomes optional, and the "stop reloading a seed once Organizers edit in the app" warning stays.
 
 ## Implementation Decisions
 
@@ -139,14 +182,26 @@ Remove **Reveal** and the "Reveal rules" section. Remove "Standings hidden" from
 - The About demo (`about-reveal-demo.tsx`, `scripts/about-media.ts` stills, `src/lib/about.ts` copy) moves to Finale wording. `/about` stays static.
 - Ticket 1 changes the schema, so it needs a red-team review, a seed + migration update, and a smoke test.
 
-### Ticket 2 (prototype)
+### Ticket 2 (War Week lifecycle)
+- A pure module, `src/lib/war-week-lifecycle.ts`, holds `transitionError(from, to, { liveEdition })`, `nextEditionDefaults(warWeeks)` (Roman numeral, number, year) and `defaultWinner(standings)`, with unit tests for every from/to pair. Allowed transitions: `upcoming → live`, `live → complete`, `complete → live`. There's no way back to `upcoming`.
+- `status` leaves `warWeekSettingsFields` (`src/lib/setup.ts`), so a settings save can never change it. The lifecycle actions are separate server actions. `winner` and `highlights` join the editable settings.
+- A migration adds a partial unique index so the database also refuses a second `live` War Week: `CREATE UNIQUE INDEX war_week_one_live ON war_week ((true)) WHERE status = 'live'`. The seed loader reports a clear error when a seed would create a second one.
+- `createWarWeek` inserts the row and the chosen copies in one transaction. The unique constraints on `edition`, `edition_number` and `year` become friendly field errors. Copied Competitions get new ids and are never linked to their source.
+- **Admin scoping (access change, needs red-team review):**
+  - `loadAdminPage` resolves the selected edition from an `admin_edition` cookie, set by the switcher. It falls back to the current War Week when the cookie is missing or no longer allowed.
+  - Every admin action that calls `getCurrentWarWeek()` today (`src/actions/setup.ts`, `announcements.ts`, `awards.ts`, `setup-schedule-faq.ts`, and the points and bracket actions) must instead take the War Week id from the request and re-check access for *that* War Week on the server.
+  - The rule lives in `src/lib/access.ts` as `canAdministerWarWeek(email, target, current)`: the email is in the target's `organizerEmails`, or the target is `complete` and the email is in the current War Week's `organizerEmails`.
+- Public pages, `/<edition>` routes and MCP are unchanged: they already resolve by edition or use the current rule.
+- Update `docs/maintainers-guide.md` ("Run a new War Week"), and add the lifecycle rules to CONTEXT.md next to the current War Week rule.
+
+### Ticket 3 (prototype)
 - A throwaway `/prototype/bracket` page (or a standalone HTML artifact) with fake data, for an 8-entrant single elimination, a 16-entrant double elimination, a 4×4 round robin and a 12-entrant 4-per-heat set, at 375px. It compares at least:
   - (a) Rounds as horizontally swiped columns with connector lines
   - (b) a vertical list of Heats grouped by Round, with "next Heat" chips
   - (c) (b) plus a zoomable full-bracket overview
-- Paul picks. If he isn't available when it's ready, the implementer picks, favoring one-thumb use and no horizontal page overflow, and records the choice and reasoning in this spec under "Decisions" for Paul to overrule. Delete the prototype before ticket 4 merges.
+- Paul picks. If he isn't available when it's ready, the implementer picks, favoring one-thumb use and no horizontal page overflow, and records the choice and reasoning in this spec under "Decisions" for Paul to overrule. Delete the prototype before ticket 5 merges.
 
-### Schema (ticket 3)
+### Schema (ticket 4)
 - `competition.format` pgEnum (default `points`), `competition.bracket_config jsonb` (zod-validated per Format), `competition.bracket_points` enum `placings | per-heat | both`, `competition.points_per_heat_win numeric`, `competition.self_report boolean default false`, `competition.finalized_at timestamptz`.
 - `squad(id, competition_id, name)` and `squad_participant(squad_id, participant_id)`. A Participant is in at most one Squad per Competition.
 - `entrant(id, competition_id, team_id | participant_id | squad_id` (exactly one, check constraint), `seed_position int)`, unique per competition and target.
@@ -181,7 +236,7 @@ Remove **Reveal** and the "Reveal rules" section. Remove "Standings hidden" from
 - Google-only, `@jahnelgroup.com`-only sign-in is unchanged. MCP stays read-only.
 
 ### Surfaces
-- `/<edition>/competitions/<id>` renders the Bracket for non-`points` Formats (layout from ticket 2).
+- `/<edition>/competitions/<id>` renders the Bracket for non-`points` Formats (layout from ticket 3).
 - `/admin/setup/competitions/<id>/bracket` is the builder: Entrants, seeding, config, Generate.
 - `/admin/brackets/<id>` runs results (phone-first).
 - Now/Next: Heats with a Day and start time join the Schedule's now/next computation under the same ET rules (60 minutes when there's no end). A Heat is never duplicated by a Schedule Item that links the same Competition; both show.
@@ -194,18 +249,19 @@ Remove **Reveal** and the "Reveal rules" section. Remove "Standings hidden" from
 ## Suggested ticket order (for /to-tickets)
 
 1. Remove hiding; Reveal → Finale (schema, red-team).
-2. Bracket view prototype at 375px; the pick is recorded.
-3. Bracket schema + seed schema + migration + engine skeleton (red-team).
-4. Single elimination end to end: builder, seeding, Generate, results, byes, forfeits, reset of later Heats, participant view, XI demo bracket.
-5. Finalize → Points Entries (placings / per-heat / both), "From bracket" in the admin ledger, Finale for a Bracket, Slack post.
-6. Round robin + Group tables + ties.
-7. Double elimination (+ grand-final reset).
-8. Multi-entrant heats.
-9. Groups → knockout.
-10. Squads.
-11. Self-report + confirm/dispute (access change, red-team).
-12. Heat times/locations + Now/Next.
-13. MCP `get_bracket`, live refresh, Archive view.
+2. War Week lifecycle: Start / End / Reopen with the one-live guard, Winner on End, Create next War Week with copy options, admin edition switcher (access change, red-team).
+3. Bracket view prototype at 375px; the pick is recorded.
+4. Bracket schema + seed schema + migration + engine skeleton (red-team).
+5. Single elimination end to end: builder, seeding, Generate, results, byes, forfeits, reset of later Heats, participant view, XI demo bracket.
+6. Finalize → Points Entries (placings / per-heat / both), "From bracket" in the admin ledger, Finale for a Bracket, Slack post, and End War Week's unfinalized-Bracket warning.
+7. Round robin + Group tables + ties.
+8. Double elimination (+ grand-final reset).
+9. Multi-entrant heats.
+10. Groups → knockout.
+11. Squads.
+12. Self-report + confirm/dispute (access change, red-team).
+13. Heat times/locations + Now/Next.
+14. MCP `get_bracket`, live refresh, Archive view (by-hand entry for past editions uses ticket 2's edition switcher).
 
 Each ticket is a vertical slice that passes `pnpm gate` alone.
 
@@ -216,6 +272,12 @@ Each ticket is a vertical slice that passes `pnpm gate` alone.
   - MCP `get_leaderboard` always returns Standings (test).
   - `/xi/finale` plays the countdown on Start, and reduced motion shows the final state (screenshot plus a short video, since motion and timing matter).
   - The planning.md and CONTEXT.md updates are in the PR.
+- [ ] **War Week lifecycle** (red-team + tests):
+  - `transitionError` is unit-tested for every from/to pair, including a refused second `live`. The partial index also rejects one (DB test).
+  - Create next War Week copies exactly what was chosen, never Teams, roster, Days, Schedule, Points Entries, Awards or Announcements. The creating Organizer is always an Organizer of the new War Week.
+  - Smoke on a fresh DB: XI `live` → create XII → end XI with a Winner → start XII. `/` shows XII, `/history` shows XI with its Winner, and the switcher can still edit XI.
+  - A signed-in non-Organizer can't change any edition, even with a forged War Week id. An Organizer of only a past edition can't change the current one.
+  - The maintainers guide and CONTEXT.md updates are in the PR.
 - [ ] **Engine:** unit tests for every Format:
   - generation for 2–17 Entrants, including byes
   - advancement, forfeits and reset of later Heats
@@ -245,3 +307,5 @@ Each ticket is a vertical slice that passes `pnpm gate` alone.
 - New roles (Scorekeeper, Competition Runner). Organizers only, plus Self-report.
 - Extracting historical brackets from `old-wikis/`.
 - Live score streaming within a Heat.
+- Clock-driven War Week transitions. Status stays a deliberate Organizer action (MVP rule).
+- Deleting a War Week in the app, and copying Teams or the roster into the next edition.
