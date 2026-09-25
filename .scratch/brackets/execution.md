@@ -72,3 +72,32 @@ orchestrator regenerated them in stack order with `pnpm db:generate`
 | `pnpm gate` | PASS | `test-results/brackets-finale-gate/gate.txt` (612 tests, smoke 143 ok) |
 
 Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3191 pnpm db:migrate && pnpm gate`.
+
+## [AI CODE REVIEW] — War Week lifecycle (PR 2)
+
+Two fresh-context reviews (opus): technical/spec/access (adversarial, since this is an access change) and standards.
+
+| Axis | Severity | Finding | Disposition |
+|---|---|---|---|
+| technical | blocking | An Organizer of only a past edition could Reopen it after XI ended and make it current | resolved `d4c76d2`: Start/Reopen rules in `lifecycleActionError`; Reopen needs a current Organizer and only the latest ended edition |
+| technical | blocking | …or Create next War Week and own the next current edition | resolved `d4c76d2`: Create next needs a current Organizer |
+| technical | non-blocking | Past-only / upcoming-only Organizers landed on `AdminRefused` | resolved `d4c76d2`: the gate defaults to an edition they can administer |
+| technical | non-blocking | "Never copied" test couldn't fail; no action-level access tests; smoke never wrote to XI via the switcher | resolved `d4c76d2` (fixture holds every table; rule table tests; smoke edits XI and is refused Reopen) |
+| technical | non-blocking | A current Organizer can edit a complete edition's `organizerEmails`/dates | accepted: within "administer"; Reopen/Create-next now need a current Organizer |
+| technical | non-blocking | The rule is checked before the transaction (slightly stale under a race); Reopen/Create-next buttons show for Organizers the rule will refuse | accepted |
+| standards | non-blocking | direct `db` reads in a page/action/auth, lib reads the clock, duplicate seed keys, double Organizer check, two status-label maps, raw status pill, misplaced smoke doc, stale CONTEXT line | resolved `d4c76d2` |
+| standards | non-blocking | mutation signatures don't match the ADR's `(input, ctx)` shape; `DEFAULT_SETTINGS` in mutations | accepted |
+
+## [CLOSEOUT] — War Week lifecycle (PR 2)
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| `transitionError` for every from/to pair incl. a refused second live; the partial index rejects one (DB test) | PASS | `src/lib/war-week-lifecycle.test.ts`, `src/mutations/war-week-lifecycle.test.ts` in the gate |
+| Create next copies exactly what was chosen, never Teams/roster/Days/Schedule/Points Entries/Awards/Announcements; creator is an Organizer | PASS | mutation tests (fixture holds one of each) |
+| Smoke: XI live → create XII → end XI with a Winner → start XII; `/` shows XII, `/history` shows XI's Winner; the switcher still edits XI | PASS | gate smoke `lifecycle:` check |
+| Non-Organizer can't change any edition even with a forged id; past-only Organizer can't change the current one | PASS | `access.test.ts`, lifecycle rule tests, smoke refusals |
+| Maintainers guide and CONTEXT.md updated | PASS | in this PR |
+| Lifecycle screens 375/1280, XI + IX; overflow | PASS | committed on PR 3's branch: `test-results/brackets-lifecycle/`, `test-results/brackets-overflow/overflow.txt` |
+| `pnpm gate` | PASS | `test-results/brackets-lifecycle-gate/gate.txt` (698 tests, smoke 144 ok) |
+
+Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3192 pnpm db:migrate && pnpm gate`.
