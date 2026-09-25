@@ -28,6 +28,7 @@ Cause: the Day `<select>` sizes itself to its longest option ("Mon, Sep 21 Â· â€
 
 **[CLOSEOUT]** (2026-09-24, branch `fix/36-schedule-form-overflow`)
 
+- PR: https://github.com/paul-macfarlane/war-weeker/pull/51
 - Found in production regression round 2; see ticket 34's comments for everything else checked.
 - Change: `w-full` added to `fieldClass` in `src/components/schedule-item-form.tsx`.
 - Verification: `w-full` applied to the form's fields on the live production DOM in same-origin iframes. Both pages went from 173px to 0px at 375, and stayed 0px at 768, 812, 1024 and 1280. Re-check on production after deploy.
