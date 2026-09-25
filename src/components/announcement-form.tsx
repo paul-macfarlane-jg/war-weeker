@@ -140,6 +140,7 @@ export function AnnouncementForm({
                       type="button"
                       variant="outline"
                       size="sm"
+                      className="min-h-11 sm:min-h-7"
                       onClick={() =>
                         setVideoUrls((urls) =>
                           urls.filter((_, i) => i !== index),
@@ -149,7 +150,11 @@ export function AnnouncementForm({
                       Remove
                     </Button>
                   </div>
-                  {hint && <FieldError>{hint}</FieldError>}
+                  {hint && (
+                    <FieldDescription className="font-medium text-amber-600">
+                      {hint}
+                    </FieldDescription>
+                  )}
                 </Field>
               );
             })}
@@ -160,6 +165,7 @@ export function AnnouncementForm({
                 type="button"
                 variant="outline"
                 size="sm"
+                className="min-h-11 sm:min-h-7"
                 onClick={() => setVideoUrls((urls) => [...urls, ""])}
               >
                 Add video link
@@ -182,7 +188,12 @@ export function AnnouncementForm({
       </FieldGroup>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending
             ? "Saving…"
             : announcementId
@@ -193,6 +204,7 @@ export function AnnouncementForm({
           type="button"
           variant="outline"
           size="lg"
+          className="min-h-11 sm:min-h-9"
           onClick={() => router.push("/admin/announcements")}
         >
           Cancel

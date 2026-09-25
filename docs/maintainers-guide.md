@@ -200,8 +200,15 @@ Notes:
   `src/components/`. Reach for one of those before building a new control.
   Only `EntityCombobox` does search and chips.
 - Popups portal into the themed root through `ThemeRoot`, which is wired
-  into `ui/popover`, `ui/select`, and `ui/combobox`, so they keep the War
-  Week's Appearance Theme.
+  into `ui/popover`, `ui/select`, `ui/combobox`, `ui/alert-dialog` and
+  `ui/sheet`, so they keep the War Week's Appearance Theme.
+- Lay out every field with `Field` / `FieldLabel htmlFor` /
+  `FieldDescription` from `ui/field`, and show a form's server error in a
+  `FieldError` under its buttons.
+- Confirm anything destructive with `ConfirmDialog` or `ConfirmActionButton`
+  (`src/components/confirm-dialog.tsx`), never `window.confirm`. Report
+  results with `toast.success` / `toast.error` from `sonner`, never
+  `window.alert`.
 - Don't put a popup inside a themed root that has `overflow-hidden`: it
   would be clipped.
 

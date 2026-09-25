@@ -1,9 +1,0 @@
-ok Points Entry: row saved with the chosen Competition, target, points and note
-ok Award: row saved with the chosen Team and both Participant recipients
-ok Range refusal: popover shows the Day-outside-range error and the War Week's dates are unchanged
-ok Day: row saved with date 2026-02-28 and theme "SMOKE TEST - delete me"
-ok Schedule Item: row saved with the chosen Day, start "7:30p" as 19:30, the chosen end, and category other
-ok Team color: Red's ColorField save wrote Blue's swatch color to the DB
-ok Leader switch: toggling and saving flipped Ashley Schuliger's is_leader
-ok You picker: picking a Participant stores their id under ww:you:xi
-ok You picker: 'Not me / clear' removes the stored pick
