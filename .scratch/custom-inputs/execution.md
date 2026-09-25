@@ -145,3 +145,54 @@ Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg pnpm db:migr
 Isolation check: D2a and D2b ran in parallel in separate worktrees as predicted; their diffs touched disjoint files, so no merge conflict occurred.
 
 PR: https://github.com/paul-macfarlane/jg-war-week/pull/63 (into `staging`).
+
+---
+
+# Execution record — custom-inputs (Phase C)
+
+Contract: [spec.md](./spec.md), Phase C (participant-page building blocks).
+Presentation only. Overnight run 2026-09-25; decisions by the orchestrator.
+
+## [EXECUTION PLAN]
+
+Branch `feat/custom-inputs-phase-c`, stacked on `feat/custom-inputs-phase-b`
+(merge B first). Worked in `.claude/worktrees/custom-inputs-c/war-weeker`;
+C1 and C2 in parallel detached worktrees (disjoint files), cherry-picked.
+
+Resolved decisions:
+
+- **C0 (orchestrator):** shadcn `card`, `tabs`, `badge` (already present),
+  `avatar`, `sheet`, `skeleton`; the Sheet portals into `ThemeRoot`.
+- **Cards** keep list semantics (`<li>` wrapping a `Card`); the Reveal's
+  animated classes stay on the `<li>`. Every smoke-checked string, href,
+  anchor and inline theme style is unchanged.
+- **Tabs** only on `/[edition]/competitions` with 2+ Competition Groups,
+  `keepMounted` so the HTML still holds every group.
+- **More on phones:** the bottom-bar "More" tab is a `SheetTrigger`; the
+  Sheet lists `moreLinks()` (shared with the `/more` page, which stays as the
+  desktop route and deep link).
+- **Skeletons:** `loading.tsx` per edition route, `/history` and `/admin`,
+  built from `page-skeleton.tsx`.
+
+| ID | Slice | Model | Commit |
+|---|---|---|---|
+| C0 | shadcn pieces | orchestrator | `f57a534` |
+| C1 | Standings, Competitions, Announcements, Awards, roster, Archive, hero, Now/Next on Card/Badge/Avatar/Tabs | opus | `1121713` |
+| C2 | More Sheet + `moreLinks` (tested) + Skeleton loading states | sonnet | `33fb8bf` |
+| C3 | evidence script, screenshots, checks, overflow sweep | sonnet | — |
+
+### Verification map
+
+| Criterion | Command / action | Evidence | Earliest |
+|---|---|---|---|
+| C: surfaces on shadcn | `[data-slot=card]` on every participant page; screenshots | `test-results/custom-inputs-c-pages/` | after C3 |
+| C: More is a Sheet on phones | evidence check (dialog opens at 375, links, closes on navigate) | `checks.txt` | after C3 |
+| C: skeletons | `loading.tsx` inventory + skeleton shot when capturable | `checks.txt` | after C3 |
+| screenshots 375/1280 XI + IX | evidence script | `custom-inputs-c-pages/` | after C3 |
+| overflow sweep | evidence script | `custom-inputs-c-overflow/overflow.txt` | after C3 |
+| `pnpm gate` | private DB | `custom-inputs-c-gate/gate.txt` | before PR |
+
+## [PROGRESS]
+
+- 2026-09-25 06:00Z: branch created on the Phase B head; C0 committed; C1 ∥ C2 dispatched.
+- 06:40Z: C1 and C2 accepted and integrated; C3 dispatched.
