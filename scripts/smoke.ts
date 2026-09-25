@@ -13,7 +13,8 @@ import { MCP_TOOLS } from "@/mcp/tools";
 
 loadEnvConfig(process.cwd());
 
-const PORT = 3100;
+// SMOKE_PORT lets parallel worktrees run smoke side by side.
+const PORT = Number(process.env.SMOKE_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 const READY_TIMEOUT_MS = 30_000;
 

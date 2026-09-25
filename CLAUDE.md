@@ -48,7 +48,7 @@ repository keeps its own base SHA, branch, verification result, and pull request
 - Never read .env.local or other .env files; use .env.example for variable names
 - Keep scope to what fits the Fri 2026-09-25 10:00 AM deadline
 - All work goes on a feature branch (`feat/NN-<slug>`, `fix/…`, `chore/…`, `docs/…`) with a PR into `staging`. Never commit directly to `staging` or `main`; `staging` → `main` is its own PR. This overrides any skill that says to commit to the current branch.
-- UI uses shadcn components (base-nova / Base UI, `components.json`). Add one with `pnpm dlx shadcn@latest add <name>`; don't hand-roll a control shadcn already has. App-specific wrappers (`EntityCombobox`, `DatePicker`, `DateRangePicker`, `TimeCombobox`, `ColorField`) live in `src/components/`; their popups portal into the themed root via `ThemeRoot`.
+- UI uses shadcn components (base-nova / Base UI, `components.json`). Add one with `pnpm dlx shadcn@latest add <name>`; don't hand-roll a control shadcn already has. App-specific wrappers (`EntityCombobox`, `DatePicker`, `DateRangePicker`, `TimeCombobox`, `ColorField`, `ConfirmDialog`) live in `src/components/`; confirms use `ConfirmDialog`, results use sonner toasts; their popups portal into the themed root via `ThemeRoot`.
 
 ## Atlas repository workflow
 
