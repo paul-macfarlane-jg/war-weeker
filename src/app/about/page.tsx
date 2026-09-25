@@ -26,8 +26,8 @@ export const metadata: Metadata = {
  * features and the history, for Jason first, then Organizers, then
  * Participants. Static on purpose: copy, stills and the Reveal recording
  * only. It reads nothing from the database or the session, wears War Week
- * XI's Appearance Theme from `ABOUT_THEME`, and is the one page besides
- * sign-in that an anonymous visitor can open (`PUBLIC_PREFIXES`).
+ * XI's theme from `ABOUT_THEME`, and is one of the pages an anonymous
+ * visitor can open (`PUBLIC_PATHS` in `src/lib/access.ts`).
  * The entrance fade is tw-animate-css's `animate-in`, turned off with
  * `motion-reduce:animate-none` for visitors who asked for no motion.
  */
@@ -56,7 +56,7 @@ export default function AboutPage() {
         <section className="animate-in fade-in grid items-center gap-12 duration-700 motion-reduce:animate-none md:grid-cols-[minmax(0,1fr)_auto] md:gap-16">
           <div className="flex flex-col gap-6">
             <p className="text-primary text-xs font-semibold tracking-[0.2em] uppercase">
-              Jahnel Group · since 2016
+              Jahnel Group War Week · since 2016
             </p>
             <h1 className="text-4xl leading-[1.05] font-bold tracking-tight sm:text-6xl">
               Run War Week in one place, and keep every year of it.
@@ -85,9 +85,9 @@ export default function AboutPage() {
             Why it exists
           </h2>
           <div className="grid gap-4 md:grid-cols-3">
-            <Problem title="The points are gone.">
-              Competiscore held every War Week&apos;s scores. Its data was lost,
-              and with it who won what.
+            <Problem title="Competiscore was too general.">
+              An earlier attempt: a general-purpose scoring platform, built for
+              any kind of competition, that never quite fit how War Week works.
             </Problem>
             <Problem title="The history is scattered.">
               Ten years of War Week lived only in old wiki pages, one per year,
@@ -120,34 +120,30 @@ export default function AboutPage() {
           <AboutFeatureGrid />
           <p className="text-foreground/75 max-w-3xl leading-relaxed">
             Sign in and War Weeker finds you on the roster, so your Team is
-            highlighted wherever it appears. Add it to your home screen from{" "}
-            <Link href="/install" className="underline underline-offset-4">
-              /install
-            </Link>{" "}
-            and it opens like an app. And each edition wears its own Appearance
-            Theme, so The Matrix looks nothing like Survivor.
+            highlighted wherever it appears. Once you&apos;re signed in,{" "}
+            <strong>More → Install app</strong> puts it on your home screen, and
+            every War Week keeps its own colors and logo.
           </p>
         </section>
 
         <section className="border-border bg-background/60 flex flex-col gap-4 rounded-2xl border p-6 sm:p-10">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            Why I built this
+            Why we built this
           </h2>
           <div className="text-foreground/80 flex max-w-3xl flex-col gap-4 leading-relaxed">
             <p>
               War Week has run every year since 2016; XI, in 2026, is the
-              eleventh. For most of those years Competiscore held the points,
-              until its data was lost, and the rest of each War Week lived in a
-              wiki page that only the people who wrote it could find. Organizers
-              juggled spreadsheets, Slack and wikis to run a week that was
-              supposed to be fun.
+              eleventh. For most of those years the points lived in one tool and
+              the rest of each War Week in a wiki page that only the people who
+              wrote it could find. Organizers juggled spreadsheets, Slack and
+              wikis to run a week that was supposed to be fun.
             </p>
             <p>
-              I wanted the next Organizer to open one screen, set the week up,
-              and get back to competing. And I wanted to read about War Week
+              We wanted the next Organizer to open one screen, set the week up,
+              and get back to competing. And we wanted to read about War Week
               2016 without asking anyone where the page went.
             </p>
-            <p className="text-foreground/60 text-sm">Paul Macfarlane</p>
+            <p className="text-foreground/60 text-sm">Jahnel Group</p>
           </div>
         </section>
 
