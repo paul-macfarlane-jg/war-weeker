@@ -79,6 +79,8 @@ before it says it's done.
 | Server actions behind admin forms          | `src/actions/`                                                         |
 | Database reads / writes                    | `src/queries/`, `src/mutations/`                                       |
 | Rules with unit tests (standings, schedule, Finale, access…) | `src/lib/` (`*.test.ts` next to each file)           |
+| The Bracket engine (seeding, Rounds/Heats, advancing winners, Bracket → Points Entries) | `src/lib/bracket/` (`*.test.ts` next to each file) |
+| Bracket builder and results screens                | `src/app/admin/setup/competitions/[id]/bracket/`, `src/app/admin/brackets/[id]/` |
 | Database schema                            | `src/db/schema.ts`                                                     |
 | Migrations (generated, never hand-edited)  | `drizzle/`                                                             |
 | Seed data, one file per War Week           | `seeds/i.json` … `seeds/xi.json`                                       |
@@ -166,6 +168,30 @@ import). If you use one, load it with the **Seed** workflow in the GitHub
 Actions tab (pick the environment and the file). A reload never changes a
 War Week's status, Winner or highlights. Once organizers edit a War Week in
 the app, stop reloading its seed: a reload overwrites their other edits.
+
+### Run a knockout Competition as a Bracket
+
+Organizer screens cover setting one up and running it: set the Competition's
+**Format** to single elimination under `/admin/setup/competitions`, open its
+Bracket builder to pick Entrants (all Teams, or specific Participants) and
+Generate; then record each Heat's result from the results screen
+(`/admin/brackets/<id>`) and Finalize to write its placings as Points
+Entries. No code needed for any of that.
+
+To add a new Format (single elimination is the only one today):
+
+```text
+/implement Add a <name> Format to Competitions, alongside single
+elimination. Follow src/lib/bracket/ (types.ts, seeding.ts, engine.ts,
+points.ts, view.ts, each with its test) for the shape a Format needs:
+building the bracket structure from Entrants, advancing a Heat's winner,
+and turning a finished bracket into Points Entries. Add it to the Format
+select on the Competition form and to the builder/results screens.
+```
+
+The engine is deliberately separate from the UI: `src/lib/bracket/` has no
+React imports and never reads or writes the database itself, so a new
+Format's rules are unit-testable on their own before any screen uses them.
 
 ### Add a field
 

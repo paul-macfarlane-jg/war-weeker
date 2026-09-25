@@ -114,7 +114,30 @@ export function OrganizerGuide({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">The Finale</h2>
+        <h2 className="text-lg font-semibold">Running a Bracket</h2>
+        <p className="text-foreground/70">
+          Set a Competition&apos;s Format to single elimination under{" "}
+          <Link
+            href="/admin/setup/competitions"
+            className="text-primary underline underline-offset-4"
+          >
+            Competitions
+          </Link>
+          , then open its Bracket builder to pick Entrants — all {teamLower}s,
+          or specific Participants — and Generate the Bracket (Seed Positions
+          are random; Re-roll before any Heat is played to try again). From the
+          results screen, tap a Heat to record its winner, score or a forfeit;
+          editing a decided Heat resets every later Heat it feeds. Finalize
+          turns the Bracket&apos;s placings into Points Entries marked
+          &quot;From bracket&quot;; un-finalize removes them so you can fix a
+          Heat and finalize again.
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">
+          The Finale at closing ceremony
+        </h2>
         <p className="text-foreground/70">
           Standings are always visible to Participants and Claude. At closing
           ceremonies, open the{" "}
@@ -127,6 +150,30 @@ export function OrganizerGuide({
           on the projector and press Start: the Standings count in from last
           place to first. Replay runs it again. The Finale never changes the
           Standings, it only plays them.
+        </p>
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-lg font-semibold">
+          Ending {edition.toUpperCase()} and starting the next War Week
+        </h2>
+        <p className="text-foreground/70">
+          The{" "}
+          <Link
+            href="/admin/setup"
+            className="text-primary underline underline-offset-4"
+          >
+            Setup
+          </Link>{" "}
+          page&apos;s Lifecycle box moves a War Week through Start, End and
+          Reopen. Only one War Week is ever live: End this one (confirming the
+          Winner, prefilled from first place, and any highlights) before the
+          next can Start. Create next War Week copies what you choose
+          (Organizers and settings by default; Competitions and the FAQ are off)
+          and opens the new edition as upcoming, so you can set it up while this
+          one stays live. The header&apos;s edition switcher moves the admin
+          between editions you may administer — a banner marks the Archive so
+          you don&apos;t mistake it for the live one.
         </p>
       </section>
 

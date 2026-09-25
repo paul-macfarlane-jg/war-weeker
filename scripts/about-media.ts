@@ -423,6 +423,75 @@ async function recordFinale(cookie: string, ffmpeg: string) {
 }
 
 // ---------------------------------------------------------------------------
+// A finished single-elimination Bracket for the "brackets" still
+
+const BRACKET_COMP_NAME = "Capture the Flag";
+
+/**
+ * Builds a small, already-finished single-elimination Bracket on XI (4
+ * Participant Entrants, two Round 1 Heats and a decided final) directly in
+ * SQL, the way `scripts/brackets-evidence.ts` sets its demo Bracket up. The
+ * caller deletes the Competition (which cascades its Entrants and Heats)
+ * when done.
+ */
+async function setupBracketDemo(): Promise<string> {
+  const [xiWarWeek] = await query<{ id: string }>(
+    `select id from war_week where edition = 'xi'`,
+  );
+  const [comp] = await query<{ id: string }>(
+    `insert into competition (war_week_id, name, scoring, format)
+     values ($1, $2, 'individual', 'single-elimination') returning id`,
+    [xiWarWeek.id, BRACKET_COMP_NAME],
+  );
+  const competitionId = comp.id;
+  const participants = await query<{ id: string }>(
+    `select id from participant where war_week_id = $1 order by display_name limit 4`,
+    [xiWarWeek.id],
+  );
+  if (participants.length < 4) {
+    throw new Error("XI needs at least 4 Participants for the Bracket demo");
+  }
+  const entrantIds: string[] = [];
+  for (const [i, p] of participants.entries()) {
+    const [entrant] = await query<{ id: string }>(
+      `insert into entrant (competition_id, participant_id, seed_position)
+       values ($1, $2, $3) returning id`,
+      [competitionId, p.id, i + 1],
+    );
+    entrantIds.push(entrant.id);
+  }
+  const [e1, e2, e3, e4] = entrantIds;
+  const [finalHeat] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status)
+     values ($1, 2, 1, 'played') returning id`,
+    [competitionId],
+  );
+  const [heatA] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status, winner_to_heat_id, winner_to_slot)
+     values ($1, 1, 1, 'played', $2, 0) returning id`,
+    [competitionId, finalHeat.id],
+  );
+  const [heatB] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status, winner_to_heat_id, winner_to_slot)
+     values ($1, 1, 2, 'played', $2, 1) returning id`,
+    [competitionId, finalHeat.id],
+  );
+  await query(
+    `insert into heat_entrant (heat_id, entrant_id, slot, place) values
+       ($1, $2, 0, 1), ($1, $3, 1, 2),
+       ($4, $5, 0, 1), ($4, $6, 1, 2),
+       ($7, $2, 0, 1), ($7, $5, 1, 2)`,
+    [heatA.id, e1, e4, heatB.id, e2, e3, finalHeat.id],
+  );
+  note(`bracket demo: competition ${competitionId}, champion entrant ${e1}`);
+  return competitionId;
+}
+
+async function teardownBracketDemo(competitionId: string) {
+  await query(`delete from competition where id = $1`, [competitionId]);
+}
+
+// ---------------------------------------------------------------------------
 // The stills
 
 async function still(
@@ -652,6 +721,7 @@ async function main() {
     [DEMO_EMAIL, realOrganizer],
   );
   const cookie = await createSession(DEMO_EMAIL);
+  const bracketCompetitionId = await setupBracketDemo();
 
   const server = spawn("pnpm", ["start", "-p", String(PORT)], {
     env: {
@@ -684,8 +754,8 @@ async function main() {
     await recordFinale(cookie, "ffmpeg");
 
     const slugs = ABOUT_FEATURES.map((f) => f.slug);
-    await still(slugs[0], cookie, "/admin/setup");
-    await still(slugs[1], cookie, "/admin/points", async (page) => {
+    await still("organizer-setup", cookie, "/admin/setup");
+    await still("points", cookie, "/admin/points", async (page) => {
       const picked = await selectCompetition(page, "Settlers of Catan");
       await sleep(500);
       const presets = await page.evaluate<number>(
@@ -697,7 +767,7 @@ async function main() {
       if (!presets) throw new Error("no Placement Points buttons on screen");
     });
     await still(
-      slugs[2],
+      "schedule",
       cookie,
       `/xi?at=${encodeURIComponent(SCHEDULE_AT)}`,
       async (page) => {
@@ -706,11 +776,26 @@ async function main() {
         if (!found) throw new Error("no Now / Next section on the XI home");
       },
     );
-    await still(slugs[3], cookie, "/xi/news", () => sleep(2_000));
-    await still(slugs[4], cookie, "/history");
+    await still("announcements", cookie, "/xi/news", () => sleep(2_000));
+    await still(
+      "brackets",
+      cookie,
+      `/xi/competitions/${bracketCompetitionId}`,
+      async (page) => {
+        const found = await page.evaluate<boolean>(scrollToText("champion"));
+        await sleep(300);
+        if (!found) throw new Error("no champion card on the Bracket view");
+      },
+    );
+    await still("lifecycle", cookie, "/admin/setup", async (page) => {
+      const found = await page.evaluate<boolean>(scrollToText("Lifecycle"));
+      await sleep(300);
+      if (!found) throw new Error("no Lifecycle box on /admin/setup");
+    });
+    await still("archive", cookie, "/history");
     const result = await askMcp(cookie);
     note(`ask-claude: get_leaderboard rows=${result.standings.length}`);
-    await still(slugs[5], null, chatCardUrl(result));
+    await still("ask-claude", null, chatCardUrl(result));
 
     await evidence();
 
@@ -745,6 +830,7 @@ async function main() {
       [realOrganizer, DEMO_EMAIL],
     );
     await query(`delete from "user" where email = $1`, [DEMO_EMAIL]);
+    await teardownBracketDemo(bracketCompetitionId);
     writeFileSync(
       path.join(EVIDENCE, "about-media.txt"),
       log.join("\n") + "\n",

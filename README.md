@@ -1,8 +1,9 @@
 # jg-war-week
 
-War Week: themes, schedule, teams, competitions, points, awards, and
-announcements for Jahnel Group's annual War Week, plus a curated War Week
-history. See `CONTEXT.md` for the domain glossary.
+War Week: themes, schedule, teams, competitions (including single-elimination
+Brackets), points, awards, announcements, and a closing-ceremony Finale, for
+Jahnel Group's annual War Week — one live edition at a time, with a curated
+Archive of every past one. See `CONTEXT.md` for the domain glossary.
 
 **Changing the JG War Week app?** Start with the
 [maintainer's guide](./docs/maintainers-guide.md): access, where things
