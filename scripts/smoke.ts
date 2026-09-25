@@ -3233,6 +3233,48 @@ async function assertMcpBearerToken() {
   }
 }
 
+async function assertAdminGuidePage(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const organizerCheck =
+    "GET /admin/guide as an Organizer shows the guide, linked in the admin nav";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const body = await res.text();
+    if (
+      res.status === 200 &&
+      body.includes("Organizer guide") &&
+      body.includes("Placement Points") &&
+      body.includes('href="/admin/guide"')
+    ) {
+      ok(organizerCheck);
+    } else {
+      fail(organizerCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(organizerCheck, String(error));
+  }
+
+  const refusalCheck =
+    "GET /admin/guide as a signed-in non-Organizer shows the refusal";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.notOrganizer.cookie },
+    });
+    const body = await res.text();
+    if (res.status === 200 && body.includes("Organizers only")) {
+      ok(refusalCheck);
+    } else {
+      fail(refusalCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(refusalCheck, String(error));
+  }
+}
+
 async function assertAdminLink(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;
@@ -3726,6 +3768,7 @@ async function main() {
       await assertAdminGate(sessions);
       await assertSignInRequired();
       await assertAdminLink(sessions);
+      await assertAdminGuidePage(sessions);
       await assertAdminPointsPage(sessions);
       await assertPointsEntryActions(sessions);
       await assertHideAndReveal(sessions);
