@@ -1,16 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useId, useState } from "react";
 
-import {
-  type SetupActionResult,
-  createDay,
-  deleteDay,
-  updateDay,
-} from "@/actions/setup";
+import { createDay, deleteDay, updateDay } from "@/actions/setup";
 import { DatePicker } from "@/components/date-picker";
-import { Button } from "@/components/ui/button";
+import {
+  SetupRowButtons,
+  SetupRowError,
+  useSetupRow,
+} from "@/components/setup-row";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { SetupDay } from "@/queries/setup";
 
@@ -28,93 +27,71 @@ function DayRow({
   startDate: string;
   endDate: string;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const id = useId();
   const [date, setDate] = useState(day?.date ?? "");
   const [dayTheme, setDayTheme] = useState(day?.dayTheme ?? "");
-  const [result, setResult] = useState<SetupActionResult | null>(null);
+  const { pending, run, error } = useSetupRow(
+    day
+      ? undefined
+      : () => {
+          setDate("");
+          setDayTheme("");
+        },
+  );
   const label = day ? `Day ${day.date}` : "New Day";
-
-  function run(action: () => Promise<SetupActionResult>) {
-    startTransition(async () => {
-      const saved = await action();
-      setResult(saved);
-      if (!saved.ok) return;
-      if (!day) {
-        setDate("");
-        setDayTheme("");
-      }
-      router.refresh();
-    });
-  }
+  const usage = !day
+    ? ""
+    : day.scheduleItemCount === 1
+      ? "1 Schedule Item"
+      : `${day.scheduleItemCount} Schedule Items`;
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const input = { date, dayTheme };
-    run(() => (day ? updateDay(day.id, input) : createDay(input)));
+    run(() => (day ? updateDay(day.id, input) : createDay(input)), "Day saved");
   }
 
   return (
     <li className="border-border border-b py-3 last:border-b-0">
-      <form
-        onSubmit={submit}
-        aria-label={label}
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
-      >
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Date
-          <DatePicker
-            name="date"
-            required
-            min={startDate}
-            max={endDate}
-            value={date}
-            onValueChange={setDate}
+      <form onSubmit={submit} aria-label={label}>
+        <FieldGroup className="gap-2 sm:flex-row sm:items-end">
+          <Field className="sm:w-auto">
+            <FieldLabel htmlFor={`${id}-date`}>Date</FieldLabel>
+            <DatePicker
+              id={`${id}-date`}
+              name="date"
+              required
+              min={startDate}
+              max={endDate}
+              value={date}
+              onValueChange={setDate}
+            />
+          </Field>
+          <Field className="sm:flex-1">
+            <FieldLabel htmlFor={`${id}-theme`}>Day Theme</FieldLabel>
+            <Input
+              id={`${id}-theme`}
+              name="dayTheme"
+              required
+              maxLength={120}
+              className="h-11 sm:h-9"
+              value={dayTheme}
+              onChange={(event) => setDayTheme(event.target.value)}
+            />
+          </Field>
+          <SetupRowButtons
+            pending={pending}
+            addLabel="Add Day"
+            onDelete={
+              day && (() => run(() => deleteDay(day.id), "Day deleted"))
+            }
+            deleteTitle={day && `Delete the Day on ${day.date}?`}
+            deleteDescription={usage}
           />
-        </label>
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
-          Day Theme
-          <Input
-            name="dayTheme"
-            required
-            maxLength={120}
-            className="h-11 sm:h-9"
-            value={dayTheme}
-            onChange={(event) => setDayTheme(event.target.value)}
-          />
-        </label>
-        <div className="flex items-center gap-2">
-          <Button type="submit" size="lg" disabled={pending}>
-            {pending ? "Saving…" : day ? "Save" : "Add Day"}
-          </Button>
-          {day && (
-            <Button
-              type="button"
-              variant="destructive"
-              size="lg"
-              disabled={pending}
-              onClick={() => {
-                if (!window.confirm(`Delete the Day on ${day.date}?`)) return;
-                run(() => deleteDay(day.id));
-              }}
-            >
-              Delete
-            </Button>
-          )}
-        </div>
+        </FieldGroup>
       </form>
-      {day && (
-        <p className="text-foreground/60 mt-1 text-xs">
-          {day.scheduleItemCount === 1
-            ? "1 Schedule Item"
-            : `${day.scheduleItemCount} Schedule Items`}
-        </p>
-      )}
-      {result && !result.ok && !pending && (
-        <p role="alert" className="text-destructive mt-1 text-sm">
-          {result.error}
-        </p>
-      )}
+      {day && <p className="text-foreground/60 mt-1 text-xs">{usage}</p>}
+      <SetupRowError error={error} />
     </li>
   );
 }

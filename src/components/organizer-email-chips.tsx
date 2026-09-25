@@ -5,6 +5,12 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   emailsFromInput,
@@ -47,10 +53,10 @@ export function OrganizerEmailChips({
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <span id="organizer-emails-label" className="text-sm font-medium">
+    <Field>
+      <FieldLabel id="organizer-emails-label" htmlFor="organizer-emails-input">
         Organizer emails
-      </span>
+      </FieldLabel>
       <ul
         aria-labelledby="organizer-emails-label"
         className="flex flex-wrap gap-1.5"
@@ -83,13 +89,14 @@ export function OrganizerEmailChips({
         })}
       </ul>
       <Input
+        id="organizer-emails-input"
         aria-labelledby="organizer-emails-label"
         aria-describedby="organizer-emails-help"
         type="text"
         inputMode="email"
         autoComplete="off"
         placeholder="name@jahnelgroup.com"
-        className="border-border h-9"
+        className="border-border h-11 sm:h-9"
         value={draft}
         aria-invalid={rejected.length > 0 || undefined}
         onChange={(event) => {
@@ -121,15 +128,15 @@ export function OrganizerEmailChips({
         }}
       />
       {rejected.length > 0 && (
-        <p role="alert" className="text-destructive text-sm">
+        <FieldError>
           Only @jahnelgroup.com addresses can be Organizers:{" "}
           {rejected.join(", ")}
-        </p>
+        </FieldError>
       )}
-      <p id="organizer-emails-help" className="text-foreground/60 text-xs">
+      <FieldDescription id="organizer-emails-help">
         Press Enter or a comma to add, or paste a list. Everyone listed can use
         these admin pages.
-      </p>
-    </div>
+      </FieldDescription>
+    </Field>
   );
 }
