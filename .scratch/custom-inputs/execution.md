@@ -143,3 +143,5 @@ Evidence commit `420e091` has the same `src/` as `4230257`; later commits touch 
 Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg pnpm db:migrate && pnpm gate`; evidence: `pnpm build && pnpm tsx scripts/custom-inputs-evidence.ts` against a private DB.
 
 Isolation check: D2a and D2b ran in parallel in separate worktrees as predicted; their diffs touched disjoint files, so no merge conflict occurred.
+
+PR: https://github.com/paul-macfarlane/jg-war-week/pull/63 (into `staging`).
