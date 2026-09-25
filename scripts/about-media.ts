@@ -565,7 +565,7 @@ function chatCardUrl(result: LeaderboardResult): string {
   .who{font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;margin-bottom:6px}
   </style></head><body><div class="chat">
   <div class="msg you"><div class="who">You</div>Who's winning War Week XI?</div>
-  <div class="msg claude"><div class="who">Claude</div>${answer}<div class="tool">war-weeker · get_leaderboard(kind: "team")</div></div>
+  <div class="msg claude"><div class="who">Claude</div>${answer}<div class="tool">jg-war-week · get_leaderboard(kind: "team")</div></div>
   </div></body></html>`)}`;
 }
 

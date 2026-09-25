@@ -1,6 +1,6 @@
 # Maintainer's guide
 
-For Jason, or anyone who runs War Week and wants to change War Weeker
+For Jason, or anyone who runs War Week and wants to change the JG War Week app
 without learning the whole stack first. You describe the change to Claude
 Code, review what it did, check it, and ship it. This page tells you how,
 and how to leave the repo no worse than you found it.
@@ -119,7 +119,7 @@ Every change, however small:
 6. **Check the Vercel preview** linked on the PR.
 7. **Merge into `staging`.** The staging database migrates automatically.
 8. **Ship to production:** open a PR from `staging` into `main`, merge it.
-   Production migrates and deploys. Check https://war-weeker.vercel.app.
+   Production migrates and deploys. Check https://jg-war-week.vercel.app.
 
 ## Recipes
 

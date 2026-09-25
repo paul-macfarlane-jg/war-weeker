@@ -9,7 +9,7 @@ import { loadAdminPage } from "../gate";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Standings visibility · War Weeker",
+  title: "Standings visibility · JG War Week",
 };
 
 export default async function AdminStandingsPage() {
@@ -27,7 +27,7 @@ export default async function AdminStandingsPage() {
         <p className="text-lg font-semibold">
           {hidden
             ? "Standings are hidden 🔒"
-            : "Standings are visible on the public site"}
+            : "Standings are visible to Participants"}
         </p>
         <p className="text-foreground/70">
           {hidden ? (

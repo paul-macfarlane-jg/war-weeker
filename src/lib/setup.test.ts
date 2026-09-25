@@ -105,7 +105,11 @@ describe("parseWarWeekSettingsInput", () => {
     [{ organizerEmails: " " }, "Add at least one organizer email."],
     [
       { organizerEmails: "a@jahnelgroup.com, not-an-email" },
-      'Organizer email "not-an-email" must be a valid email.',
+      'Organizer email "not-an-email" must be an @jahnelgroup.com address.',
+    ],
+    [
+      { organizerEmails: "a@jahnelgroup.com, someone@gmail.com" },
+      'Organizer email "someone@gmail.com" must be an @jahnelgroup.com address.',
     ],
     [
       { startDate: "2026-02-28", endDate: "2026-02-27" },
@@ -113,6 +117,13 @@ describe("parseWarWeekSettingsInput", () => {
     ],
   ])("refuses %o", (overrides, error) => {
     expect(parsed(overrides)).toEqual({ ok: false, error });
+  });
+
+  it("accepts a mixed-case Jahnel Group organizer email", () => {
+    const result = parsed({ organizerEmails: "A@JahnelGroup.Com" });
+    expect(result.ok && result.value.organizerEmails).toEqual([
+      "a@jahnelgroup.com",
+    ]);
   });
 });
 

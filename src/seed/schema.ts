@@ -51,7 +51,14 @@ export const scheduleItemSeedSchema = z
     location: z.string().max(200).nullish(),
     virtualLink: httpsUrl.nullish(),
     description: contentInputSchema.nullish(),
-    category: z.enum(["competition", "education", "social", "meal", "work"]),
+    category: z.enum([
+      "competition",
+      "education",
+      "social",
+      "meal",
+      "work",
+      "other",
+    ]),
     /** A Competition name from this seed. */
     competition: z.string().min(1).max(120).nullish(),
   })

@@ -1,7 +1,10 @@
 # CONTEXT
 
-Domain glossary and vocabulary rules for War Weeker. Read this before naming
-domain concepts in code, tests, tickets, or specs.
+Domain glossary and vocabulary rules for the JG War Week app. Read this before
+naming domain concepts in code, tests, tickets, or specs.
+
+The product is **JG War Week** (in sentences, "the JG War Week app"; formerly
+War Weeker). **War Week** alone always means the event, never the app.
 
 ## Domain glossary
 
@@ -65,6 +68,10 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   today's Day or a later one.
 - Home and schedule pages accept `?at=<ISO instant>` to show the schedule as
   of that moment, for demos of a War Week that isn't on right now.
+- A Schedule Item has one of six categories, each with its own fixed color
+  independent of the Appearance Theme: Competition, Education, Social, Meal,
+  Work, and **Other**. `other` uses neutral styling, for an item that is none
+  of the other five.
 
 ## Competition and roster display rules
 
@@ -114,9 +121,11 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   sign-in; signed-in non-Organizers see "Organizers only".
 - Every page and API route needs a JG sign-in. Anonymous visitors to a
   page go to `/sign-in` and come back afterwards; API routes answer 401.
-  Only `/sign-in`, `/api/auth/*` and `/about` are public. `/about` is
-  static copy and media (`public/about/`, written by
+  Only `/sign-in`, `/api/auth/*`, `/about`, `/privacy` and `/terms` are
+  public. `/about` is static copy and media (`public/about/`, written by
   `scripts/about-media.ts`): it never reads the database or the session.
+  `/privacy` and `/terms` are static the same way: copy only, no database
+  or session reads.
 - `/api/mcp` also lets in `Authorization: Bearer <MCP_TOKEN>` (off when
   `MCP_TOKEN` is unset or blank), and anyone while `MCP_PUBLIC=true` (off by
   default; for a claude.ai connector demo). `canUseMcp` in

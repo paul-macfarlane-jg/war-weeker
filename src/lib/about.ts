@@ -61,7 +61,7 @@ export const ABOUT_FEATURES = [
   {
     slug: "ask-claude",
     title: "Ask Claude",
-    text: "Add War Weeker to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, and it never spoils hidden Standings.",
-    alt: "A chat with Claude asking who's winning War Week XI, answered from War Weeker's MCP connector.",
+    text: "Add the JG War Week app to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, and it never spoils hidden Standings.",
+    alt: "A chat with Claude asking who's winning War Week XI, answered from the JG War Week app's MCP connector.",
   },
 ] as const;

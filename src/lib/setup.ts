@@ -1,6 +1,7 @@
 import { type ZodType, z } from "zod";
 
 import type { Competition, Participant, Team, WarWeek } from "@/db/schema";
+import { isJahnelGroupEmail } from "@/lib/access";
 import { dayOutsideRangeError } from "@/lib/day-range";
 import {
   competitionSeedSchema,
@@ -292,6 +293,13 @@ export function parseWarWeekSettingsInput(
         .map((email) => email.toLowerCase()),
     ),
   ];
+  const notJg = emails.find((email) => !isJahnelGroupEmail(email));
+  if (notJg) {
+    return {
+      ok: false,
+      error: `Organizer email "${notJg}" must be an @jahnelgroup.com address.`,
+    };
+  }
   return parseWith(
     settingsSchema,
     { ...input, organizerEmails: emails },

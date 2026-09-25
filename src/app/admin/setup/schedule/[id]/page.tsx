@@ -16,7 +16,7 @@ import { loadAdminPage } from "../../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Edit Schedule Item · War Weeker" };
+export const metadata: Metadata = { title: "Edit Schedule Item · JG War Week" };
 
 export default async function EditScheduleItemPage({
   params,

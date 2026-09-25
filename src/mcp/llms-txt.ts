@@ -16,7 +16,7 @@ const PAGES: [path: string, purpose: string][] = [
   ["/<edition>/faq", "Frequently asked questions."],
   ["/<edition>/more", "Links to the rest of the War Week's pages."],
   ["/history", "The Archive of past War Weeks, 2016 onward."],
-  ["/install", "How to install War Weeker as an app."],
+  ["/install", "How to install JG War Week as an app."],
   [
     "/admin",
     "Organizer-only: Points Entry, Standings, Announcements, Awards, and Setup (War Week settings, Appearance Theme, Days).",
@@ -36,9 +36,9 @@ export function llmsTxt(origin: string): string {
     .map(([name, tool]) => `- \`${name}\`: ${tool.description}`)
     .join("\n");
 
-  return `# War Weeker
+  return `# JG War Week
 
-> War Weeker is where Jahnel Group organizers run War Week, the company's annual week of team competitions, and where participants follow it: themes, schedule, teams, competitions, points, awards and announcements, plus a history of past War Weeks.
+> The JG War Week app is where Jahnel Group organizers run War Week, the company's annual week of team competitions, and where participants follow it: themes, schedule, teams, competitions, points, awards and announcements, plus a history of past War Weeks.
 
 Every page and API route except sign-in needs a signed-in Jahnel Group account.
 
@@ -55,8 +55,8 @@ ${tools}
 ## Access
 
 - Browser: sign in with Google using a @jahnelgroup.com account.
-- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the War Weeker operators issue. A signed-in browser session also works. Otherwise it answers 401.
-- Claude Code: \`claude mcp add --transport http war-weeker ${origin}/api/mcp --header "Authorization: Bearer <MCP_TOKEN>"\`
+- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the JG War Week app operators issue. A signed-in browser session also works. Otherwise it answers 401.
+- Claude Code: \`claude mcp add --transport http jg-war-week ${origin}/api/mcp --header "Authorization: Bearer <MCP_TOKEN>"\`
 
 ## Source
 

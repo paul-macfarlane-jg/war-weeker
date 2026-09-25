@@ -10,14 +10,14 @@ hackathon without redoing the research.
 
 - It logs self-reported stair climbs, keyed by the climber's
   `@jahnelgroup.com` email.
-- Its API needs a Firebase ID token, so War Weeker can't call it with its own
+- Its API needs a Firebase ID token, so the JG War Week app can't call it with its own
   Google sign-in or a server credential today.
 
 ## Recommended route
 
 Add an **API-key-protected date-range report endpoint** to the Stairs
 backend (estimated **5–8 hours**): given a start and end date, it returns
-climbs per email. War Weeker would then:
+climbs per email. The JG War Week app would then:
 
 1. Call it with a server-side API key (a new env var; never exposed to the
    browser) for the War Week's dates.

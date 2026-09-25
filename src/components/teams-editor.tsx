@@ -17,6 +17,7 @@ import {
   usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
+import { SuggestionCombobox } from "@/components/suggestion-combobox";
 import type { ParticipantInput, TeamInput } from "@/lib/setup";
 import type { SetupParticipant, SetupTeam } from "@/queries/setup";
 
@@ -142,12 +143,15 @@ function ParticipantRow({
   teams,
   teamLabel,
   leaderTitle,
+  tagSuggestions,
 }: {
   participant?: SetupParticipant;
   /** Empty in a free-for-all, which hides the Team and Leader fields. */
   teams: SetupTeam[];
   teamLabel: string;
   leaderTitle: string;
+  /** Company Tags used in any War Week. */
+  tagSuggestions: string[];
 }) {
   const initial: ParticipantInput = participant
     ? {
@@ -196,13 +200,15 @@ function ParticipantRow({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Company Tag
-          <input
+          <SuggestionCombobox
             name="companyTag"
             maxLength={40}
             placeholder="Optional"
-            className={fieldClass}
+            suggestions={tagSuggestions}
             value={values.companyTag}
-            onChange={set("companyTag")}
+            onValueChange={(companyTag) =>
+              setValues((v) => ({ ...v, companyTag }))
+            }
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
@@ -313,13 +319,16 @@ export function RosterEditor({
   teams,
   teamLabel,
   leaderTitle,
+  tagSuggestions,
 }: {
   participants: SetupParticipant[];
   teams: SetupTeam[];
   teamLabel: string;
   leaderTitle: string;
+  /** Company Tags used in any War Week, for the Company Tag field. */
+  tagSuggestions: string[];
 }) {
-  const rowProps = { teams, teamLabel, leaderTitle };
+  const rowProps = { teams, teamLabel, leaderTitle, tagSuggestions };
   return (
     <div className="flex flex-col gap-1">
       {participants.length === 0 ? (

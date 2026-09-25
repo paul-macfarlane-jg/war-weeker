@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   EyeOff,
   LayoutDashboard,
   Medal,
@@ -16,6 +17,7 @@ import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
+  { label: "Guide", icon: BookOpen, href: "/admin/guide" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
   { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
@@ -59,7 +61,7 @@ export function AdminShell({
             href={`/${warWeek.edition}`}
             className="text-primary underline-offset-4 hover:underline"
           >
-            View public site
+            Back to War Week {warWeek.edition.toUpperCase()}
           </Link>
           <span className="text-foreground/70 truncate">{email}</span>
           <SignOutButton />

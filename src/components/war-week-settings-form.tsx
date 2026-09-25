@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { type SetupActionResult, updateWarWeekSettings } from "@/actions/setup";
+import { OrganizerEmailChips } from "@/components/organizer-email-chips";
 import { Button } from "@/components/ui/button";
 import type { WarWeek } from "@/db/schema";
 import type { WarWeekSettingsInput } from "@/lib/setup";
@@ -44,8 +45,11 @@ function pickerValue(hex: string): string {
  */
 export function WarWeekSettingsForm({
   initial,
+  actorEmail,
 }: {
   initial: WarWeekSettingsInput;
+  /** The signed-in Organizer, whose own chip can't be removed. */
+  actorEmail: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -146,21 +150,16 @@ export function WarWeekSettingsForm({
         {text("wikiUrl", "Wiki URL", { placeholder: "Optional" })}
       </fieldset>
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="mb-2 text-base font-semibold">Organizers</legend>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Organizer emails
-          <textarea
-            name="organizerEmails"
-            rows={4}
-            className={`${fieldClass} h-auto py-2 font-mono`}
-            value={values.organizerEmails}
-            onChange={set("organizerEmails")}
-          />
-        </label>
-        <p className="text-foreground/60 text-xs">
-          One per line. Everyone listed can use these admin pages.
-        </p>
+        <OrganizerEmailChips
+          value={values.organizerEmails}
+          actorEmail={actorEmail}
+          onChange={(organizerEmails) => {
+            setValues((v) => ({ ...v, organizerEmails }));
+            setResult(null);
+          }}
+        />
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">

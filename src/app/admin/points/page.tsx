@@ -20,7 +20,7 @@ import { loadAdminPage } from "../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Points Entries · War Weeker" };
+export const metadata: Metadata = { title: "Points Entries · JG War Week" };
 
 export default async function AdminPointsPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage("/admin/points");
@@ -48,7 +48,7 @@ export default async function AdminPointsPage() {
             <h2 className="text-lg font-semibold">Current standings</h2>
             {warWeek.standingsHidden && (
               <p className="text-foreground/70 text-sm">
-                Hidden on the public site 🔒 Only Organizers see these.
+                Hidden from Participants 🔒 Only Organizers see these.
               </p>
             )}
           </div>

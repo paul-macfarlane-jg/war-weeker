@@ -10,7 +10,7 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "War Week settings · War Weeker" };
+export const metadata: Metadata = { title: "War Week settings · JG War Week" };
 
 export default async function WarWeekSettingsPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage(
@@ -32,6 +32,7 @@ export default async function WarWeekSettingsPage() {
         <WarWeekSettingsForm
           key={warWeek.updatedAt.toISOString()}
           initial={settingsInputFrom(warWeek)}
+          actorEmail={email}
         />
       </section>
     </AdminShell>

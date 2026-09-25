@@ -39,12 +39,18 @@ describe("AboutPage", () => {
     expect(html).toContain(`href="${MAINTAINERS_GUIDE_URL}"`);
   });
 
-  it("tells Paul's story and mentions the one-sentence features", () => {
-    expect(text).toContain("Why I built this");
+  it("tells the team's story and mentions the one-sentence features", () => {
+    expect(text).toContain("Why we built this");
+    expect(text).toContain("Jahnel Group War Week · since 2016");
+    expect(text).toContain("Install app");
     expect(text).toContain("2016");
-    expect(text).toContain("Competiscore");
-    expect(text).toMatch(/home screen/i);
-    expect(text).toMatch(/Appearance Theme/);
+    expect(text.match(/Competiscore/g)).toHaveLength(1);
+    expect(text).not.toContain("points are gone");
+    expect(text).not.toContain("Why I built this");
+    expect(text).not.toContain("Paul Macfarlane");
+    expect(text).not.toContain("Appearance Theme");
+    expect(text).not.toMatch(/\blost\b/i);
+    expect(html).not.toContain('href="/install"');
   });
 
   it("mentions no build tooling and no banned terms", () => {

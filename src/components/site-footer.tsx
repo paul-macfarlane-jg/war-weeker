@@ -11,7 +11,7 @@ export function SiteFooter({ className }: { className?: string }) {
   return (
     <footer
       className={cn(
-        "text-foreground/70 flex items-center justify-center gap-3 px-4 py-6 text-xs",
+        "text-foreground/70 flex flex-wrap items-center justify-center gap-3 px-4 py-6 text-xs",
         className,
       )}
     >
@@ -21,6 +21,18 @@ export function SiteFooter({ className }: { className?: string }) {
         className="hover:text-foreground underline underline-offset-4"
       >
         About
+      </Link>
+      <Link
+        href="/privacy"
+        className="hover:text-foreground underline underline-offset-4"
+      >
+        Privacy
+      </Link>
+      <Link
+        href="/terms"
+        className="hover:text-foreground underline underline-offset-4"
+      >
+        Terms
       </Link>
       <a
         href={REPO_URL}

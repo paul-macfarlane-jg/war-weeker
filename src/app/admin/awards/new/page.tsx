@@ -8,7 +8,7 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "New Award · War Weeker" };
+export const metadata: Metadata = { title: "New Award · JG War Week" };
 
 export default async function NewAwardPage() {
   const { warWeek, email, isOrganizer } =

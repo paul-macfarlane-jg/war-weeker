@@ -7,7 +7,7 @@ import {
   APP_THEME_COLOR,
 } from "@/lib/pwa";
 
-/** Served at `/manifest.webmanifest`; makes War Weeker installable. */
+/** Served at `/manifest.webmanifest`; makes JG War Week installable. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: APP_NAME,

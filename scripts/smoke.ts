@@ -409,7 +409,7 @@ async function assertInstallable() {
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
       favicon: home.includes('rel="icon" href="/favicon.ico'),
       install:
-        install.status === 200 && installBody.includes("Install War Weeker"),
+        install.status === 200 && installBody.includes("Install JG War Week"),
       installFooter: installBody.includes("Jahnel Group"),
     };
     if (Object.values(checks).every(Boolean)) {
@@ -433,7 +433,7 @@ async function assertLlmsTxt() {
       contentType: (res.headers.get("content-type") ?? "").startsWith(
         "text/plain",
       ),
-      title: body.startsWith("# War Weeker\n"),
+      title: body.startsWith("# JG War Week\n"),
       tools: Object.keys(MCP_TOOLS).every((name) =>
         body.includes(`\`${name}\``),
       ),
@@ -897,6 +897,47 @@ async function assertAboutPage() {
   }
 }
 
+async function assertPrivacyAndTermsPages() {
+  for (const [pathname, title] of [
+    ["/privacy", "Privacy"],
+    ["/terms", "Terms"],
+  ] as const) {
+    const check = `anonymous GET ${pathname} is 200 with its "${title}" heading, "Last updated" and no sign-in redirect`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const body = await res.text();
+      if (
+        res.status === 200 &&
+        body.includes(`>${title}</h1>`) &&
+        body.includes("Last updated")
+      ) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+
+  // /privacy and /terms are exact matches: the [edition] route would
+  // otherwise make /privacy/x or /terms/leaderboard public edition pages.
+  for (const pathname of ["/privacy/x", "/termsx"]) {
+    const privateCheck = `anonymous GET ${pathname} redirects to sign-in`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const location = res.headers.get("location") ?? "";
+      if (res.status === 307 && location.includes("/sign-in")) {
+        ok(privateCheck);
+      } else {
+        fail(privateCheck, `status=${res.status} location=${location}`);
+      }
+    } catch (error) {
+      fail(privateCheck, String(error));
+    }
+  }
+}
+
 async function assertSignInPage() {
   const check =
     "GET /sign-in renders without OAuth credentials and says Google isn't configured";
@@ -904,7 +945,7 @@ async function assertSignInPage() {
     const res = await fetch(`${BASE_URL}/sign-in?callbackURL=%2Fadmin`);
     const body = await res.text();
     const checks = {
-      heading: body.includes("Sign in to War Weeker"),
+      heading: body.includes("Sign in to JG War Week"),
       domain: body.includes("Use your @jahnelgroup.com Google account."),
       notConfigured: body.includes("configured on this server"),
       about: body.includes('href="/about"'),
@@ -991,6 +1032,31 @@ async function assertAdminGate(sessions: {
         ok(check);
       } else {
         fail(check, `status=${result.status} location=${result.location}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
+async function assertAdminWording(sessions: { organizer: SmokeSession }) {
+  for (const route of ["/admin", "/admin/standings", "/admin/points"]) {
+    const check = `GET ${route} as an Organizer says 'Back to War Week XI' and never 'public site'`;
+    try {
+      const res = await fetch(`${BASE_URL}${route}`, {
+        headers: { cookie: sessions.organizer.cookie },
+      });
+      const body = await res.text();
+      const checks = {
+        // React SSR can split "Back to War Week " and "XI" with a hydration
+        // comment marker, so tolerate one between them.
+        backLink: /Back to War Week\s*(?:<!--\s*-->)?\s*XI/.test(body),
+        noPublicSite: !body.includes("public site"),
+      };
+      if (res.status === 200 && Object.values(checks).every(Boolean)) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
       }
     } catch (error) {
       fail(check, String(error));
@@ -1148,7 +1214,7 @@ async function assertAdminPointsPage(sessions: {
       unscheduled: Number(unscheduled.count),
       ledger: Boolean(enteredBy) && body.includes(escapeHtml(enteredBy.email)),
       standings:
-        body.includes("Hidden on the public site") &&
+        body.includes("Hidden from Participants") &&
         body.includes("Individual leaderboard") &&
         /tabular-nums">[\d.,]+<\/span>/.test(body),
     };
@@ -2561,7 +2627,8 @@ async function assertAwardAdminPages(sessions: {
 
 /**
  * /admin/setup: the landing, settings and Days pages, and one settings save
- * and one Day Theme edit that the public site reflects. Restores XI after.
+ * and one Day Theme edit that the War Week's own pages reflect. Restores XI
+ * after.
  */
 async function assertSetup(sessions: {
   organizer: SmokeSession;
@@ -2924,7 +2991,7 @@ async function assertSetupTeamsAndCompetitions(sessions: {
 /**
  * /admin/setup/schedule and /admin/setup/faq: the pages, the Schedule Item
  * validation refusals, and one new Schedule Item and one new FAQ Item that
- * the public site shows. Deletes both after.
+ * the War Week's own pages show. Deletes both after.
  */
 async function assertSetupScheduleFaq(sessions: {
   organizer: SmokeSession;
@@ -3230,6 +3297,48 @@ async function assertMcpBearerToken() {
     }
   } catch (error) {
     fail(check, String(error));
+  }
+}
+
+async function assertAdminGuidePage(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const organizerCheck =
+    "GET /admin/guide as an Organizer shows the guide, linked in the admin nav";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const body = await res.text();
+    if (
+      res.status === 200 &&
+      body.includes("Organizer guide") &&
+      body.includes("Placement Points") &&
+      body.includes('href="/admin/guide"')
+    ) {
+      ok(organizerCheck);
+    } else {
+      fail(organizerCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(organizerCheck, String(error));
+  }
+
+  const refusalCheck =
+    "GET /admin/guide as a signed-in non-Organizer shows the refusal";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.notOrganizer.cookie },
+    });
+    const body = await res.text();
+    if (res.status === 200 && body.includes("Organizers only")) {
+      ok(refusalCheck);
+    } else {
+      fail(refusalCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(refusalCheck, String(error));
   }
 }
 
@@ -3722,10 +3831,13 @@ async function main() {
       await assertYouHighlight(sessions);
       await assertMcp();
       await assertAboutPage();
+      await assertPrivacyAndTermsPages();
       await assertSignInPage();
       await assertAdminGate(sessions);
+      await assertAdminWording(sessions);
       await assertSignInRequired();
       await assertAdminLink(sessions);
+      await assertAdminGuidePage(sessions);
       await assertAdminPointsPage(sessions);
       await assertPointsEntryActions(sessions);
       await assertHideAndReveal(sessions);

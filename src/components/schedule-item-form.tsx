@@ -10,6 +10,7 @@ import {
 } from "@/actions/setup-schedule-faq";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import type { ScheduleItem } from "@/db/schema";
 import type { Content } from "@/lib/rich-text/content";
 import { formatDayHeading } from "@/lib/schedule";
 import type { ScheduleItemInput } from "@/lib/setup-schedule-faq";
@@ -23,7 +24,8 @@ const CATEGORIES = [
   ["social", "Social"],
   ["meal", "Meal"],
   ["work", "Work"],
-] as const;
+  ["other", "Other"],
+] as const satisfies ReadonlyArray<readonly [ScheduleItem["category"], string]>;
 
 const EMPTY: ScheduleItemInput = {
   dayId: "",
