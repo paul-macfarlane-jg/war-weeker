@@ -29,7 +29,7 @@ export default async function CompetitionsPage({
       <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
         <h1 className="text-2xl font-bold">Competitions</h1>
         <Tabs defaultValue="0">
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="h-11 w-full justify-start overflow-x-auto">
             {sections.map((section, index) => (
               <TabsTrigger key={section.name} value={String(index)}>
                 {section.name}

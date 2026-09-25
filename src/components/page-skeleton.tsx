@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /** The container every `/[edition]` sub-page uses, so nothing jumps. */
 export const PAGE_SKELETON_CLASS =
-  "mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl";
+  "mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl";
 
 /** One list-row placeholder, the height of a card or list item. */
 export function RowSkeleton({ className }: { className?: string }) {

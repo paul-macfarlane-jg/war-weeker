@@ -7,8 +7,6 @@ import { SignOutButton } from "@/components/auth-buttons";
 import type { NavAccount } from "@/components/primary-nav";
 import { type MoreLinksInput, moreLinks } from "@/lib/more-links";
 
-export type { MoreLinksInput };
-
 /**
  * The More Sheet's content on a phone: the same links as `/[edition]/more`,
  * plus the signed-in account row. Tapping a link calls `onNavigate` so the
@@ -35,7 +33,7 @@ export function MoreMenu({
   });
 
   return (
-    <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
+    <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <ul className="border-border flex flex-col rounded-lg border">
         {links.map(({ label, href, icon: Icon }) => (
           <li key={href} className="border-border border-b last:border-b-0">
