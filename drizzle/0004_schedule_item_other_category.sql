@@ -1,0 +1,1 @@
+ALTER TYPE "public"."schedule_item_category" ADD VALUE 'other';

@@ -65,6 +65,10 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   today's Day or a later one.
 - Home and schedule pages accept `?at=<ISO instant>` to show the schedule as
   of that moment, for demos of a War Week that isn't on right now.
+- A Schedule Item has one of six categories, each with its own fixed color
+  independent of the Appearance Theme: Competition, Education, Social, Meal,
+  Work, and **Other**. `other` uses neutral styling, for an item that is none
+  of the other five.
 
 ## Competition and roster display rules
 

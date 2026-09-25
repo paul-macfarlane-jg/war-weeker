@@ -217,6 +217,13 @@ describe("warWeekSeedSchema", () => {
     ).toBe(true);
   });
 
+  it("accepts an `other` Schedule Item category", () => {
+    const fixture = loadFixture();
+    fixture.days[1].scheduleItems[0].category = "other";
+    const seed = warWeekSeedSchema.parse(fixture);
+    expect(seed.days[1].scheduleItems[0].category).toBe("other");
+  });
+
   it("rejects Counts Toward Team on a team Competition", () => {
     const fixture = loadFixture();
     fixture.competitions.push({
