@@ -2,13 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
-import { type SetupActionResult, updateWarWeekSettings } from "@/actions/setup";
+import { updateWarWeekSettings } from "@/actions/setup";
 import { ColorField, type ColorSwatch } from "@/components/color-field";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { OptionSelect, type SelectOption } from "@/components/option-select";
 import { OrganizerEmailChips } from "@/components/organizer-email-chips";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { WarWeek } from "@/db/schema";
 import type { WarWeekSettingsInput } from "@/lib/setup";
@@ -72,11 +81,11 @@ export function WarWeekSettingsForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(initial);
-  const [result, setResult] = useState<SetupActionResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   function setValue(field: keyof WarWeekSettingsInput, value: string) {
     setValues((v) => ({ ...v, [field]: value }));
-    setResult(null);
+    setError(null);
   }
   const set =
     (field: keyof WarWeekSettingsInput) =>
@@ -94,8 +103,14 @@ export function WarWeekSettingsForm({
     event.preventDefault();
     startTransition(async () => {
       const saved = await updateWarWeekSettings(values);
-      setResult(saved);
-      if (saved.ok) router.refresh();
+      if (saved.ok) {
+        setError(null);
+        toast.success("War Week settings saved");
+        router.refresh();
+      } else {
+        setError(saved.error);
+        toast.error(saved.error);
+      }
     });
   }
 
@@ -104,16 +119,17 @@ export function WarWeekSettingsForm({
     label: string,
     props: React.InputHTMLAttributes<HTMLInputElement> = {},
   ) => (
-    <label className="flex flex-col gap-1 text-sm font-medium">
-      {label}
+    <Field>
+      <FieldLabel htmlFor={`settings-${field}`}>{label}</FieldLabel>
       <Input
+        id={`settings-${field}`}
         name={field}
         className="h-11 sm:h-9"
         value={values[field]}
         onChange={set(field)}
         {...props}
       />
-    </label>
+    </Field>
   );
 
   return (
@@ -122,78 +138,90 @@ export function WarWeekSettingsForm({
       className="flex flex-col gap-6"
       aria-label="War Week settings"
     >
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-base font-semibold">Story</legend>
-        <div className="sm:col-span-2">
-          {text("storyTheme", "Story Theme", {
+      <FieldSet>
+        <FieldLegend className="mb-2 font-semibold">Story</FieldLegend>
+        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            {text("storyTheme", "Story Theme", {
+              required: true,
+              maxLength: 120,
+            })}
+          </div>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor="warWeekDates">Dates</FieldLabel>
+            <DateRangePicker
+              id="warWeekDates"
+              startName="startDate"
+              endName="endDate"
+              value={{ start: values.startDate, end: values.endDate }}
+              days={dayDates}
+              onValueChange={({ start, end }) => {
+                setValues((v) => ({ ...v, startDate: start, endDate: end }));
+                setError(null);
+              }}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="settings-status">Status</FieldLabel>
+            <OptionSelect
+              id="settings-status"
+              name="status"
+              options={STATUS_OPTIONS}
+              value={values.status}
+              onValueChange={(status) => setValue("status", status)}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="settings-mode">Mode</FieldLabel>
+            <OptionSelect
+              id="settings-mode"
+              name="mode"
+              options={MODE_OPTIONS}
+              value={values.mode}
+              onValueChange={(mode) => setValue("mode", mode)}
+            />
+          </Field>
+          {text("teamLabel", "Team Label", { required: true, maxLength: 40 })}
+          {text("leaderTitle", "Leader Title", {
             required: true,
-            maxLength: 120,
+            maxLength: 40,
           })}
-        </div>
-        <div className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-          <label htmlFor="warWeekDates">Dates</label>
-          <DateRangePicker
-            id="warWeekDates"
-            startName="startDate"
-            endName="endDate"
-            value={{ start: values.startDate, end: values.endDate }}
-            days={dayDates}
-            onValueChange={({ start, end }) => {
-              setValues((v) => ({ ...v, startDate: start, endDate: end }));
-              setResult(null);
+        </FieldGroup>
+      </FieldSet>
+
+      <FieldSet>
+        <FieldLegend className="mb-2 font-semibold">Links</FieldLegend>
+        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+          {text("slackChannelUrl", "Slack URL", {
+            type: "url",
+            required: true,
+          })}
+          {text("wikiUrl", "Wiki URL", { placeholder: "Optional" })}
+        </FieldGroup>
+      </FieldSet>
+
+      <FieldSet className="min-w-0">
+        <FieldLegend className="mb-2 font-semibold">Organizers</FieldLegend>
+        <FieldGroup>
+          <OrganizerEmailChips
+            value={values.organizerEmails}
+            actorEmail={actorEmail}
+            onChange={(organizerEmails) => {
+              setValues((v) => ({ ...v, organizerEmails }));
+              setError(null);
             }}
           />
-        </div>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Status
-          <OptionSelect
-            name="status"
-            options={STATUS_OPTIONS}
-            value={values.status}
-            onValueChange={(status) => setValue("status", status)}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Mode
-          <OptionSelect
-            name="mode"
-            options={MODE_OPTIONS}
-            value={values.mode}
-            onValueChange={(mode) => setValue("mode", mode)}
-          />
-        </label>
-        {text("teamLabel", "Team Label", { required: true, maxLength: 40 })}
-        {text("leaderTitle", "Leader Title", { required: true, maxLength: 40 })}
-      </fieldset>
+        </FieldGroup>
+      </FieldSet>
 
-      <fieldset className="grid gap-4 sm:grid-cols-2">
-        <legend className="mb-2 text-base font-semibold">Links</legend>
-        {text("slackChannelUrl", "Slack URL", { type: "url", required: true })}
-        {text("wikiUrl", "Wiki URL", { placeholder: "Optional" })}
-      </fieldset>
-
-      <fieldset className="flex min-w-0 flex-col gap-2">
-        <legend className="mb-2 text-base font-semibold">Organizers</legend>
-        <OrganizerEmailChips
-          value={values.organizerEmails}
-          actorEmail={actorEmail}
-          onChange={(organizerEmails) => {
-            setValues((v) => ({ ...v, organizerEmails }));
-            setResult(null);
-          }}
-        />
-      </fieldset>
-
-      <fieldset className="flex flex-col gap-4">
-        <legend className="mb-2 text-base font-semibold">
+      <FieldSet>
+        <FieldLegend className="mb-2 font-semibold">
           Appearance Theme
-        </legend>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        </FieldLegend>
+        <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLOR_FIELDS.map(({ field, label }) => (
-            <div key={field} className="flex flex-col gap-1 text-sm">
-              <label htmlFor={field} className="font-medium">
-                {label} color
-              </label>
+            <Field key={field}>
+              <FieldLabel htmlFor={field}>{label} color</FieldLabel>
               <ColorField
                 id={field}
                 name={field}
@@ -201,26 +229,27 @@ export function WarWeekSettingsForm({
                 swatches={swatches}
                 onValueChange={(hex) => setValue(field, hex)}
               />
-            </div>
+            </Field>
           ))}
-          <label className="flex flex-col gap-1 text-sm font-medium">
-            Font
+          <Field>
+            <FieldLabel htmlFor="settings-fontPreset">Font</FieldLabel>
             <OptionSelect
+              id="settings-fontPreset"
               name="fontPreset"
               options={FONT_OPTIONS}
               value={values.fontPreset}
               onValueChange={(font) => setValue("fontPreset", font)}
             />
-          </label>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+          </Field>
+        </FieldGroup>
+        <FieldGroup className="grid gap-4 sm:grid-cols-2">
           {text("logoUrl", "Logo URL", {
             placeholder: "/themes/… or https://…",
           })}
           {text("bannerUrl", "Banner URL", {
             placeholder: "/themes/… or https://…",
           })}
-        </div>
+        </FieldGroup>
 
         <div
           aria-label="Theme preview"
@@ -253,20 +282,20 @@ export function WarWeekSettingsForm({
             ))}
           </ul>
         )}
-      </fieldset>
+      </FieldSet>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
-          {pending ? "Saving…" : "Save settings"}
-        </Button>
-        {result && !pending && (
-          <p
-            role={result.ok ? "status" : "alert"}
-            className={result.ok ? "text-sm" : "text-destructive text-sm"}
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="submit"
+            size="lg"
+            className="min-h-11 sm:min-h-9"
+            disabled={pending}
           >
-            {result.ok ? "Saved." : result.error}
-          </p>
-        )}
+            {pending ? "Saving…" : "Save settings"}
+          </Button>
+        </div>
+        <FieldError>{pending ? null : error}</FieldError>
       </div>
     </form>
   );

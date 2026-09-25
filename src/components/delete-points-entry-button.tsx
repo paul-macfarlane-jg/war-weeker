@@ -1,10 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-
 import { deletePointsEntry } from "@/actions/points-entries";
-import { Button } from "@/components/ui/button";
+import { ConfirmActionButton } from "@/components/confirm-dialog";
 
 export function DeletePointsEntryButton({
   id,
@@ -14,24 +11,13 @@ export function DeletePointsEntryButton({
   /** e.g. "5 pts to Red in Tug of War", for the confirm prompt. */
   description: string;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
   return (
-    <Button
-      variant="destructive"
-      size="xs"
-      disabled={pending}
-      onClick={() => {
-        if (!window.confirm(`Delete ${description}?`)) return;
-        startTransition(async () => {
-          const result = await deletePointsEntry(id);
-          if (!result.ok) window.alert(result.error);
-          router.refresh();
-        });
-      }}
+    <ConfirmActionButton
+      title={`Delete ${description}?`}
+      action={() => deletePointsEntry(id)}
+      successMessage="Points Entry deleted"
     >
-      {pending ? "Deleting…" : "Delete"}
-    </Button>
+      Delete
+    </ConfirmActionButton>
   );
 }

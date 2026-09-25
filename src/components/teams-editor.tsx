@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import {
   createParticipant,
@@ -19,8 +19,8 @@ import {
   useSetupRow,
 } from "@/components/setup-row";
 import { SuggestionCombobox } from "@/components/suggestion-combobox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { normalizeHex } from "@/lib/color";
 import type { ParticipantInput, TeamInput } from "@/lib/setup";
@@ -41,6 +41,7 @@ function TeamRow({
   const initial: TeamInput = team
     ? { name: team.name, color: team.color, logoUrl: team.logoUrl ?? "" }
     : EMPTY_TEAM;
+  const id = useId();
   const [values, setValues] = useState(initial);
   const { pending, run, error } = useSetupRow(
     team ? undefined : () => setValues(EMPTY_TEAM),
@@ -49,9 +50,20 @@ function TeamRow({
     (field: keyof TeamInput) => (event: React.ChangeEvent<HTMLInputElement>) =>
       setValues((v) => ({ ...v, [field]: event.target.value }));
 
+  const usage = team
+    ? usageSummary([
+        [team.participantCount, "Participant", "Participants"],
+        [team.pointsEntryCount, "Points Entry", "Points Entries"],
+        [team.awardCount, "Award", "Awards"],
+      ])
+    : "";
+
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    run(() => (team ? updateTeam(team.id, values) : createTeam(values)));
+    run(
+      () => (team ? updateTeam(team.id, values) : createTeam(values)),
+      `${teamLabel} saved`,
+    );
   }
 
   return (
@@ -59,60 +71,55 @@ function TeamRow({
       <form
         onSubmit={submit}
         aria-label={team ? `${teamLabel} ${team.name}` : `New ${teamLabel}`}
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
       >
-        <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm font-medium">
-          Name
-          <Input
-            name="name"
-            required
-            maxLength={80}
-            className="h-11 sm:h-9"
-            value={values.name}
-            onChange={set("name")}
+        <FieldGroup className="gap-2 sm:flex-row sm:items-end">
+          <Field className="min-w-0 sm:flex-1">
+            <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
+            <Input
+              id={`${id}-name`}
+              name="name"
+              required
+              maxLength={80}
+              className="h-11 sm:h-9"
+              value={values.name}
+              onChange={set("name")}
+            />
+          </Field>
+          <Field className="sm:w-auto">
+            <FieldLabel htmlFor={`${id}-color`}>Color</FieldLabel>
+            <ColorField
+              id={`${id}-color`}
+              name="color"
+              value={values.color}
+              swatches={swatches}
+              onValueChange={(color) => setValues((v) => ({ ...v, color }))}
+            />
+          </Field>
+          <Field className="sm:flex-1">
+            <FieldLabel htmlFor={`${id}-logo`}>Logo URL</FieldLabel>
+            <Input
+              id={`${id}-logo`}
+              name="logoUrl"
+              maxLength={500}
+              placeholder="Optional"
+              className="h-11 sm:h-9"
+              value={values.logoUrl}
+              onChange={set("logoUrl")}
+            />
+          </Field>
+          <SetupRowButtons
+            pending={pending}
+            addLabel={`Add ${teamLabel}`}
+            onDelete={
+              team &&
+              (() => run(() => deleteTeam(team.id), `${teamLabel} deleted`))
+            }
+            deleteTitle={team && `Delete ${teamLabel} ${team.name}?`}
+            deleteDescription={usage}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Color
-          <ColorField
-            name="color"
-            value={values.color}
-            swatches={swatches}
-            onValueChange={(color) => setValues((v) => ({ ...v, color }))}
-          />
-        </label>
-        <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
-          Logo URL
-          <Input
-            name="logoUrl"
-            maxLength={500}
-            placeholder="Optional"
-            className="h-11 sm:h-9"
-            value={values.logoUrl}
-            onChange={set("logoUrl")}
-          />
-        </label>
-        <SetupRowButtons
-          pending={pending}
-          addLabel={`Add ${teamLabel}`}
-          onDelete={
-            team &&
-            (() => {
-              if (!window.confirm(`Delete ${teamLabel} ${team.name}?`)) return;
-              run(() => deleteTeam(team.id));
-            })
-          }
-        />
+        </FieldGroup>
       </form>
-      {team && (
-        <p className="text-foreground/60 mt-1 text-xs">
-          {usageSummary([
-            [team.participantCount, "Participant", "Participants"],
-            [team.pointsEntryCount, "Points Entry", "Points Entries"],
-            [team.awardCount, "Award", "Awards"],
-          ])}
-        </p>
-      )}
+      {team && <p className="text-foreground/60 mt-1 text-xs">{usage}</p>}
       <SetupRowError error={error} />
     </li>
   );
@@ -154,6 +161,7 @@ function ParticipantRow({
         isLeader: participant.isLeader,
       }
     : EMPTY_PARTICIPANT;
+  const id = useId();
   const [values, setValues] = useState(initial);
   const { pending, run, error } = useSetupRow(
     participant ? undefined : () => setValues(EMPTY_PARTICIPANT),
@@ -167,12 +175,21 @@ function ParticipantRow({
     ...teams.map((team) => ({ value: team.id, label: team.name })),
   ];
 
+  const usage = participant
+    ? usageSummary([
+        [participant.pointsEntryCount, "Points Entry", "Points Entries"],
+        [participant.awardCount, "Award", "Awards"],
+      ])
+    : "";
+
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    run(() =>
-      participant
-        ? updateParticipant(participant.id, values)
-        : createParticipant(values),
+    run(
+      () =>
+        participant
+          ? updateParticipant(participant.id, values)
+          : createParticipant(values),
+      "Participant saved",
     );
   }
 
@@ -181,89 +198,97 @@ function ParticipantRow({
       <form
         onSubmit={submit}
         aria-label={participant ? participant.displayName : "New Participant"}
-        className="grid gap-2 sm:grid-cols-3 sm:items-end xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto_auto]"
       >
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Display name
-          <Input
-            name="displayName"
-            required
-            maxLength={120}
-            className="h-11 sm:h-9"
-            value={values.displayName}
-            onChange={set("displayName")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Company Tag
-          <SuggestionCombobox
-            name="companyTag"
-            maxLength={40}
-            placeholder="Optional"
-            suggestions={tagSuggestions}
-            value={values.companyTag}
-            onValueChange={(companyTag) =>
-              setValues((v) => ({ ...v, companyTag }))
-            }
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Email
-          <Input
-            name="email"
-            type="email"
-            maxLength={254}
-            placeholder="Optional"
-            className="h-11 sm:h-9"
-            value={values.email}
-            onChange={set("email")}
-          />
-        </label>
-        {teams.length > 0 ? (
-          <>
-            <label className="flex flex-col gap-1 text-sm font-medium">
-              {teamLabel}
-              <OptionSelect
-                name="teamId"
-                options={teamOptions}
-                value={values.teamId}
-                onValueChange={(teamId) => setValues((v) => ({ ...v, teamId }))}
-              />
-            </label>
-            <Label className="min-h-11 sm:min-h-9">
-              <Switch
-                name="isLeader"
-                checked={values.isLeader}
-                onCheckedChange={(isLeader) =>
-                  setValues((v) => ({ ...v, isLeader }))
+        <FieldGroup className="grid gap-2 sm:grid-cols-3 sm:items-end xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,1.4fr)_minmax(0,1fr)_auto_auto]">
+          <Field>
+            <FieldLabel htmlFor={`${id}-name`}>Display name</FieldLabel>
+            <Input
+              id={`${id}-name`}
+              name="displayName"
+              required
+              maxLength={120}
+              className="h-11 sm:h-9"
+              value={values.displayName}
+              onChange={set("displayName")}
+            />
+          </Field>
+          <Field>
+            {/* SuggestionCombobox takes no id, so the label wraps it. */}
+            <FieldLabel className="w-full flex-col items-stretch">
+              Company Tag
+              <SuggestionCombobox
+                name="companyTag"
+                maxLength={40}
+                placeholder="Optional"
+                suggestions={tagSuggestions}
+                value={values.companyTag}
+                onValueChange={(companyTag) =>
+                  setValues((v) => ({ ...v, companyTag }))
                 }
               />
-              {leaderTitle}
-            </Label>
-          </>
-        ) : (
-          <span className="hidden sm:col-span-2 sm:block" />
-        )}
-        <SetupRowButtons
-          pending={pending}
-          addLabel="Add Participant"
-          onDelete={
-            participant &&
-            (() => {
-              if (!window.confirm(`Delete ${participant.displayName}?`)) return;
-              run(() => deleteParticipant(participant.id));
-            })
-          }
-        />
+            </FieldLabel>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-email`}>Email</FieldLabel>
+            <Input
+              id={`${id}-email`}
+              name="email"
+              type="email"
+              maxLength={254}
+              placeholder="Optional"
+              className="h-11 sm:h-9"
+              value={values.email}
+              onChange={set("email")}
+            />
+          </Field>
+          {teams.length > 0 ? (
+            <>
+              <Field>
+                <FieldLabel htmlFor={`${id}-team`}>{teamLabel}</FieldLabel>
+                <OptionSelect
+                  id={`${id}-team`}
+                  name="teamId"
+                  options={teamOptions}
+                  value={values.teamId}
+                  onValueChange={(teamId) =>
+                    setValues((v) => ({ ...v, teamId }))
+                  }
+                />
+              </Field>
+              <Field orientation="horizontal" className="min-h-11 sm:min-h-9">
+                <Switch
+                  id={`${id}-leader`}
+                  name="isLeader"
+                  checked={values.isLeader}
+                  onCheckedChange={(isLeader) =>
+                    setValues((v) => ({ ...v, isLeader }))
+                  }
+                />
+                <FieldLabel htmlFor={`${id}-leader`}>{leaderTitle}</FieldLabel>
+              </Field>
+            </>
+          ) : (
+            <span className="hidden sm:col-span-2 sm:block" />
+          )}
+          <SetupRowButtons
+            pending={pending}
+            addLabel="Add Participant"
+            onDelete={
+              participant &&
+              (() =>
+                run(
+                  () => deleteParticipant(participant.id),
+                  "Participant deleted",
+                ))
+            }
+            deleteTitle={participant && `Delete ${participant.displayName}?`}
+            deleteDescription={usage}
+          />
+        </FieldGroup>
       </form>
       {participant &&
         (participant.pointsEntryCount > 0 || participant.awardCount > 0) && (
-          <p className="text-foreground/60 mt-1 text-xs">
-            {usageSummary([
-              [participant.pointsEntryCount, "Points Entry", "Points Entries"],
-              [participant.awardCount, "Award", "Awards"],
-            ])}
-          </p>
+          <p className="text-foreground/60 mt-1 text-xs">{usage}</p>
         )}
       <SetupRowError error={error} />
     </li>

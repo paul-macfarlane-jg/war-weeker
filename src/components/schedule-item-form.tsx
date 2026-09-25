@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type SetupScheduleFaqActionResult,
@@ -13,6 +14,12 @@ import { OptionSelect } from "@/components/option-select";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { TimeCombobox } from "@/components/time-combobox";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import type { ScheduleItem } from "@/db/schema";
 import type { Content } from "@/lib/rich-text/content";
@@ -116,7 +123,11 @@ export function ScheduleItemForm({
         ? await updateScheduleItem(itemId, fields)
         : await createScheduleItem(fields);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success("Schedule Item saved");
       router.push(BACK);
       router.refresh();
     });
@@ -128,100 +139,139 @@ export function ScheduleItemForm({
       className="flex flex-col gap-5"
       aria-label="Schedule Item"
     >
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Day
-          <OptionSelect required options={dayOptions} {...control("dayId")} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Start time (ET)
-          <TimeCombobox required {...control("startTime")} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          End time (ET, optional)
-          <TimeCombobox start={fields.startTime} {...control("endTime")} />
-        </label>
-      </div>
+      <FieldGroup>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="schedule-day">Day</FieldLabel>
+            <OptionSelect
+              id="schedule-day"
+              required
+              options={dayOptions}
+              {...control("dayId")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-start-time">
+              Start time (ET)
+            </FieldLabel>
+            <TimeCombobox
+              id="schedule-start-time"
+              required
+              {...control("startTime")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-end-time">
+              End time (ET, optional)
+            </FieldLabel>
+            <TimeCombobox
+              id="schedule-end-time"
+              start={fields.startTime}
+              {...control("endTime")}
+            />
+          </Field>
+        </div>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Title
-        <Input
-          required
-          maxLength={200}
-          className="h-11 sm:h-9"
-          {...text("title")}
-        />
-      </label>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Category
-          <OptionSelect
-            required
-            options={CATEGORIES}
-            {...control("category")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Competition (optional)
-          <EntityCombobox
-            items={competitionItems}
-            placeholder="No Competition"
-            {...control("competitionId")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Host (optional)
-          <Input maxLength={200} className="h-11 sm:h-9" {...text("host")} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Location (optional)
+        <Field>
+          <FieldLabel htmlFor="schedule-title">Title</FieldLabel>
           <Input
+            id="schedule-title"
+            required
             maxLength={200}
             className="h-11 sm:h-9"
-            {...text("location")}
+            {...text("title")}
           />
-        </label>
-      </div>
+        </Field>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Virtual link (optional)
-        <Input
-          type="url"
-          maxLength={500}
-          placeholder="https://"
-          className="h-11 sm:h-9"
-          {...text("virtualLink")}
-        />
-      </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="schedule-category">Category</FieldLabel>
+            <OptionSelect
+              id="schedule-category"
+              required
+              options={CATEGORIES}
+              {...control("category")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-competition">
+              Competition (optional)
+            </FieldLabel>
+            <EntityCombobox
+              id="schedule-competition"
+              items={competitionItems}
+              placeholder="No Competition"
+              {...control("competitionId")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-host">Host (optional)</FieldLabel>
+            <Input
+              id="schedule-host"
+              maxLength={200}
+              className="h-11 sm:h-9"
+              {...text("host")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-location">
+              Location (optional)
+            </FieldLabel>
+            <Input
+              id="schedule-location"
+              maxLength={200}
+              className="h-11 sm:h-9"
+              {...text("location")}
+            />
+          </Field>
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Description (optional)</span>
-        <RichTextEditor
-          content={fields.description as Content}
-          onChange={(description) => set("description", description)}
-          label="Description"
-        />
-      </div>
+        <Field>
+          <FieldLabel htmlFor="schedule-virtual-link">
+            Virtual link (optional)
+          </FieldLabel>
+          <Input
+            id="schedule-virtual-link"
+            type="url"
+            maxLength={500}
+            placeholder="https://"
+            className="h-11 sm:h-9"
+            {...text("virtualLink")}
+          />
+        </Field>
+
+        <Field>
+          <FieldLabel>Description (optional)</FieldLabel>
+          <RichTextEditor
+            content={fields.description as Content}
+            onChange={(description) => set("description", description)}
+            label="Description"
+          />
+        </Field>
+      </FieldGroup>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : itemId ? "Save changes" : "Add Schedule Item"}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="lg"
+          className="min-h-11 sm:min-h-9"
           onClick={() => router.push(BACK)}
         >
           Cancel
         </Button>
-        {result && !result.ok && !pending && (
-          <p role="alert" className="text-destructive text-sm">
-            {result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }

@@ -3,6 +3,12 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import {
+  FieldDescription,
+  FieldError,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { MAX_PLACEMENTS, placementLabel } from "@/lib/competitions";
 import {
@@ -50,12 +56,14 @@ export function PlacementPointsRows({
   const errors = placementRowErrors(rows, maxPoints);
 
   return (
-    <fieldset className="flex min-w-0 flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium">Placement Points</legend>
+    <FieldSet className="min-w-0 gap-2">
+      <FieldLegend variant="label" className="mb-1">
+        Placement Points
+      </FieldLegend>
       {rows.length === 0 ? (
-        <p className="text-foreground/60 text-xs">
+        <FieldDescription>
           None. Add places, 1st first, or use 5 · 3 · 1.
-        </p>
+        </FieldDescription>
       ) : (
         <ol className="flex flex-col gap-2">
           {rows.map((row, index) => {
@@ -71,7 +79,7 @@ export function PlacementPointsRows({
                   min={0}
                   step="any"
                   aria-label={`${label} place Placement Points`}
-                  className="border-border h-9 w-28"
+                  className="border-border h-11 w-28 sm:h-9"
                   value={row}
                   onChange={(event) =>
                     setRows(
@@ -92,6 +100,7 @@ export function PlacementPointsRows({
             type="button"
             variant="outline"
             onClick={() => setRows([...rows, ""])}
+            className="min-h-11 sm:min-h-9"
           >
             Add place
           </Button>
@@ -100,6 +109,7 @@ export function PlacementPointsRows({
           type="button"
           variant="outline"
           disabled={rows.length === 0}
+          className="min-h-11 sm:min-h-9"
           onClick={() => setRows(rows.slice(0, -1))}
         >
           Remove last
@@ -108,18 +118,16 @@ export function PlacementPointsRows({
           type="button"
           variant="secondary"
           aria-label="Fill 5, 3, 1"
+          className="min-h-11 sm:min-h-9"
           onClick={() => setRows([...QUICK_FILL])}
         >
           5 · 3 · 1
         </Button>
       </div>
-      {errors.length > 0 && (
-        <ul aria-live="polite" className="text-destructive text-sm">
-          {errors.map((error) => (
-            <li key={error}>{error}</li>
-          ))}
-        </ul>
-      )}
-    </fieldset>
+      <FieldError
+        aria-live="polite"
+        errors={errors.map((message) => ({ message }))}
+      />
+    </FieldSet>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import {
   createCompetition,
@@ -16,8 +16,8 @@ import {
   useSetupRow,
 } from "@/components/setup-row";
 import { SuggestionCombobox } from "@/components/suggestion-combobox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { WarWeek } from "@/db/schema";
@@ -60,6 +60,7 @@ function CompetitionRow({
   teamLabel: string;
   groupSuggestions: string[];
 }) {
+  const id = useId();
   const [values, setValues] = useState(
     competition ? inputFrom(competition) : emptyCompetition(mode),
   );
@@ -83,123 +84,135 @@ function CompetitionRow({
       countsTowardTeam:
         values.scoring === "individual" && values.countsTowardTeam,
     };
-    run(() =>
-      competition
-        ? updateCompetition(competition.id, input)
-        : createCompetition(input),
+    run(
+      () =>
+        competition
+          ? updateCompetition(competition.id, input)
+          : createCompetition(input),
+      "Competition saved",
     );
   }
+
+  const usage = competition
+    ? usageSummary([
+        [competition.pointsEntryCount, "Points Entry", "Points Entries"],
+        [competition.scheduleItemCount, "Schedule Item", "Schedule Items"],
+      ])
+    : "";
 
   return (
     <li className="border-border border-b py-4 last:border-b-0">
       <form
         onSubmit={submit}
         aria-label={competition ? competition.name : "New Competition"}
-        className="grid gap-3 sm:grid-cols-2"
       >
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Name
-          <Input
-            name="name"
-            required
-            maxLength={120}
-            className="h-11 sm:h-9"
-            value={values.name}
-            onChange={set("name")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Group
-          <SuggestionCombobox
-            name="group"
-            maxLength={120}
-            placeholder="Optional"
-            suggestions={groupSuggestions}
-            value={values.group}
-            onValueChange={(group) => setValues((v) => ({ ...v, group }))}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-          Description
-          <Textarea
-            name="description"
-            maxLength={2000}
-            rows={2}
-            placeholder="Optional"
-            value={values.description}
-            onChange={set("description")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Scoring
-          <OptionSelect
-            name="scoring"
-            options={scoringOptions}
-            value={values.scoring}
-            onValueChange={(scoring) => setValues((v) => ({ ...v, scoring }))}
-          />
-        </label>
-        {mode === "teams" && (
-          <Label className="min-h-11 sm:min-h-9 sm:self-end">
-            <Switch
-              name="countsTowardTeam"
-              disabled={values.scoring !== "individual"}
-              checked={
-                values.scoring === "individual" && values.countsTowardTeam
-              }
-              onCheckedChange={(countsTowardTeam) =>
-                setValues((v) => ({ ...v, countsTowardTeam }))
-              }
+        <FieldGroup className="grid gap-3 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
+            <Input
+              id={`${id}-name`}
+              name="name"
+              required
+              maxLength={120}
+              className="h-11 sm:h-9"
+              value={values.name}
+              onChange={set("name")}
             />
-            Counts toward the {teamLabel}
-          </Label>
-        )}
-        <label className="flex flex-col gap-1 text-sm font-medium sm:col-start-1">
-          Max points
-          <Input
-            name="maxPoints"
-            inputMode="decimal"
-            placeholder="Optional"
-            className="h-11 sm:h-9"
-            value={values.maxPoints}
-            onChange={set("maxPoints")}
-          />
-        </label>
-        <PlacementPointsRows
-          value={values.placementPoints}
-          maxPoints={values.maxPoints}
-          onChange={(placementPoints) =>
-            setValues((v) => ({ ...v, placementPoints }))
-          }
-        />
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
-          <p className="text-foreground/60 text-xs">
-            {competition &&
-              usageSummary([
-                [
-                  competition.pointsEntryCount,
-                  "Points Entry",
-                  "Points Entries",
-                ],
-                [
-                  competition.scheduleItemCount,
-                  "Schedule Item",
-                  "Schedule Items",
-                ],
-              ])}
-          </p>
-          <SetupRowButtons
-            pending={pending}
-            addLabel="Add Competition"
-            onDelete={
-              competition &&
-              (() => {
-                if (!window.confirm(`Delete ${competition.name}?`)) return;
-                run(() => deleteCompetition(competition.id));
-              })
+          </Field>
+          <Field>
+            {/* SuggestionCombobox takes no id, so the label wraps it. */}
+            <FieldLabel className="w-full flex-col items-stretch">
+              Group
+              <SuggestionCombobox
+                name="group"
+                maxLength={120}
+                placeholder="Optional"
+                suggestions={groupSuggestions}
+                value={values.group}
+                onValueChange={(group) => setValues((v) => ({ ...v, group }))}
+              />
+            </FieldLabel>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
+            <Textarea
+              id={`${id}-description`}
+              name="description"
+              maxLength={2000}
+              rows={2}
+              placeholder="Optional"
+              value={values.description}
+              onChange={set("description")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-scoring`}>Scoring</FieldLabel>
+            <OptionSelect
+              id={`${id}-scoring`}
+              name="scoring"
+              options={scoringOptions}
+              value={values.scoring}
+              onValueChange={(scoring) => setValues((v) => ({ ...v, scoring }))}
+            />
+          </Field>
+          {mode === "teams" && (
+            <Field
+              orientation="horizontal"
+              className="min-h-11 sm:min-h-9 sm:self-end"
+            >
+              <Switch
+                id={`${id}-counts`}
+                name="countsTowardTeam"
+                disabled={values.scoring !== "individual"}
+                checked={
+                  values.scoring === "individual" && values.countsTowardTeam
+                }
+                onCheckedChange={(countsTowardTeam) =>
+                  setValues((v) => ({ ...v, countsTowardTeam }))
+                }
+              />
+              <FieldLabel htmlFor={`${id}-counts`}>
+                Counts toward the {teamLabel}
+              </FieldLabel>
+            </Field>
+          )}
+          <Field className="sm:col-start-1">
+            <FieldLabel htmlFor={`${id}-max`}>Max points</FieldLabel>
+            <Input
+              id={`${id}-max`}
+              name="maxPoints"
+              inputMode="decimal"
+              placeholder="Optional"
+              className="h-11 sm:h-9"
+              value={values.maxPoints}
+              onChange={set("maxPoints")}
+            />
+          </Field>
+          <PlacementPointsRows
+            value={values.placementPoints}
+            maxPoints={values.maxPoints}
+            onChange={(placementPoints) =>
+              setValues((v) => ({ ...v, placementPoints }))
             }
           />
-        </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
+            <p className="text-foreground/60 text-xs">{usage}</p>
+            <SetupRowButtons
+              pending={pending}
+              addLabel="Add Competition"
+              onDelete={
+                competition &&
+                (() =>
+                  run(
+                    () => deleteCompetition(competition.id),
+                    "Competition deleted",
+                  ))
+              }
+              deleteTitle={competition && `Delete ${competition.name}?`}
+              deleteDescription={usage}
+            />
+          </div>
+        </FieldGroup>
       </form>
       <SetupRowError error={error} />
     </li>

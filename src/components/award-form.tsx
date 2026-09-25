@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type AwardActionResult,
@@ -11,6 +12,15 @@ import {
 import { EntityCombobox } from "@/components/entity-combobox";
 import { FormValueInput } from "@/components/form-value-input";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -82,7 +92,11 @@ export function AwardForm({
         ? await updateAward(awardId, input)
         : await createAward(input);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success("Award saved");
       router.push("/admin/awards");
       router.refresh();
     });
@@ -90,100 +104,111 @@ export function AwardForm({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-5" aria-label="Award">
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Name
-        <Input
-          name="name"
-          required
-          maxLength={AWARD_NAME_MAX}
-          className="h-11 sm:h-9"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
-      </label>
-
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Description
-        <Textarea
-          name="description"
-          rows={3}
-          maxLength={AWARD_DESCRIPTION_MAX}
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-        />
-      </label>
-
-      <fieldset className="flex min-w-0 flex-col gap-3">
-        <legend className="text-sm font-medium">Recipients</legend>
-        <p className="text-foreground/60 text-xs">
-          A {teamLabel}, Participants, or both. Awards don&apos;t affect the
-          Standings.
-        </p>
-
-        {options.teams.length > 0 && (
-          <label className="flex flex-col gap-1 text-sm">
-            {teamLabel}
-            <Select
-              value={teamId === "" ? NO_TEAM : teamId}
-              items={teamItems}
-              onValueChange={(value) =>
-                setTeamId(!value || value === NO_TEAM ? "" : value)
-              }
-            >
-              <SelectTrigger className="h-11 w-full sm:h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {teamItems.map((item) => (
-                  <SelectItem
-                    key={item.value}
-                    value={item.value}
-                    className="min-h-11 sm:min-h-8"
-                  >
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* "" posts as no Team. */}
-            <FormValueInput name="teamId" value={teamId} />
-          </label>
-        )}
-
-        <div className="flex flex-col gap-2">
-          <span className="text-sm">
-            Participants ({participantIds.length} chosen)
-          </span>
-          <EntityCombobox
-            multiple
-            name="participantIds"
-            items={participantItems}
-            value={participantIds}
-            onValueChange={setParticipantIds}
-            placeholder={`Find by name or ${teamLabel}`}
-            aria-label="Find Participants"
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="award-name">Name</FieldLabel>
+          <Input
+            id="award-name"
+            name="name"
+            required
+            maxLength={AWARD_NAME_MAX}
+            className="h-11 sm:h-9"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
           />
-        </div>
-      </fieldset>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="award-description">Description</FieldLabel>
+          <Textarea
+            id="award-description"
+            name="description"
+            rows={3}
+            maxLength={AWARD_DESCRIPTION_MAX}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+          />
+        </Field>
+
+        <FieldSet>
+          <FieldLegend variant="label">Recipients</FieldLegend>
+          <FieldDescription>
+            A {teamLabel}, Participants, or both. Awards don&apos;t affect the
+            Standings.
+          </FieldDescription>
+
+          <FieldGroup>
+            {options.teams.length > 0 && (
+              <Field>
+                <FieldLabel htmlFor="award-team">{teamLabel}</FieldLabel>
+                <Select
+                  value={teamId === "" ? NO_TEAM : teamId}
+                  items={teamItems}
+                  onValueChange={(value) =>
+                    setTeamId(!value || value === NO_TEAM ? "" : value)
+                  }
+                >
+                  <SelectTrigger id="award-team" className="h-11 w-full sm:h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {teamItems.map((item) => (
+                      <SelectItem
+                        key={item.value}
+                        value={item.value}
+                        className="min-h-11 sm:min-h-8"
+                      >
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* "" posts as no Team. */}
+                <FormValueInput name="teamId" value={teamId} />
+              </Field>
+            )}
+
+            <Field>
+              <FieldLabel htmlFor="award-participants">
+                Participants ({participantIds.length} chosen)
+              </FieldLabel>
+              <EntityCombobox
+                id="award-participants"
+                multiple
+                name="participantIds"
+                items={participantItems}
+                value={participantIds}
+                onValueChange={setParticipantIds}
+                placeholder={`Find by name or ${teamLabel}`}
+                aria-label="Find Participants"
+              />
+            </Field>
+          </FieldGroup>
+        </FieldSet>
+      </FieldGroup>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : awardId ? "Save changes" : "Give Award"}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="lg"
+          className="min-h-11 sm:min-h-9"
           onClick={() => router.push("/admin/awards")}
         >
           Cancel
         </Button>
-        {result && !result.ok && !pending && (
-          <p role="alert" className="text-destructive text-sm">
-            {result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }

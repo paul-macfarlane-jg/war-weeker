@@ -12,6 +12,7 @@ import Link from "next/link";
 import { SignOutButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeRoot } from "@/components/theme-root";
+import { Toaster } from "@/components/ui/sonner";
 import type { WarWeek } from "@/db/schema";
 import { warWeekThemeStyle } from "@/lib/theme";
 
@@ -110,6 +111,8 @@ export function AdminShell({
         <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
       </div>
       <SiteFooter className="border-border border-t" />
+      {/* Inside the themed root so the edition's colors apply to toasts. */}
+      <Toaster position="bottom-center" closeButton />
     </ThemeRoot>
   );
 }
