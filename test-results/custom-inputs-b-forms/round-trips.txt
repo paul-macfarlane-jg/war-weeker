@@ -1,0 +1,7 @@
+ok FAQ delete: Cancel on the AlertDialog leaves the row in the DB
+ok FAQ delete: confirming the AlertDialog removes the row from the DB
+ok Points Entry: a successful save shows a toast containing "saved"
+ok Points Entry: the row landed in the DB
+ok Team: a duplicate name shows the server's refusal in a toast ('There's already a Team named "Red".')
+ok Team: the refused duplicate created no second Red Team
+ok grep: window.confirm/window.alert appear only in confirm-dialog.tsx's doc comment
