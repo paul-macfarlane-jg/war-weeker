@@ -41,6 +41,7 @@ export const scheduleItemCategory = pgEnum("schedule_item_category", [
   "social",
   "meal",
   "work",
+  "other",
 ]);
 
 export const competitionScoring = pgEnum("competition_scoring", [
