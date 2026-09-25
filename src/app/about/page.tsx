@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AboutFeatureGrid } from "@/components/about-feature-grid";
 import { AboutRevealDemo } from "@/components/about-reveal-demo";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
 import { buttonVariants } from "@/components/ui/button";
 import {
   ABOUT_THEME,
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
  */
 export default function AboutPage() {
   return (
-    <div
+    <ThemeRoot
       style={warWeekThemeStyle(ABOUT_THEME)}
       className="bg-background text-foreground relative flex min-h-dvh flex-col overflow-hidden font-sans"
     >
@@ -181,7 +182,7 @@ export default function AboutPage() {
         </section>
       </main>
       <SiteFooter className="relative" />
-    </div>
+    </ThemeRoot>
   );
 }
 
