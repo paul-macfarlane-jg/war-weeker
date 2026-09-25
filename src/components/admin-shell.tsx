@@ -10,6 +10,7 @@ import Link from "next/link";
 
 import { SignOutButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
 import type { WarWeek } from "@/db/schema";
 import { warWeekThemeStyle } from "@/lib/theme";
 
@@ -44,7 +45,7 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   return (
-    <div
+    <ThemeRoot
       style={warWeekThemeStyle(warWeek)}
       className="bg-background text-foreground flex min-h-dvh flex-col font-sans"
     >
@@ -107,7 +108,7 @@ export function AdminShell({
         <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
       </div>
       <SiteFooter className="border-border border-t" />
-    </div>
+    </ThemeRoot>
   );
 }
 

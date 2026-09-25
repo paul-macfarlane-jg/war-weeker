@@ -1,0 +1,81 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  MAX_PLACES,
+  QUICK_FILL,
+  placementPointsFromRows,
+  placementRowErrors,
+  rowsFromPlacementPoints,
+} from "@/lib/placement-rows";
+
+describe("rowsFromPlacementPoints", () => {
+  it("splits the saved Placement Points text into one row per place", () => {
+    expect(rowsFromPlacementPoints("5, 3, 1")).toEqual(["5", "3", "1"]);
+  });
+
+  it("gives no rows for empty Placement Points", () => {
+    expect(rowsFromPlacementPoints("")).toEqual([]);
+    expect(rowsFromPlacementPoints("   ")).toEqual([]);
+  });
+});
+
+describe("placementPointsFromRows", () => {
+  it("joins rows into the comma-separated text the Competition form submits", () => {
+    expect(placementPointsFromRows(["5", "3", "1"])).toBe("5, 3, 1");
+  });
+
+  it("gives empty text for no rows and skips blank rows", () => {
+    expect(placementPointsFromRows([])).toBe("");
+    expect(placementPointsFromRows(["10", " ", ""])).toBe("10");
+  });
+
+  it("round-trips with rowsFromPlacementPoints", () => {
+    for (const text of ["5, 3, 1", "", "10, 7.5, 5, 2, 1"]) {
+      expect(placementPointsFromRows(rowsFromPlacementPoints(text))).toBe(text);
+    }
+  });
+});
+
+describe("placementRowErrors", () => {
+  it("has no errors for a valid set within Max points", () => {
+    expect(placementRowErrors(["5", "3", "1"], "5")).toEqual([]);
+    expect(placementRowErrors(["5", "5", "0"], "")).toEqual([]);
+    expect(placementRowErrors([], "10")).toEqual([]);
+  });
+
+  it("flags a place worth more than the place above it", () => {
+    expect(placementRowErrors(["3", "5"], "")).toEqual([
+      "Each place's Placement Points must be no more than the place above it.",
+    ]);
+  });
+
+  it("flags a negative value", () => {
+    expect(placementRowErrors(["5", "-1"], "")).toEqual([
+      "Placement Points can't be negative.",
+    ]);
+  });
+
+  it("flags a value that isn't a number", () => {
+    expect(placementRowErrors(["5", "abc"], "")).toEqual([
+      "Each place's Placement Points must be a number.",
+    ]);
+  });
+
+  it("flags 1st place over Max points", () => {
+    expect(placementRowErrors(["12", "3"], "10")).toEqual([
+      "1st place's Placement Points can't be more than Max points.",
+    ]);
+  });
+
+  it("caps the rows at five places", () => {
+    expect(MAX_PLACES).toBe(5);
+    expect(placementRowErrors(["6", "5", "4", "3", "2", "1"], "")).toEqual([
+      "Placement Points cover at most 5 places.",
+    ]);
+  });
+
+  it("offers a 5 · 3 · 1 quick fill that is itself valid", () => {
+    expect(QUICK_FILL).toEqual(["5", "3", "1"]);
+    expect(placementRowErrors(QUICK_FILL, "5")).toEqual([]);
+  });
+});

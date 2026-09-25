@@ -7,6 +7,7 @@ import {
   deleteCompetition,
   updateCompetition,
 } from "@/actions/setup";
+import { PlacementPointsRows } from "@/components/placement-points-rows";
 import {
   SetupRowButtons,
   SetupRowError,
@@ -14,8 +15,8 @@ import {
   usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
+import { SuggestionCombobox } from "@/components/suggestion-combobox";
 import type { WarWeek } from "@/db/schema";
-import { MAX_PLACEMENTS } from "@/lib/competitions";
 import type { CompetitionInput } from "@/lib/setup";
 import type { SetupCompetition } from "@/queries/setup";
 
@@ -48,10 +49,12 @@ function CompetitionRow({
   competition,
   mode,
   teamLabel,
+  groupSuggestions,
 }: {
   competition?: SetupCompetition;
   mode: WarWeek["mode"];
   teamLabel: string;
+  groupSuggestions: string[];
 }) {
   const [values, setValues] = useState(
     competition ? inputFrom(competition) : emptyCompetition(mode),
@@ -103,13 +106,13 @@ function CompetitionRow({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Group
-          <input
+          <SuggestionCombobox
             name="group"
             maxLength={120}
             placeholder="Optional"
-            className={fieldClass}
+            suggestions={groupSuggestions}
             value={values.group}
-            onChange={set("group")}
+            onValueChange={(group) => setValues((v) => ({ ...v, group }))}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
@@ -166,16 +169,13 @@ function CompetitionRow({
             onChange={set("maxPoints")}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Placement Points
-          <input
-            name="placementPoints"
-            placeholder={`e.g. 5, 3, 1 (up to ${MAX_PLACEMENTS} places)`}
-            className={fieldClass}
-            value={values.placementPoints}
-            onChange={set("placementPoints")}
-          />
-        </label>
+        <PlacementPointsRows
+          value={values.placementPoints}
+          maxPoints={values.maxPoints}
+          onChange={(placementPoints) =>
+            setValues((v) => ({ ...v, placementPoints }))
+          }
+        />
         <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
           <p className="text-foreground/60 text-xs">
             {competition &&
@@ -215,10 +215,13 @@ export function CompetitionsEditor({
   competitions,
   mode,
   teamLabel,
+  groupSuggestions,
 }: {
   competitions: SetupCompetition[];
   mode: WarWeek["mode"];
   teamLabel: string;
+  /** Competition Groups already used in this War Week. */
+  groupSuggestions: string[];
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -233,6 +236,7 @@ export function CompetitionsEditor({
               competition={c}
               mode={mode}
               teamLabel={teamLabel}
+              groupSuggestions={groupSuggestions}
             />
           ))}
         </ul>
@@ -240,7 +244,11 @@ export function CompetitionsEditor({
       <section className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">Add a Competition</h2>
         <ul>
-          <CompetitionRow mode={mode} teamLabel={teamLabel} />
+          <CompetitionRow
+            mode={mode}
+            teamLabel={teamLabel}
+            groupSuggestions={groupSuggestions}
+          />
         </ul>
       </section>
     </div>
