@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   type CompetitionListItem,
   type LedgerEntry,
@@ -16,11 +18,16 @@ export function CompetitionFacts({
   teamLabel: string;
 }) {
   return (
-    <div className="text-foreground/70 flex flex-wrap gap-x-3 gap-y-1 text-sm">
-      <span className="font-medium tabular-nums">
+    <div className="flex flex-wrap gap-1.5">
+      <Badge variant="secondary" className="tabular-nums">
         {formatMaxPoints(competition.maxPoints)}
-      </span>
-      <span>{describeScoring(competition, teamLabel)}</span>
+      </Badge>
+      <Badge
+        variant="outline"
+        className="text-foreground/70 h-auto text-left whitespace-normal"
+      >
+        {describeScoring(competition, teamLabel)}
+      </Badge>
     </div>
   );
 }
@@ -40,10 +47,18 @@ export function CompetitionList({
         <li key={competition.id}>
           <Link
             href={`/${edition}/competitions/${competition.id}`}
-            className="border-border hover:border-primary flex flex-col gap-1 rounded-lg border px-4 py-3"
+            className="block rounded-xl"
           >
-            <span className="font-semibold">{competition.name}</span>
-            <CompetitionFacts competition={competition} teamLabel={teamLabel} />
+            <Card
+              size="sm"
+              className="hover:ring-primary gap-2 px-4 transition-shadow"
+            >
+              <span className="font-semibold">{competition.name}</span>
+              <CompetitionFacts
+                competition={competition}
+                teamLabel={teamLabel}
+              />
+            </Card>
           </Link>
         </li>
       ))}
@@ -53,12 +68,12 @@ export function CompetitionList({
 
 export function PointsHidden() {
   return (
-    <div className="border-border rounded-lg border px-4 py-6 text-center">
-      <p className="font-semibold">Points hidden 🔒</p>
-      <p className="text-foreground/70 mt-1 text-sm">
+    <Card className="gap-1 px-4 py-6 text-center">
+      <p className="text-base font-semibold">Points hidden 🔒</p>
+      <p className="text-foreground/70 text-sm">
         Points Entries stay hidden until closing ceremonies.
       </p>
-    </div>
+    </Card>
   );
 }
 
@@ -68,38 +83,37 @@ export function PointsEntryList({ entries }: { entries: LedgerEntry[] }) {
   }
 
   return (
-    <ul className="flex flex-col gap-1">
-      {entries.map(({ id, target, points, note }) => (
-        <li
-          key={id}
-          className="border-border flex items-start gap-3 border-b px-2 py-2 last:border-b-0"
-        >
-          <span
-            aria-hidden
-            className="mt-1.5 size-3 shrink-0 rounded-full"
-            style={{ backgroundColor: target.color ?? "transparent" }}
-          />
-          <span className="flex flex-1 flex-col">
-            <span>
-              <span className="font-medium">{target.name}</span>
-              {target.team ? (
-                <span
-                  className="ml-2 text-xs font-medium"
-                  style={{ color: target.color ?? undefined }}
-                >
-                  {target.team}
-                </span>
+    <Card size="sm" className="py-1">
+      <ul className="flex flex-col divide-y px-(--card-spacing)">
+        {entries.map(({ id, target, points, note }) => (
+          <li key={id} className="flex items-start gap-3 px-2 py-2">
+            <span
+              aria-hidden
+              className="mt-1.5 size-3 shrink-0 rounded-full"
+              style={{ backgroundColor: target.color ?? "transparent" }}
+            />
+            <span className="flex flex-1 flex-col">
+              <span>
+                <span className="font-medium">{target.name}</span>
+                {target.team ? (
+                  <span
+                    className="ml-2 text-xs font-medium"
+                    style={{ color: target.color ?? undefined }}
+                  >
+                    {target.team}
+                  </span>
+                ) : null}
+              </span>
+              {note ? (
+                <span className="text-foreground/70 text-sm">{note}</span>
               ) : null}
             </span>
-            {note ? (
-              <span className="text-foreground/70 text-sm">{note}</span>
-            ) : null}
-          </span>
-          <span className="font-semibold tabular-nums">
-            {formatPoints(points)}
-          </span>
-        </li>
-      ))}
-    </ul>
+            <span className="font-semibold tabular-nums">
+              {formatPoints(points)}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

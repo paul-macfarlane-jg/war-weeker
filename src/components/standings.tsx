@@ -1,4 +1,5 @@
 import { Avatar } from "@/components/avatar";
+import { Card } from "@/components/ui/card";
 import { YouTag } from "@/components/you";
 import { formatPoints } from "@/lib/points";
 import { type RowReveal, countUpTotal } from "@/lib/reveal";
@@ -7,9 +8,9 @@ import { YOU_ROW_CLASS } from "@/lib/you";
 
 export function StandingsHidden() {
   return (
-    <div className="border-border rounded-lg border px-4 py-8 text-center text-lg font-semibold">
+    <Card className="px-4 py-8 text-center text-lg font-semibold">
       Standings hidden 🔒
-    </div>
+    </Card>
   );
 }
 
@@ -47,22 +48,21 @@ export function TeamStandingsList({
       {rows.map((row, i) => {
         const shown = revealed(row.total, reveal?.[i]);
         return (
-          <li
-            key={row.id}
-            className={`border-border flex items-center gap-3 rounded-lg border px-4 py-3 ${shown.className}`}
-          >
-            <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
-              {row.rank}
-            </span>
-            <span
-              aria-hidden
-              className="size-4 shrink-0 rounded-full"
-              style={{ backgroundColor: row.color }}
-            />
-            <span className="flex-1 font-semibold">{row.name}</span>
-            <span className="text-xl font-bold tabular-nums">
-              {formatPoints(shown.total)}
-            </span>
+          <li key={row.id} className={shown.className || undefined}>
+            <Card size="sm" className="flex-row items-center gap-3 px-4 py-3">
+              <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
+                {row.rank}
+              </span>
+              <span
+                aria-hidden
+                className="size-4 shrink-0 rounded-full"
+                style={{ backgroundColor: row.color }}
+              />
+              <span className="flex-1 font-semibold">{row.name}</span>
+              <span className="text-xl font-bold tabular-nums">
+                {formatPoints(shown.total)}
+              </span>
+            </Card>
           </li>
         );
       })}
@@ -87,43 +87,45 @@ export function IndividualStandingsList({
   if (rows.length === 0) return <NoPointsYet />;
 
   return (
-    <ol className="flex flex-col gap-1">
-      {rows.map((row, i) => {
-        const { team } = row;
-        const shown = revealed(row.total, reveal?.[i]);
-        return (
-          <li
-            key={row.id}
-            className={`border-border flex items-center gap-3 border-b px-2 py-2 last:border-b-0 ${YOU_ROW_CLASS} ${shown.className}`}
-          >
-            <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
-              {row.rank}
-            </span>
-            {primaryColor ? (
-              <Avatar
-                name={row.name}
-                teamColor={team?.color ?? null}
-                primaryColor={primaryColor}
-              />
-            ) : null}
-            <span className="flex-1">
-              {row.name}
-              {team ? (
-                <span
-                  className="ml-2 text-xs font-medium"
-                  style={{ color: team.color }}
-                >
-                  {team.name}
-                </span>
+    <Card size="sm" className="py-1">
+      <ol className="flex flex-col divide-y px-(--card-spacing)">
+        {rows.map((row, i) => {
+          const { team } = row;
+          const shown = revealed(row.total, reveal?.[i]);
+          return (
+            <li
+              key={row.id}
+              className={`flex items-center gap-3 px-2 py-2 ${YOU_ROW_CLASS} ${shown.className}`}
+            >
+              <span className="text-foreground/60 w-6 text-sm font-medium tabular-nums">
+                {row.rank}
+              </span>
+              {primaryColor ? (
+                <Avatar
+                  name={row.name}
+                  teamColor={team?.color ?? null}
+                  primaryColor={primaryColor}
+                />
               ) : null}
-            </span>
-            <YouTag participantId={row.id} />
-            <span className="font-semibold tabular-nums">
-              {formatPoints(shown.total)}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+              <span className="flex-1">
+                {row.name}
+                {team ? (
+                  <span
+                    className="ml-2 text-xs font-medium"
+                    style={{ color: team.color }}
+                  >
+                    {team.name}
+                  </span>
+                ) : null}
+              </span>
+              <YouTag participantId={row.id} />
+              <span className="font-semibold tabular-nums">
+                {formatPoints(shown.total)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </Card>
   );
 }
