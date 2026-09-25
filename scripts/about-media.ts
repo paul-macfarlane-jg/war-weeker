@@ -533,7 +533,7 @@ async function selectCompetition(page: Page, name: string): Promise<string> {
 }
 
 const scrollToText = (text: string) => `(() => {
-  const el = Array.from(document.querySelectorAll("section, h2")).find((e) => e.innerText.toLowerCase().includes(${JSON.stringify(text)}.toLowerCase()));
+  const el = Array.from(document.querySelectorAll('section, h2, [data-slot="card"]')).find((e) => e.innerText.toLowerCase().includes(${JSON.stringify(text)}.toLowerCase()));
   el?.scrollIntoView({ block: "start" });
   window.scrollBy(0, -16);
   return Boolean(el);

@@ -7,6 +7,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
+import { ABOUT_FEATURES } from "@/lib/about";
 import { WAR_WEEK_TIME_ZONE } from "@/lib/schedule";
 import { YOU_ROW_CLASS } from "@/lib/you";
 import { MCP_TOOLS } from "@/mcp/tools";
@@ -816,14 +817,15 @@ async function setSmokeOrganizer(on: boolean) {
 
 async function assertAboutPage() {
   const check =
-    "anonymous GET /about is 200 with the Finale video, six feature cards, the XI link and no sign-in redirect";
+    "anonymous GET /about is 200 with the Finale video, every feature card, the XI link and no sign-in redirect";
   try {
     const res = await fetch(`${BASE_URL}/about`, { redirect: "manual" });
     const body = await res.text();
     const checks = {
       video: body.includes('src="/about/finale.mp4"'),
       poster: body.includes('poster="/about/finale-poster.png"'),
-      cards: (body.match(/data-feature="/g) ?? []).length === 6,
+      cards:
+        (body.match(/data-feature="/g) ?? []).length === ABOUT_FEATURES.length,
       xi: body.includes('href="/xi"'),
       noTooling: !/claude code|atlas/i.test(body),
     };

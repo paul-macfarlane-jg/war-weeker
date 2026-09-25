@@ -1,9 +1,0 @@
-ok Generate: single-elimination Bracket drew the 2 semifinal Heats for 4 Entrants
-ok Recording: the Final's two slots are the semifinal winners
-ok Finalize: 4 generated Points Entries (10/6/3/3) from the final placings
-ok Finalize: Standings totals for this Competition rose by exactly the generated points (10+6+3+3=22)
-ok Finalize: the hand-entered Points Entry on the same Competition is untouched
-ok Un-finalize: removes the generated Points Entries
-ok Un-finalize: the hand-entered Points Entry is still untouched
-ok Re-finalize: produces the same set of targets and points as the first Finalize
-ok /admin/points: shows a "From bracket" badge on each generated row, with no Edit/Delete
