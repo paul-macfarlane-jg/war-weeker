@@ -1,7 +1,7 @@
 ---
 title: War Weeker — Admin polish (round 3 feedback)
-status: ready-for-agent
-labels: [ready-for-agent]
+status: done
+labels: [done]
 created: 2026-09-24
 deadline: 2026-09-25T08:00-04:00 (staging freeze; submission 10:00)
 source: Paul's first-use feedback and grilling session, 2026-09-24 (Q1–Q9, Q20)
