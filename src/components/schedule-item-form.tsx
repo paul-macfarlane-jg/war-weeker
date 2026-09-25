@@ -2,28 +2,41 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type SetupScheduleFaqActionResult,
   createScheduleItem,
   updateScheduleItem,
 } from "@/actions/setup-schedule-faq";
+import { EntityCombobox } from "@/components/entity-combobox";
+import { OptionSelect } from "@/components/option-select";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { TimeCombobox } from "@/components/time-combobox";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import type { ScheduleItem } from "@/db/schema";
 import type { Content } from "@/lib/rich-text/content";
 import { formatDayHeading } from "@/lib/schedule";
 import type { ScheduleItemInput } from "@/lib/setup-schedule-faq";
 
-const fieldClass =
-  "border-border bg-background h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
 const CATEGORIES = [
-  ["competition", "Competition"],
-  ["education", "Education"],
-  ["social", "Social"],
-  ["meal", "Meal"],
-  ["work", "Work"],
-] as const;
+  { value: "competition", label: "Competition" },
+  { value: "education", label: "Education" },
+  { value: "social", label: "Social" },
+  { value: "meal", label: "Meal" },
+  { value: "work", label: "Work" },
+  { value: "other", label: "Other" },
+] as const satisfies ReadonlyArray<{
+  value: ScheduleItem["category"];
+  label: string;
+}>;
 
 const EMPTY: ScheduleItemInput = {
   dayId: "",
@@ -77,11 +90,31 @@ export function ScheduleItemForm({
     return {
       name: key,
       value: fields[key],
-      onChange: (
-        event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-      ) => set(key, event.target.value),
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+        set(key, event.target.value),
     };
   }
+
+  /** Name, value and change wiring for a custom control. */
+  function control(key: Exclude<keyof ScheduleItemInput, "description">) {
+    return {
+      name: key,
+      value: fields[key],
+      onValueChange: (value: string) => set(key, value),
+    };
+  }
+
+  const dayOptions = days.map((day) => ({
+    value: day.id,
+    label: `${formatDayHeading(day.date)} · ${day.dayTheme}`,
+  }));
+  const competitionItems = [
+    { id: "", label: "No Competition" },
+    ...competitions.map((competition) => ({
+      id: competition.id,
+      label: competition.name,
+    })),
+  ];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,7 +123,11 @@ export function ScheduleItemForm({
         ? await updateScheduleItem(itemId, fields)
         : await createScheduleItem(fields);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success("Schedule Item saved");
       router.push(BACK);
       router.refresh();
     });
@@ -102,112 +139,139 @@ export function ScheduleItemForm({
       className="flex flex-col gap-5"
       aria-label="Schedule Item"
     >
-      <div className="grid gap-4 sm:grid-cols-3">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Day
-          <select required className={fieldClass} {...text("dayId")}>
-            {days.map((day) => (
-              <option key={day.id} value={day.id}>
-                {formatDayHeading(day.date)} · {day.dayTheme}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Start time (ET)
-          <input
-            type="time"
+      <FieldGroup>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field>
+            <FieldLabel htmlFor="schedule-day">Day</FieldLabel>
+            <OptionSelect
+              id="schedule-day"
+              required
+              options={dayOptions}
+              {...control("dayId")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-start-time">
+              Start time (ET)
+            </FieldLabel>
+            <TimeCombobox
+              id="schedule-start-time"
+              required
+              {...control("startTime")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-end-time">
+              End time (ET, optional)
+            </FieldLabel>
+            <TimeCombobox
+              id="schedule-end-time"
+              start={fields.startTime}
+              {...control("endTime")}
+            />
+          </Field>
+        </div>
+
+        <Field>
+          <FieldLabel htmlFor="schedule-title">Title</FieldLabel>
+          <Input
+            id="schedule-title"
             required
-            className={fieldClass}
-            {...text("startTime")}
+            maxLength={200}
+            className="h-11 sm:h-9"
+            {...text("title")}
           />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          End time (ET, optional)
-          <input type="time" className={fieldClass} {...text("endTime")} />
-        </label>
-      </div>
+        </Field>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Title
-        <input
-          required
-          maxLength={200}
-          className={fieldClass}
-          {...text("title")}
-        />
-      </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="schedule-category">Category</FieldLabel>
+            <OptionSelect
+              id="schedule-category"
+              required
+              options={CATEGORIES}
+              {...control("category")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-competition">
+              Competition (optional)
+            </FieldLabel>
+            <EntityCombobox
+              id="schedule-competition"
+              items={competitionItems}
+              placeholder="No Competition"
+              {...control("competitionId")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-host">Host (optional)</FieldLabel>
+            <Input
+              id="schedule-host"
+              maxLength={200}
+              className="h-11 sm:h-9"
+              {...text("host")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="schedule-location">
+              Location (optional)
+            </FieldLabel>
+            <Input
+              id="schedule-location"
+              maxLength={200}
+              className="h-11 sm:h-9"
+              {...text("location")}
+            />
+          </Field>
+        </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Category
-          <select required className={fieldClass} {...text("category")}>
-            {CATEGORIES.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Competition (optional)
-          <select className={fieldClass} {...text("competitionId")}>
-            <option value="">None</option>
-            {competitions.map((competition) => (
-              <option key={competition.id} value={competition.id}>
-                {competition.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Host (optional)
-          <input maxLength={200} className={fieldClass} {...text("host")} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Location (optional)
-          <input maxLength={200} className={fieldClass} {...text("location")} />
-        </label>
-      </div>
+        <Field>
+          <FieldLabel htmlFor="schedule-virtual-link">
+            Virtual link (optional)
+          </FieldLabel>
+          <Input
+            id="schedule-virtual-link"
+            type="url"
+            maxLength={500}
+            placeholder="https://"
+            className="h-11 sm:h-9"
+            {...text("virtualLink")}
+          />
+        </Field>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Virtual link (optional)
-        <input
-          type="url"
-          maxLength={500}
-          placeholder="https://"
-          className={fieldClass}
-          {...text("virtualLink")}
-        />
-      </label>
-
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Description (optional)</span>
-        <RichTextEditor
-          content={fields.description as Content}
-          onChange={(description) => set("description", description)}
-          label="Description"
-        />
-      </div>
+        <Field>
+          <FieldLabel>Description (optional)</FieldLabel>
+          <RichTextEditor
+            content={fields.description as Content}
+            onChange={(description) => set("description", description)}
+            label="Description"
+          />
+        </Field>
+      </FieldGroup>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : itemId ? "Save changes" : "Add Schedule Item"}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="lg"
+          className="min-h-11 sm:min-h-9"
           onClick={() => router.push(BACK)}
         >
           Cancel
         </Button>
-        {result && !result.ok && !pending && (
-          <p role="alert" className="text-destructive text-sm">
-            {result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }

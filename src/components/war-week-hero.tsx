@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import type { WarWeek } from "@/db/schema";
 import { WAR_WEEK_STATUS_LABEL, formatDateRange } from "@/lib/war-week-display";
 
@@ -46,9 +47,9 @@ export function WarWeekHero({ warWeek }: { warWeek: WarWeek }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="border-border rounded-full border px-3 py-1 font-medium">
+          <Badge variant="outline" className="h-auto px-3 py-1 text-sm">
             {WAR_WEEK_STATUS_LABEL[warWeek.status]}
-          </span>
+          </Badge>
           <span className="text-foreground/70">
             {formatDateRange(warWeek.startDate, warWeek.endDate)}
           </span>

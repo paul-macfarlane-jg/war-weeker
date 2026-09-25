@@ -4,6 +4,7 @@ import {
   type LucideIcon,
   MapPin,
   PartyPopper,
+  Shapes,
   Trophy,
   User,
   Utensils,
@@ -53,6 +54,12 @@ const CATEGORY_STYLE: Record<
     icon: Briefcase,
     badge: "border-slate-500 bg-slate-500/15",
     cardEdge: "border-l-slate-500",
+  },
+  other: {
+    label: "Other",
+    icon: Shapes,
+    badge: "border-zinc-400 bg-zinc-400/15",
+    cardEdge: "border-l-zinc-400",
   },
 };
 

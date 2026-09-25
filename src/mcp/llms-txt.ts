@@ -8,6 +8,10 @@ const PAGES: [path: string, purpose: string][] = [
     "A War Week's home (edition as a lowercase Roman numeral, e.g. /xi): what's on now and next, pinned Announcements.",
   ],
   ["/<edition>/leaderboard", "Team and individual Standings."],
+  [
+    "/<edition>/finale",
+    "The closing-ceremony playback of the Standings, last place to first.",
+  ],
   ["/<edition>/schedule", "The schedule, grouped by Day with each Day Theme."],
   ["/<edition>/news", "Announcements, pinned first then newest first."],
   ["/<edition>/teams", "Teams and their rosters."],
@@ -16,7 +20,7 @@ const PAGES: [path: string, purpose: string][] = [
   ["/<edition>/faq", "Frequently asked questions."],
   ["/<edition>/more", "Links to the rest of the War Week's pages."],
   ["/history", "The Archive of past War Weeks, 2016 onward."],
-  ["/install", "How to install War Weeker as an app."],
+  ["/install", "How to install JG War Week as an app."],
   [
     "/admin",
     "Organizer-only: Points Entry, Standings, Announcements, Awards, and Setup (War Week settings, Appearance Theme, Days).",
@@ -36,11 +40,20 @@ export function llmsTxt(origin: string): string {
     .map(([name, tool]) => `- \`${name}\`: ${tool.description}`)
     .join("\n");
 
-  return `# War Weeker
+  return `# JG War Week
 
-> War Weeker is where Jahnel Group organizers run War Week, the company's annual week of team competitions, and where participants follow it: themes, schedule, teams, competitions, points, awards and announcements, plus a history of past War Weeks.
+> The JG War Week app is where Jahnel Group organizers run War Week, the company's annual week of team competitions, and where participants follow it: themes, schedule, teams, competitions (points-based or single-elimination Brackets), points, awards and announcements, the Finale, plus a history of past War Weeks.
 
 Every page and API route except sign-in needs a signed-in Jahnel Group account.
+
+Exactly one War Week is live at a time; \`get_current_war_week\` returns it (the
+live one, else the next upcoming one, else the latest complete one). Complete
+editions stay in the Archive at \`/history\`. Standings are never hidden: they
+are always the current Standings, live or complete. The Finale
+(\`/<edition>/finale\`) is a closing-ceremony playback of those Standings, not
+a separate result — it changes nothing. Some Competitions run as a
+single-elimination Bracket instead of plain points; there is no MCP tool for
+Bracket detail yet, so ask about a Competition's Standings, not its Bracket.
 
 ## Pages
 
@@ -48,15 +61,15 @@ ${pages}
 
 ## MCP
 
-A read-only Model Context Protocol server over Streamable HTTP at ${origin}/api/mcp. Every tool returns only what a signed-in participant sees: hidden Standings stay hidden, and no tool returns an email.
+A read-only Model Context Protocol server over Streamable HTTP at ${origin}/api/mcp. Every tool returns only what a signed-in participant sees, and no tool returns an email.
 
 ${tools}
 
 ## Access
 
 - Browser: sign in with Google using a @jahnelgroup.com account.
-- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the War Weeker operators issue. A signed-in browser session also works. Otherwise it answers 401.
-- Claude Code: \`claude mcp add --transport http war-weeker ${origin}/api/mcp --header "Authorization: Bearer <MCP_TOKEN>"\`
+- MCP: send \`Authorization: Bearer <MCP_TOKEN>\`, a token the JG War Week app operators issue. A signed-in browser session also works. Otherwise it answers 401.
+- Claude Code: \`claude mcp add --transport http jg-war-week ${origin}/api/mcp --header "Authorization: Bearer <MCP_TOKEN>"\`
 
 ## Source
 

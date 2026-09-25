@@ -2,13 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type PointsEntryActionResult,
   createPointsEntry,
   updatePointsEntry,
 } from "@/actions/points-entries";
+import { EntityCombobox } from "@/components/entity-combobox";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import {
   formatMaxPoints,
   placementLabel,
@@ -16,13 +26,7 @@ import {
 } from "@/lib/competitions";
 import { formatPoints } from "@/lib/points";
 import { overMaxWarning } from "@/lib/points-entry";
-import type {
-  PointsEntryFormOptions,
-  PointsEntryFormTarget,
-} from "@/queries/points-entries";
-
-const fieldClass =
-  "border-border bg-background h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
+import type { PointsEntryFormOptions } from "@/queries/points-entries";
 
 type Initial = {
   competitionId: string;
@@ -30,10 +34,6 @@ type Initial = {
   points: string;
   note: string;
 };
-
-function targetLabel(target: PointsEntryFormTarget) {
-  return target.team ? `${target.name} (${target.team})` : target.name;
-}
 
 /**
  * Add or edit one Points Entry. The target list follows the chosen
@@ -86,7 +86,11 @@ export function PointsEntryForm({
         ? await updatePointsEntry(entryId, input)
         : await createPointsEntry(input);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success("Points Entry saved");
       if (entryId) {
         router.push("/admin/points");
       } else {
@@ -104,106 +108,124 @@ export function PointsEntryForm({
       className="flex flex-col gap-4"
       aria-label="Points Entry"
     >
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Competition
-        <select
-          name="competitionId"
-          required
-          className={fieldClass}
-          value={competitionId}
-          onChange={(event) => {
-            setCompetitionId(event.target.value);
-            setTargetId("");
-            setResult(null);
-          }}
-        >
-          <option value="">Choose a Competition…</option>
-          {options.competitions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {`${c.name} · ${c.scoring === "team" ? teamLabel : "Individual"} · ${formatMaxPoints(c.maxPoints)}`}
-            </option>
-          ))}
-        </select>
-      </label>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="points-entry-competition">
+            Competition
+          </FieldLabel>
+          <EntityCombobox
+            id="points-entry-competition"
+            name="competitionId"
+            aria-label="Competition"
+            required
+            placeholder="Choose a Competition…"
+            items={options.competitions.map((c) => ({
+              id: c.id,
+              label: c.name,
+              detail: `${c.scoring === "team" ? teamLabel : "Individual"} · ${formatMaxPoints(c.maxPoints)}`,
+            }))}
+            value={competitionId}
+            onValueChange={(id) => {
+              setCompetitionId(id);
+              setTargetId("");
+              setResult(null);
+            }}
+          />
+        </Field>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        {competition?.scoring === "individual" ? "Participant" : teamLabel}
-        <select
-          name="targetId"
-          required
-          disabled={!competition}
-          className={fieldClass}
-          value={targetId}
-          onChange={(event) => setTargetId(event.target.value)}
-        >
-          <option value="">
-            {competition
-              ? competition.scoring === "team"
-                ? `Choose a ${teamLabel}…`
-                : "Choose a Participant…"
-              : "Choose a Competition first"}
-          </option>
-          {targets.map((t) => (
-            <option key={t.id} value={t.id}>
-              {targetLabel(t)}
-            </option>
-          ))}
-        </select>
-      </label>
+        <Field>
+          <FieldLabel htmlFor="points-entry-target">
+            {competition?.scoring === "individual" ? "Participant" : teamLabel}
+          </FieldLabel>
+          <EntityCombobox
+            id="points-entry-target"
+            name="targetId"
+            aria-label={
+              competition?.scoring === "individual" ? "Participant" : teamLabel
+            }
+            required
+            disabled={!competition}
+            placeholder={
+              competition
+                ? competition.scoring === "team"
+                  ? `Choose a ${teamLabel}…`
+                  : "Choose a Participant…"
+                : "Choose a Competition first"
+            }
+            items={targets.map((t) => ({
+              id: t.id,
+              label: t.name,
+              detail: t.team ?? undefined,
+            }))}
+            value={targetId}
+            onValueChange={setTargetId}
+          />
+        </Field>
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Points
-        <input
-          name="points"
-          required
-          type="number"
-          step="0.01"
-          inputMode="decimal"
-          className={fieldClass}
-          value={points}
-          onChange={(event) => setPoints(event.target.value)}
-        />
-      </label>
-      {competition && places.length > 0 && (
-        <div
-          role="group"
-          aria-label="Placement Points"
-          className="-mt-2 flex flex-wrap gap-2"
-        >
-          {places.map((place) => {
-            const preset = pointsForPlacement(competition, place)!;
-            return (
-              <Button
-                key={place}
-                type="button"
-                variant="outline"
-                onClick={() => setPoints(String(preset))}
-              >
-                {`${placementLabel(place)} · ${formatPoints(preset)}`}
-              </Button>
-            );
-          })}
-        </div>
-      )}
-      {warning && (
-        <p role="status" className="text-sm font-medium text-amber-600">
-          ⚠️ {warning}
-        </p>
-      )}
+        <Field>
+          <FieldLabel htmlFor="points-entry-points">Points</FieldLabel>
+          <Input
+            id="points-entry-points"
+            name="points"
+            required
+            type="number"
+            step="0.01"
+            inputMode="decimal"
+            className="h-11 sm:h-9"
+            value={points}
+            onChange={(event) => setPoints(event.target.value)}
+          />
+          {warning && (
+            <FieldDescription
+              role="status"
+              className="font-medium text-amber-600"
+            >
+              ⚠️ {warning}
+            </FieldDescription>
+          )}
+        </Field>
+        {competition && places.length > 0 && (
+          <div
+            role="group"
+            aria-label="Placement Points"
+            className="-mt-2 flex flex-wrap gap-2"
+          >
+            {places.map((place) => {
+              const preset = pointsForPlacement(competition, place)!;
+              return (
+                <Button
+                  key={place}
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPoints(String(preset))}
+                >
+                  {`${placementLabel(place)} · ${formatPoints(preset)}`}
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Note (optional)
-        <input
-          name="note"
-          maxLength={500}
-          className={fieldClass}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </label>
+        <Field>
+          <FieldLabel htmlFor="points-entry-note">Note (optional)</FieldLabel>
+          <Input
+            id="points-entry-note"
+            name="note"
+            maxLength={500}
+            className="h-11 sm:h-9"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+          />
+        </Field>
+      </FieldGroup>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : entryId ? "Save changes" : "Add Points Entry"}
         </Button>
         {entryId && (
@@ -211,22 +233,16 @@ export function PointsEntryForm({
             type="button"
             variant="outline"
             size="lg"
+            className="min-h-11 sm:min-h-9"
             onClick={() => router.push("/admin/points")}
           >
             Cancel
           </Button>
         )}
-        {result && !pending && (
-          <p
-            role={result.ok ? "status" : "alert"}
-            className={
-              result.ok ? "text-sm text-green-600" : "text-destructive text-sm"
-            }
-          >
-            {result.ok ? "Saved." : result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }

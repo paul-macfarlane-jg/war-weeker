@@ -10,7 +10,7 @@ export const SETUP_SECTIONS: {
   {
     label: "War Week",
     description:
-      "Story Theme, dates, status, mode, labels, links, organizers and the Appearance Theme.",
+      "Story Theme, dates, mode, labels, links, organizers, the Appearance Theme, Winner and highlights.",
     href: "/admin/setup/war-week",
   },
   {

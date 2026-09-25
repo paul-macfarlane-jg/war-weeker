@@ -1,4 +1,6 @@
 import { RichText } from "@/components/rich-text";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Announcement } from "@/db/schema";
 import { formatPublishedAt } from "@/lib/announcements";
 import { videoEmbedUrl } from "@/lib/video";
@@ -19,38 +21,40 @@ export function AnnouncementCard({
 }) {
   const Heading = headingLevel;
   return (
-    <article className="border-border flex flex-col gap-3 rounded-lg border p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <Heading className="text-lg font-semibold">
-          {announcement.title}
-        </Heading>
-        {announcement.pinned ? (
-          <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-            Pinned
-          </span>
-        ) : null}
-      </div>
-      <p className="text-foreground/60 text-xs">
-        {announcement.authorEmail} ·{" "}
-        {formatPublishedAt(announcement.publishedAt)}
-      </p>
-      <RichText content={announcement.body} />
-      {announcement.videoUrls.map((url, index) => {
-        const src = videoEmbedUrl(url);
-        if (!src) return null;
-        return (
-          <iframe
-            key={`${index}-${url}`}
-            src={src}
-            title={`Video: ${announcement.title}`}
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-            className="aspect-video w-full rounded-lg"
-          />
-        );
-      })}
+    <article>
+      <Card className="gap-3">
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            <Heading className="text-lg font-semibold">
+              {announcement.title}
+            </Heading>
+            {announcement.pinned ? <Badge>Pinned</Badge> : null}
+          </CardTitle>
+          <p className="text-foreground/60 text-xs">
+            {announcement.authorEmail} ·{" "}
+            {formatPublishedAt(announcement.publishedAt)}
+          </p>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <RichText content={announcement.body} />
+          {announcement.videoUrls.map((url, index) => {
+            const src = videoEmbedUrl(url);
+            if (!src) return null;
+            return (
+              <iframe
+                key={`${index}-${url}`}
+                src={src}
+                title={`Video: ${announcement.title}`}
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                className="aspect-video w-full rounded-lg"
+              />
+            );
+          })}
+        </CardContent>
+      </Card>
     </article>
   );
 }

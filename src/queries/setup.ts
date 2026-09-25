@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
 import {
@@ -10,6 +10,7 @@ import {
   awardParticipant,
   competition,
   day,
+  entrant,
   participant,
   pointsEntry,
   scheduleItem,
@@ -48,6 +49,7 @@ export type SetupTeam = Pick<Team, "id" | "name" | "color" | "logoUrl"> & {
   participantCount: number;
   pointsEntryCount: number;
   awardCount: number;
+  entrantCount: number;
 };
 
 /** A War Week's Teams by name. */
@@ -70,6 +72,7 @@ export async function getSetupTeams(
         eq(pointsEntry.teamId, team.id),
       ),
       awardCount: dbOrTx.$count(award, eq(award.teamId, team.id)),
+      entrantCount: dbOrTx.$count(entrant, eq(entrant.teamId, team.id)),
     })
     .from(team)
     .where(eq(team.warWeekId, warWeek.id))
@@ -80,7 +83,7 @@ export async function getSetupTeams(
 export type SetupParticipant = Pick<
   Participant,
   "id" | "displayName" | "companyTag" | "email" | "teamId" | "isLeader"
-> & { pointsEntryCount: number; awardCount: number };
+> & { pointsEntryCount: number; awardCount: number; entrantCount: number };
 
 /** A War Week's Participants by display name. */
 export async function getSetupParticipants(
@@ -103,6 +106,10 @@ export async function getSetupParticipants(
         awardParticipant,
         eq(awardParticipant.participantId, participant.id),
       ),
+      entrantCount: dbOrTx.$count(
+        entrant,
+        eq(entrant.participantId, participant.id),
+      ),
     })
     .from(participant)
     .where(eq(participant.warWeekId, warWeek.id))
@@ -120,6 +127,7 @@ export type SetupCompetition = Pick<
   | "placementPoints"
   | "countsTowardTeam"
   | "competitionGroup"
+  | "format"
 > & { pointsEntryCount: number; scheduleItemCount: number };
 
 /** A War Week's Competitions by name. */
@@ -137,6 +145,7 @@ export async function getSetupCompetitions(
       placementPoints: competition.placementPoints,
       countsTowardTeam: competition.countsTowardTeam,
       competitionGroup: competition.competitionGroup,
+      format: competition.format,
       pointsEntryCount: dbOrTx.$count(
         pointsEntry,
         eq(pointsEntry.competitionId, competition.id),
@@ -149,4 +158,34 @@ export async function getSetupCompetitions(
     .from(competition)
     .where(eq(competition.warWeekId, warWeek.id))
     .orderBy(asc(competition.name));
+}
+
+/** Competition Groups already used in a War Week, sorted, for suggestions. */
+export async function getCompetitionGroupSuggestions(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<string[]> {
+  const rows = await dbOrTx
+    .selectDistinct({ group: competition.competitionGroup })
+    .from(competition)
+    .where(
+      and(
+        eq(competition.warWeekId, warWeek.id),
+        isNotNull(competition.competitionGroup),
+      ),
+    )
+    .orderBy(asc(competition.competitionGroup));
+  return rows.flatMap((row) => (row.group ? [row.group] : []));
+}
+
+/** Company Tags used in any War Week, sorted by name, for suggestions. */
+export async function getCompanyTagSuggestions(
+  dbOrTx: DBOrTx = db,
+): Promise<string[]> {
+  const rows = await dbOrTx
+    .selectDistinct({ tag: participant.companyTag })
+    .from(participant)
+    .where(isNotNull(participant.companyTag))
+    .orderBy(asc(participant.companyTag));
+  return rows.flatMap((row) => (row.tag ? [row.tag] : []));
 }

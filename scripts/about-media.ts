@@ -1,7 +1,7 @@
 /**
  * Writes the About page's media (ticket 28) from the seeded demo, never by
- * hand: `public/about/reveal.mp4` and `reveal-poster.png` (War Week XI's
- * leaderboard on a phone, hidden, then Revealed) and one still per feature
+ * hand: `public/about/finale.mp4` and `finale-poster.png` (War Week XI's
+ * Finale on a phone: the Start screen, then the countdown) and one still per feature
  * card at `public/about/<slug>.png`. Afterwards it screenshots `/about` as an
  * anonymous visitor at 390px, desktop and with reduced motion into
  * `test-results/28-splash/`, with a log.
@@ -32,7 +32,7 @@ import path from "node:path";
 import { Client } from "pg";
 
 import { ABOUT_FEATURES, ABOUT_THEME } from "@/lib/about";
-import { REVEAL_MAX_MS } from "@/lib/reveal";
+import { FINALE_MAX_MS } from "@/lib/finale";
 import type { LeaderboardResult } from "@/mcp/leaderboard";
 
 loadEnvConfig(process.cwd());
@@ -49,7 +49,7 @@ const AUTH_SECRET = `about-media-secret-${randomUUID()}`;
 const DEMO_EMAIL = "about-demo@jahnelgroup.com";
 const STILL = { width: 1280, height: 720 };
 const PHONE = { width: 390, height: 844 };
-/** Around the Reveal: this much of the hidden state before, and after. */
+/** Around the Finale: this much of the Start screen before, and after. */
 const LEAD_IN_MS = 2_500;
 const HOLD_MS = 3_500;
 /** A time inside XI's week for the Now / Next still (ET). */
@@ -298,11 +298,11 @@ async function assertNoRealEmail(page: Page, what: string) {
 }
 
 // ---------------------------------------------------------------------------
-// The Reveal recording
+// The Finale recording
 
 type Frame = { at: number; data: string };
 
-async function recordReveal(cookie: string, ffmpeg: string) {
+async function recordFinale(cookie: string, ffmpeg: string) {
   const page = await Page.open();
   // The screencast sends CSS-pixel frames whatever the device scale, so
   // the page is laid out at 390px inside a doubled viewport, zoomed 2x.
@@ -312,13 +312,10 @@ async function recordReveal(cookie: string, ffmpeg: string) {
     1,
   );
   await page.cookie(cookie);
-  await query(
-    `update war_week set standings_hidden = true where edition = 'xi'`,
-  );
-  await page.goto("/xi/leaderboard", 3_000);
+  await page.goto("/xi/finale", 3_000);
   await page.evaluate(`(document.documentElement.style.zoom = "2")`);
   await sleep(500);
-  await assertNoRealEmail(page, "reveal");
+  await assertNoRealEmail(page, "finale");
 
   const frames: Frame[] = [];
   page.on("Page.screencastFrame", (params) => {
@@ -335,37 +332,37 @@ async function recordReveal(cookie: string, ffmpeg: string) {
   });
   await sleep(LEAD_IN_MS);
 
-  const flippedAt = Date.now();
-  await query(
-    `update war_week set standings_hidden = false where edition = 'xi'`,
+  const pressedAt = Date.now();
+  await page.evaluate(
+    `Array.from(document.querySelectorAll("button")).find((b) => b.innerText.trim() === "Start")?.click()`,
   );
   let startedAt: number | null = null;
-  while (Date.now() - flippedAt < 20_000 && startedAt === null) {
+  while (Date.now() - pressedAt < 20_000 && startedAt === null) {
     const value = await page.evaluate<string | null>(
-      `document.querySelector("[data-reveal-started-at]")?.dataset.revealStartedAt ?? null`,
+      `document.querySelector("[data-finale-started-at]")?.dataset.finaleStartedAt ?? null`,
     );
     if (value) startedAt = Number(value);
     else await sleep(100);
   }
-  if (startedAt === null) throw new Error("the Reveal never started");
-  note(`reveal: animation started ${startedAt - flippedAt} ms after the flip`);
-  await sleep(REVEAL_MAX_MS + HOLD_MS);
+  if (startedAt === null) throw new Error("the Finale never started");
+  note(`finale: countdown started ${startedAt - pressedAt} ms after Start`);
+  await sleep(FINALE_MAX_MS + HOLD_MS);
   await page.send("Page.stopScreencast");
   await page.close();
 
-  // Keep the lead-in before the Reveal and the hold after it; a frame only
+  // Keep the lead-in before the Finale and the hold after it; a frame only
   // arrives when something changes, so each one lasts until the next.
   const from = startedAt - LEAD_IN_MS;
-  const to = startedAt + REVEAL_MAX_MS + HOLD_MS;
+  const to = startedAt + FINALE_MAX_MS + HOLD_MS;
   const before = frames.filter((f) => f.at <= from).at(-1);
   const kept = [
     ...(before ? [{ ...before, at: from }] : []),
     ...frames.filter((f) => f.at > from && f.at <= to),
   ];
   if (kept.length < 10) {
-    throw new Error(`only ${kept.length} frames recorded around the Reveal`);
+    throw new Error(`only ${kept.length} frames recorded around the Finale`);
   }
-  note(`reveal: ${frames.length} frames captured, ${kept.length} kept`);
+  note(`finale: ${frames.length} frames captured, ${kept.length} kept`);
 
   const dir = mkdtempSync(path.join(os.tmpdir(), "about-frames-"));
   try {
@@ -385,7 +382,7 @@ async function recordReveal(cookie: string, ffmpeg: string) {
     writeFileSync(listFile, list.join("\n") + "\n");
     copyFileSync(
       path.join(dir, "0000.png"),
-      path.join(MEDIA, "reveal-poster.png"),
+      path.join(MEDIA, "finale-poster.png"),
     );
 
     const result = spawnSync(
@@ -413,7 +410,7 @@ async function recordReveal(cookie: string, ffmpeg: string) {
         "-movflags",
         "+faststart",
         "-an",
-        path.join(MEDIA, "reveal.mp4"),
+        path.join(MEDIA, "finale.mp4"),
       ],
       { stdio: ["ignore", "inherit", "pipe"] },
     );
@@ -423,6 +420,75 @@ async function recordReveal(cookie: string, ffmpeg: string) {
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+}
+
+// ---------------------------------------------------------------------------
+// A finished single-elimination Bracket for the "brackets" still
+
+const BRACKET_COMP_NAME = "Capture the Flag";
+
+/**
+ * Builds a small, already-finished single-elimination Bracket on XI (4
+ * Participant Entrants, two Round 1 Heats and a decided final) directly in
+ * SQL, the way `scripts/brackets-evidence.ts` sets its demo Bracket up. The
+ * caller deletes the Competition (which cascades its Entrants and Heats)
+ * when done.
+ */
+async function setupBracketDemo(): Promise<string> {
+  const [xiWarWeek] = await query<{ id: string }>(
+    `select id from war_week where edition = 'xi'`,
+  );
+  const [comp] = await query<{ id: string }>(
+    `insert into competition (war_week_id, name, scoring, format)
+     values ($1, $2, 'individual', 'single-elimination') returning id`,
+    [xiWarWeek.id, BRACKET_COMP_NAME],
+  );
+  const competitionId = comp.id;
+  const participants = await query<{ id: string }>(
+    `select id from participant where war_week_id = $1 order by display_name limit 4`,
+    [xiWarWeek.id],
+  );
+  if (participants.length < 4) {
+    throw new Error("XI needs at least 4 Participants for the Bracket demo");
+  }
+  const entrantIds: string[] = [];
+  for (const [i, p] of participants.entries()) {
+    const [entrant] = await query<{ id: string }>(
+      `insert into entrant (competition_id, participant_id, seed_position)
+       values ($1, $2, $3) returning id`,
+      [competitionId, p.id, i + 1],
+    );
+    entrantIds.push(entrant.id);
+  }
+  const [e1, e2, e3, e4] = entrantIds;
+  const [finalHeat] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status)
+     values ($1, 2, 1, 'played') returning id`,
+    [competitionId],
+  );
+  const [heatA] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status, winner_to_heat_id, winner_to_slot)
+     values ($1, 1, 1, 'played', $2, 0) returning id`,
+    [competitionId, finalHeat.id],
+  );
+  const [heatB] = await query<{ id: string }>(
+    `insert into heat (competition_id, round, position, status, winner_to_heat_id, winner_to_slot)
+     values ($1, 1, 2, 'played', $2, 1) returning id`,
+    [competitionId, finalHeat.id],
+  );
+  await query(
+    `insert into heat_entrant (heat_id, entrant_id, slot, place) values
+       ($1, $2, 0, 1), ($1, $3, 1, 2),
+       ($4, $5, 0, 1), ($4, $6, 1, 2),
+       ($7, $2, 0, 1), ($7, $5, 1, 2)`,
+    [heatA.id, e1, e4, heatB.id, e2, e3, finalHeat.id],
+  );
+  note(`bracket demo: competition ${competitionId}, champion entrant ${e1}`);
+  return competitionId;
+}
+
+async function teardownBracketDemo(competitionId: string) {
+  await query(`delete from competition where id = $1`, [competitionId]);
 }
 
 // ---------------------------------------------------------------------------
@@ -447,18 +513,27 @@ async function still(
   );
 }
 
-/** Picks a Competition in the Points Entry form the way React sees it. */
-const selectCompetition = (name: string) => `(() => {
-  const select = document.querySelector('select[name="competitionId"]');
-  const option = Array.from(select.options).find((o) => o.text.includes(${JSON.stringify(name)}));
-  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
-  setter.call(select, option.value);
-  select.dispatchEvent(new Event("change", { bubbles: true }));
-  return option.text;
-})()`;
+/**
+ * Picks a Competition in the Points Entry form's combobox the way a person
+ * does: focus it, type the name, and choose the option.
+ */
+async function selectCompetition(page: Page, name: string): Promise<string> {
+  await page.evaluate(
+    `document.querySelector('input[aria-label="Competition"]').focus()`,
+  );
+  await page.send("Input.insertText", { text: name });
+  await sleep(500);
+  const picked = await page.evaluate<string | null>(`(() => {
+    const option = Array.from(document.querySelectorAll('[role="option"]')).find((o) => o.innerText.includes(${JSON.stringify(name)}));
+    option?.click();
+    return option ? option.innerText : null;
+  })()`);
+  if (!picked) throw new Error(`no Competition option for ${name}`);
+  return picked;
+}
 
 const scrollToText = (text: string) => `(() => {
-  const el = Array.from(document.querySelectorAll("section, h2")).find((e) => e.innerText.toLowerCase().includes(${JSON.stringify(text)}.toLowerCase()));
+  const el = Array.from(document.querySelectorAll('section, h2, [data-slot="card"]')).find((e) => e.innerText.toLowerCase().includes(${JSON.stringify(text)}.toLowerCase()));
   el?.scrollIntoView({ block: "start" });
   window.scrollBy(0, -16);
   return Boolean(el);
@@ -530,17 +605,15 @@ const escapeHtml = (s: string) =>
  * from the real tool result, with the tool call shown underneath.
  */
 function chatCardUrl(result: LeaderboardResult): string {
-  const answer = result.hidden
-    ? `<p>${escapeHtml(result.message)}</p>`
-    : `<p>${escapeHtml(result.teamLabel)} Standings for War Week XI right now:</p><ol>${result.standings
-        .slice(0, 5)
-        .map(
-          (row) =>
-            `<li><span class="dot" style="background:${"color" in row ? escapeHtml(row.color) : "#888"}"></span><b>${escapeHtml(row.name)}</b><span class="pts">${row.total} pts</span></li>`,
-        )
-        .join(
-          "",
-        )}</ol><p>${escapeHtml(result.standings[0]?.name ?? "")} lead${result.standings.length > 1 ? `, ${result.standings[0].total - result.standings[1].total} points ahead of ${escapeHtml(result.standings[1].name)}` : ""}.</p>`;
+  const answer = `<p>${escapeHtml(result.teamLabel)} Standings for War Week XI right now:</p><ol>${result.standings
+    .slice(0, 5)
+    .map(
+      (row) =>
+        `<li><span class="dot" style="background:${"color" in row ? escapeHtml(row.color) : "#888"}"></span><b>${escapeHtml(row.name)}</b><span class="pts">${row.total} pts</span></li>`,
+    )
+    .join(
+      "",
+    )}</ol><p>${escapeHtml(result.standings[0]?.name ?? "")} lead${result.standings.length > 1 ? `, ${result.standings[0].total - result.standings[1].total} points ahead of ${escapeHtml(result.standings[1].name)}` : ""}.</p>`;
   const t = ABOUT_THEME;
   return `data:text/html;charset=utf-8,${encodeURIComponent(`<!doctype html><html><head><meta charset="utf-8"><style>
   html,body{margin:0;height:100%;background:${t.backgroundColor};color:${t.foregroundColor};font:16px/1.5 ui-monospace,"JetBrains Mono",Menlo,monospace}
@@ -556,7 +629,7 @@ function chatCardUrl(result: LeaderboardResult): string {
   .who{font-size:12px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;margin-bottom:6px}
   </style></head><body><div class="chat">
   <div class="msg you"><div class="who">You</div>Who's winning War Week XI?</div>
-  <div class="msg claude"><div class="who">Claude</div>${answer}<div class="tool">war-weeker · get_leaderboard(kind: "team")</div></div>
+  <div class="msg claude"><div class="who">Claude</div>${answer}<div class="tool">jg-war-week · get_leaderboard(kind: "team")</div></div>
   </div></body></html>`)}`;
 }
 
@@ -583,7 +656,7 @@ async function evidence() {
   await desktop.viewport({ width: 1440, height: 900 }, false, 1);
   await desktop.goto("/about", 3_000);
   const video = await desktop.evaluate<Record<string, unknown>>(
-    `(() => { const v = document.querySelector("video"); return { readyState: v.readyState, paused: v.paused, muted: v.muted, loop: v.loop, poster: v.poster.endsWith("/about/reveal-poster.png"), videoWidth: v.videoWidth, videoHeight: v.videoHeight, duration: v.duration }; })()`,
+    `(() => { const v = document.querySelector("video"); return { readyState: v.readyState, paused: v.paused, muted: v.muted, loop: v.loop, poster: v.poster.endsWith("/about/finale-poster.png"), videoWidth: v.videoWidth, videoHeight: v.videoHeight, duration: v.duration }; })()`,
   );
   note(`evidence: desktop hero video ${JSON.stringify(video)}`);
   await desktop.screenshot(path.join(EVIDENCE, "about-desktop.png"), true);
@@ -593,7 +666,7 @@ async function evidence() {
   });
   await sleep(500);
   const reduced = await desktop.evaluate<Record<string, unknown>>(
-    `(() => { const v = document.querySelector("video"); const img = document.querySelector('img[src="/about/reveal-poster.png"]'); return { videoHidden: getComputedStyle(v).display === "none", posterShown: getComputedStyle(img).display !== "none" }; })()`,
+    `(() => { const v = document.querySelector("video"); const img = document.querySelector('img[src="/about/finale-poster.png"]'); return { videoHidden: getComputedStyle(v).display === "none", posterShown: getComputedStyle(img).display !== "none" }; })()`,
   );
   note(`evidence: reduced motion ${JSON.stringify(reduced)}`);
   await desktop.screenshot(
@@ -648,6 +721,7 @@ async function main() {
     [DEMO_EMAIL, realOrganizer],
   );
   const cookie = await createSession(DEMO_EMAIL);
+  const bracketCompetitionId = await setupBracketDemo();
 
   const server = spawn("pnpm", ["start", "-p", String(PORT)], {
     env: {
@@ -677,14 +751,12 @@ async function main() {
     }
     await waitForChrome();
 
-    await recordReveal(cookie, "ffmpeg");
+    await recordFinale(cookie, "ffmpeg");
 
     const slugs = ABOUT_FEATURES.map((f) => f.slug);
-    await still(slugs[0], cookie, "/admin/setup");
-    await still(slugs[1], cookie, "/admin/points", async (page) => {
-      const picked = await page.evaluate<string>(
-        selectCompetition("Settlers of Catan"),
-      );
+    await still("organizer-setup", cookie, "/admin/setup");
+    await still("points", cookie, "/admin/points", async (page) => {
+      const picked = await selectCompetition(page, "Settlers of Catan");
       await sleep(500);
       const presets = await page.evaluate<number>(
         `document.querySelectorAll('button').length && Array.from(document.querySelectorAll('button')).filter((b) => /^1st/.test(b.innerText)).length`,
@@ -695,7 +767,7 @@ async function main() {
       if (!presets) throw new Error("no Placement Points buttons on screen");
     });
     await still(
-      slugs[2],
+      "schedule",
       cookie,
       `/xi?at=${encodeURIComponent(SCHEDULE_AT)}`,
       async (page) => {
@@ -704,17 +776,32 @@ async function main() {
         if (!found) throw new Error("no Now / Next section on the XI home");
       },
     );
-    await still(slugs[3], cookie, "/xi/news", () => sleep(2_000));
-    await still(slugs[4], cookie, "/history");
+    await still("announcements", cookie, "/xi/news", () => sleep(2_000));
+    await still(
+      "brackets",
+      cookie,
+      `/xi/competitions/${bracketCompetitionId}`,
+      async (page) => {
+        const found = await page.evaluate<boolean>(scrollToText("champion"));
+        await sleep(300);
+        if (!found) throw new Error("no champion card on the Bracket view");
+      },
+    );
+    await still("lifecycle", cookie, "/admin/setup", async (page) => {
+      const found = await page.evaluate<boolean>(scrollToText("Lifecycle"));
+      await sleep(300);
+      if (!found) throw new Error("no Lifecycle box on /admin/setup");
+    });
+    await still("archive", cookie, "/history");
     const result = await askMcp(cookie);
-    note(`ask-claude: get_leaderboard hidden=${result.hidden}`);
-    await still(slugs[5], null, chatCardUrl(result));
+    note(`ask-claude: get_leaderboard rows=${result.standings.length}`);
+    await still("ask-claude", null, chatCardUrl(result));
 
     await evidence();
 
     for (const name of [
-      "reveal.mp4",
-      "reveal-poster.png",
+      "finale.mp4",
+      "finale-poster.png",
       ...slugs.map((s) => `${s}.png`),
     ]) {
       note(
@@ -731,9 +818,6 @@ async function main() {
     await sleep(1_000);
     rmSync(chrome.dir, { recursive: true, force: true, maxRetries: 3 });
     await query(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
-    );
-    await query(
       `update war_week set organizer_emails = array_remove(organizer_emails, $1) where edition = 'xi'`,
       [DEMO_EMAIL],
     );
@@ -746,6 +830,7 @@ async function main() {
       [realOrganizer, DEMO_EMAIL],
     );
     await query(`delete from "user" where email = $1`, [DEMO_EMAIL]);
+    await teardownBracketDemo(bracketCompetitionId);
     writeFileSync(
       path.join(EVIDENCE, "about-media.txt"),
       log.join("\n") + "\n",

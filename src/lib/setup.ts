@@ -1,6 +1,8 @@
 import { type ZodType, z } from "zod";
 
 import type { Competition, Participant, Team, WarWeek } from "@/db/schema";
+import { isJahnelGroupEmail } from "@/lib/access";
+import { dayOutsideRangeError } from "@/lib/day-range";
 import {
   competitionSeedSchema,
   daySeedSchema,
@@ -9,12 +11,13 @@ import {
   teamSeedSchema,
 } from "@/seed/schema";
 
+export { dayOutsideRangeError } from "@/lib/day-range";
+
 /** The War Week settings form's raw fields, all as the inputs hold them. */
 export type WarWeekSettingsInput = {
   storyTheme: string;
   startDate: string;
   endDate: string;
-  status: string;
   mode: string;
   teamLabel: string;
   leaderTitle: string;
@@ -30,6 +33,10 @@ export type WarWeekSettingsInput = {
   logoUrl: string;
   bannerUrl: string;
   fontPreset: string;
+  /** Blank until the War Week ends (or for an edition with no Winner). */
+  winner: string;
+  /** Short lines, one per line. */
+  highlights: string;
 };
 
 /** Validated settings, keyed by the `war_week` columns they update. */
@@ -38,7 +45,6 @@ export type WarWeekSettingsValues = Pick<
   | "storyTheme"
   | "startDate"
   | "endDate"
-  | "status"
   | "mode"
   | "teamLabel"
   | "leaderTitle"
@@ -53,6 +59,8 @@ export type WarWeekSettingsValues = Pick<
   | "logoUrl"
   | "bannerUrl"
   | "fontPreset"
+  | "winner"
+  | "highlights"
 >;
 
 /** The form's starting fields from the War Week row. */
@@ -61,7 +69,6 @@ export function settingsInputFrom(warWeek: WarWeek): WarWeekSettingsInput {
     storyTheme: warWeek.storyTheme,
     startDate: warWeek.startDate,
     endDate: warWeek.endDate,
-    status: warWeek.status,
     mode: warWeek.mode,
     teamLabel: warWeek.teamLabel,
     leaderTitle: warWeek.leaderTitle,
@@ -76,11 +83,23 @@ export function settingsInputFrom(warWeek: WarWeek): WarWeekSettingsInput {
     logoUrl: warWeek.logoUrl ?? "",
     bannerUrl: warWeek.bannerUrl ?? "",
     fontPreset: warWeek.fontPreset,
+    winner: warWeek.winner ?? "",
+    highlights: warWeek.highlights.join("\n"),
   };
 }
 
 const trim = (value: unknown) =>
   typeof value === "string" ? value.trim() : value;
+
+/** One trimmed line per entry, blank lines dropped. */
+export function splitLines(value: unknown): unknown {
+  if (value === undefined || value === null) return [];
+  if (typeof value !== "string") return value;
+  return value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
 
 /** Trims, then applies the seed's rule for the field. */
 export function trimmed<T extends ZodType>(schema: T) {
@@ -100,7 +119,6 @@ const settingsSchema = z
     storyTheme: trimmed(seed.storyTheme),
     startDate: trimmed(seed.startDate),
     endDate: trimmed(seed.endDate),
-    status: seed.status,
     mode: seed.mode,
     teamLabel: trimmed(seed.teamLabel),
     leaderTitle: trimmed(seed.leaderTitle),
@@ -117,6 +135,8 @@ const settingsSchema = z
     logoUrl: optional(seed.logoUrl),
     bannerUrl: optional(seed.bannerUrl),
     fontPreset: seed.fontPreset,
+    winner: optional(seed.winner),
+    highlights: z.preprocess(splitLines, seed.highlights),
   })
   .refine((s) => s.startDate <= s.endDate, {
     error: "Start date must not be after the end date.",
@@ -191,7 +211,8 @@ const FIELD_LABELS: Record<string, string> = {
   storyTheme: "Story Theme",
   startDate: "Start date",
   endDate: "End date",
-  status: "Status",
+  winner: "Winner",
+  highlights: "Highlights",
   mode: "Mode",
   teamLabel: "Team Label",
   leaderTitle: "Leader Title",
@@ -289,6 +310,13 @@ export function parseWarWeekSettingsInput(
         .map((email) => email.toLowerCase()),
     ),
   ];
+  const notJg = emails.find((email) => !isJahnelGroupEmail(email));
+  if (notJg) {
+    return {
+      ok: false,
+      error: `Organizer email "${notJg}" must be an @jahnelgroup.com address.`,
+    };
+  }
   return parseWith(
     settingsSchema,
     { ...input, organizerEmails: emails },
@@ -370,7 +398,9 @@ export function parseCompetitionInput(
     },
   );
   if (!parsed.ok) return parsed;
-  const { group, ...value } = parsed.value;
+  // The Format is set through the Bracket actions, never a setup save.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { group, format, ...value } = parsed.value;
   return {
     ok: true,
     value: {
@@ -506,13 +536,7 @@ export function settingsGuardError(
     const teams = ctx.teamCount === 1 ? "1 Team" : `${ctx.teamCount} Teams`;
     return `This War Week has ${teams}. Delete ${ctx.teamCount === 1 ? "it" : "them"} before switching to free-for-all.`;
   }
-  const outside = [...ctx.dayDates]
-    .sort()
-    .find((date) => date < values.startDate || date > values.endDate);
-  if (outside) {
-    return `The Day on ${outside} falls outside the new dates. Move or delete it first.`;
-  }
-  return null;
+  return dayOutsideRangeError(ctx.dayDates, values.startDate, values.endDate);
 }
 
 /** Refuses a Day outside the War Week's dates or on a date already taken. */

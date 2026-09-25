@@ -14,7 +14,7 @@ describe("SiteFooter", () => {
     expect(html).toContain('target="_blank"');
     expect(html).toContain('rel="noopener noreferrer"');
     expect(html).toContain(">GitHub<");
-    expect(REPO_URL).toBe("https://github.com/paul-macfarlane/war-weeker");
+    expect(REPO_URL).toBe("https://github.com/paul-macfarlane/jg-war-week");
   });
 
   it("links to the About page", () => {
@@ -22,5 +22,14 @@ describe("SiteFooter", () => {
 
     expect(html).toContain('href="/about"');
     expect(html).toContain(">About<");
+  });
+
+  it("links to the Privacy and Terms pages", () => {
+    const html = renderToStaticMarkup(<SiteFooter />);
+
+    expect(html).toContain('href="/privacy"');
+    expect(html).toContain(">Privacy<");
+    expect(html).toContain('href="/terms"');
+    expect(html).toContain(">Terms<");
   });
 });

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "war_week_one_live" ON "war_week" USING btree ((true)) WHERE status = 'live';

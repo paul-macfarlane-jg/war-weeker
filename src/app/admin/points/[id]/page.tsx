@@ -12,13 +12,13 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Edit Points Entry · War Weeker" };
+export const metadata: Metadata = { title: "Edit Points Entry · JG War Week" };
 
 export default async function EditPointsEntryPage({
   params,
 }: PageProps<"/admin/points/[id]">) {
   const { id } = await params;
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     `/admin/points/${id}`,
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
@@ -30,7 +30,12 @@ export default async function EditPointsEntryPage({
   if (!entry) notFound();
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Points Entries">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Points Entries"
+    >
       <section className="flex max-w-md flex-col gap-4">
         <h1 className="text-2xl font-bold">Edit Points Entry</h1>
         <p className="text-foreground/70 text-sm">

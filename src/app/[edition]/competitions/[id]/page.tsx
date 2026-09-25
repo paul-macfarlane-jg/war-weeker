@@ -3,11 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AutoRefresh } from "@/components/auto-refresh";
-import {
-  CompetitionFacts,
-  PointsEntryList,
-  PointsHidden,
-} from "@/components/competitions";
+import { BracketView } from "@/components/bracket-view";
+import { CompetitionFacts, PointsEntryList } from "@/components/competitions";
+import { getBracket, getParticipantTeamIds } from "@/queries/brackets";
 import { getCompetitionWithLedger } from "@/queries/competitions";
 
 import { getWarWeekForEdition } from "../../war-week";
@@ -22,6 +20,12 @@ export default async function CompetitionPage({
   const found = await getCompetitionWithLedger(warWeek, id);
   if (!found) notFound();
   const { competition, ledger } = found;
+  const bracket = await getBracket(competition.id);
+  const isBracket = bracket && bracket.competition.format !== "points";
+  const participantTeams =
+    isBracket && competition.scoring === "team"
+      ? await getParticipantTeamIds(warWeek)
+      : {};
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6 md:max-w-3xl">
@@ -44,16 +48,22 @@ export default async function CompetitionPage({
           teamLabel={warWeek.teamLabel}
         />
       </div>
+      {isBracket ? (
+        <BracketView
+          entrants={bracket.entrants}
+          bracket={bracket.bracket}
+          champion={bracket.champion}
+          scoring={competition.scoring}
+          primaryColor={warWeek.primaryColor}
+          participantTeams={participantTeams}
+        />
+      ) : null}
       {competition.description ? (
         <p className="text-sm whitespace-pre-line">{competition.description}</p>
       ) : null}
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Points Entries</h2>
-        {ledger.hidden ? (
-          <PointsHidden />
-        ) : (
-          <PointsEntryList entries={ledger.entries} />
-        )}
+        <PointsEntryList entries={ledger.entries} />
       </section>
       <AutoRefresh />
     </main>

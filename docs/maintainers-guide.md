@@ -1,6 +1,6 @@
 # Maintainer's guide
 
-For Jason, or anyone who runs War Week and wants to change War Weeker
+For Jason, or anyone who runs War Week and wants to change the JG War Week app
 without learning the whole stack first. You describe the change to Claude
 Code, review what it did, check it, and ship it. This page tells you how,
 and how to leave the repo no worse than you found it.
@@ -78,7 +78,9 @@ before it says it's done.
 | Organizer screens                          | `src/app/admin/` (setup, points, standings, announcements, awards)     |
 | Server actions behind admin forms          | `src/actions/`                                                         |
 | Database reads / writes                    | `src/queries/`, `src/mutations/`                                       |
-| Rules with unit tests (standings, schedule, reveal, access…) | `src/lib/` (`*.test.ts` next to each file)           |
+| Rules with unit tests (standings, schedule, Finale, access…) | `src/lib/` (`*.test.ts` next to each file)           |
+| The Bracket engine (seeding, Rounds/Heats, advancing winners, Bracket → Points Entries) | `src/lib/bracket/` (`*.test.ts` next to each file) |
+| Bracket builder and results screens                | `src/app/admin/setup/competitions/[id]/bracket/`, `src/app/admin/brackets/[id]/` |
 | Database schema                            | `src/db/schema.ts`                                                     |
 | Migrations (generated, never hand-edited)  | `drizzle/`                                                             |
 | Seed data, one file per War Week           | `seeds/i.json` … `seeds/xi.json`                                       |
@@ -95,7 +97,7 @@ The words in code come from [`CONTEXT.md`](../CONTEXT.md). The ones you'll
 see most: **War Week** (one year), **Edition** (`xi`, used in URLs),
 **Story Theme** / **Day Theme** / **Appearance Theme**, **Team**,
 **Participant**, **Organizer**, **Competition**, **Points Entry**,
-**Standings**, **Reveal**, **Award**, **Announcement**, **FAQ Item**,
+**Standings**, **Finale**, **Award**, **Announcement**, **FAQ Item**,
 **Archive**. `CONTEXT.md` also bans a few words in code ("Event", "Member",
 "Match", "Tournament"…); Claude knows, but that's why it renames yours.
 
@@ -119,7 +121,7 @@ Every change, however small:
 6. **Check the Vercel preview** linked on the PR.
 7. **Merge into `staging`.** The staging database migrates automatically.
 8. **Ship to production:** open a PR from `staging` into `main`, merge it.
-   Production migrates and deploys. Check https://war-weeker.vercel.app.
+   Production migrates and deploys. Check https://jg-war-week.vercel.app.
 
 ## Recipes
 
@@ -135,28 +137,61 @@ Words must follow `CONTEXT.md`. If Claude refuses a word, that's why.
 
 ### Run a new War Week or change this year's theme (no code first)
 
-Organizer screens already cover most of it. Sign in and go to `/admin`:
+Organizer screens cover it. Sign in and go to `/admin`:
 
-- **`/admin/setup`**: War Week settings (Story Theme, dates, status, mode,
-  Team Label, Leader Title, links, Organizers), the Appearance Theme
-  (colors, font, logo, banner) and Days with their Day Themes.
-- **`/admin/points`**, **`/admin/standings`** (hide / Reveal),
+- **`/admin/setup`**: the **Lifecycle** box (Start, End with the Winner and
+  highlights, Reopen), War Week settings (Story Theme, dates, mode, Team
+  Label, Leader Title, links, Organizers, Winner and highlights), the
+  Appearance Theme (colors, font, logo, banner), Days, Teams and roster,
+  Competitions, Schedule and FAQ.
+- **`/admin/points`**, **`/admin/standings`** (Run the Finale: "Open Finale" at closing ceremonies),
   **`/admin/announcements`**, **`/admin/awards`**.
 
-Teams and roster, Competitions, Schedule and FAQ screens show "Soon" until
-they're built; until then those live in the seed file. A brand-new edition
-starts as a seed too:
+To start next year's edition in the app:
+
+1. In `/admin/setup`, press **Create next War Week**. The edition, number
+   and year are prefilled (XII, 12, next year); add the dates and Story
+   Theme, and choose what to copy (Organizers and settings are on;
+   Competitions and FAQ are off). It starts `upcoming`, and the admin
+   switches to it so you can set it up while XI stays current.
+2. When XI is over, switch back to XI in the header's edition switcher and
+   press **End War Week**: confirm the Winner (prefilled from first place)
+   and any highlights. XI moves to the Archive.
+3. Switch to XII and press **Start War Week**. `/` and `/admin` now go to
+   XII. Only one War Week can be live, so XI must end first.
+
+Organizers of the current War Week can still pick any Archive edition in
+the switcher to correct its results.
+
+A seed file for a new edition is optional (for demo data or a bulk
+import). If you use one, load it with the **Seed** workflow in the GitHub
+Actions tab (pick the environment and the file). A reload never changes a
+War Week's status, Winner or highlights. Once organizers edit a War Week in
+the app, stop reloading its seed: a reload overwrites their other edits.
+
+### Run a knockout Competition as a Bracket
+
+Organizer screens cover setting one up and running it: set the Competition's
+**Format** to single elimination under `/admin/setup/competitions`, open its
+Bracket builder to pick Entrants (all Teams, or specific Participants) and
+Generate; then record each Heat's result from the results screen
+(`/admin/brackets/<id>`) and Finalize to write its placings as Points
+Entries. No code needed for any of that.
+
+To add a new Format (single elimination is the only one today):
 
 ```text
-/implement Create seeds/xii.json for War Week XII (<year>, "<Story Theme>",
-status upcoming), modelled on seeds/xi.json but without the demo points,
-awards and announcements. Organizers: <emails>.
+/implement Add a <name> Format to Competitions, alongside single
+elimination. Follow src/lib/bracket/ (types.ts, seeding.ts, engine.ts,
+points.ts, view.ts, each with its test) for the shape a Format needs:
+building the bracket structure from Entrants, advancing a Heat's winner,
+and turning a finished bracket into Points Entries. Add it to the Format
+select on the Competition form and to the builder/results screens.
 ```
 
-Then load it on a deployed environment with the **Seed** workflow in the
-GitHub Actions tab (pick the environment and the file). When XI is over, set
-its status to `complete` in `/admin/setup`. Once organizers edit a War Week
-in the app, stop reloading its seed: a reload overwrites their edits.
+The engine is deliberately separate from the UI: `src/lib/bracket/` has no
+React imports and never reads or writes the database itself, so a new
+Format's rules are unit-testable on their own before any screen uses them.
 
 ### Add a field
 
@@ -169,6 +204,48 @@ migration, accept it in the seed format and seeds, and show it on <page>.
 The chain is schema → `pnpm db:generate` → migration in `drizzle/` →
 `pnpm db:migrate` locally → seed format and seed files → UI. Never hand-edit
 a migration.
+
+### Add or change a form control
+
+Convert a field:
+
+```text
+/implement Convert the <field> on the <form> to shadcn's <Select / Switch /
+…>, or our <EntityCombobox / DatePicker / DateRangePicker / TimeCombobox /
+ColorField>, keeping the same state and the same submitted name and value.
+```
+
+Add a new control:
+
+```text
+/implement Add a <what it picks> control to src/components/ for <form>,
+built from shadcn primitives. It posts <value format> under its name, is at
+least 44px tall on phones, and its popup stays inside the War Week's theme.
+```
+
+Notes:
+
+- All UI uses shadcn components (base-nova / Base UI, `components.json`) —
+  never a plain `<select>`, `<input type="checkbox">`, `<input type="date">`,
+  `<input type="time">`, or `<input type="color">`. Add a missing primitive
+  with `pnpm dlx shadcn@latest add <name>`; don't hand-roll a control shadcn
+  already has.
+- The app's own wrappers — `EntityCombobox`, `DatePicker`,
+  `DateRangePicker`, `TimeCombobox`, and `ColorField` — live in
+  `src/components/`. Reach for one of those before building a new control.
+  Only `EntityCombobox` does search and chips.
+- Popups portal into the themed root through `ThemeRoot`, which is wired
+  into `ui/popover`, `ui/select`, `ui/combobox`, `ui/alert-dialog` and
+  `ui/sheet`, so they keep the War Week's Appearance Theme.
+- Lay out every field with `Field` / `FieldLabel htmlFor` /
+  `FieldDescription` from `ui/field`, and show a form's server error in a
+  `FieldError` under its buttons.
+- Confirm anything destructive with `ConfirmDialog` or `ConfirmActionButton`
+  (`src/components/confirm-dialog.tsx`), never `window.confirm`. Report
+  results with `toast.success` / `toast.error` from `sonner`, never
+  `window.alert`.
+- Don't put a popup inside a themed root that has `overflow-hidden`: it
+  would be clipped.
 
 ### Add a page
 
@@ -184,7 +261,7 @@ linked from <nav / More>. It needs a JG sign-in like every other page.
 Follow the existing tools in src/mcp/ (metadata in src/mcp/tools.ts, a
 test next to it, registered in src/app/api/mcp/route.ts) and add it to the
 README tool list. It must only return what a signed-in Participant sees: no
-hidden Standings or points while Standings are hidden, no emails.
+emails.
 ```
 
 `/llms.txt` picks the new tool up from `src/mcp/tools.ts`.

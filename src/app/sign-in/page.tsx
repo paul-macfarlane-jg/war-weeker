@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getSessionEmail, isGoogleConfigured } from "@/auth/server";
 import { GoogleSignInButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
 import { JG_EMAIL_DOMAIN, safeCallbackPath } from "@/lib/access";
 import { warWeekThemeStyle } from "@/lib/theme";
 import { WAR_WEEK_STATUS_LABEL, formatDateRange } from "@/lib/war-week-display";
@@ -12,7 +13,7 @@ import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Sign in · War Weeker" };
+export const metadata: Metadata = { title: "Sign in · JG War Week" };
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -35,7 +36,7 @@ export default async function SignInPage({
   const editionLabel = warWeek?.edition.toUpperCase();
 
   return (
-    <div
+    <ThemeRoot
       style={warWeek ? warWeekThemeStyle(warWeek) : undefined}
       className="bg-background text-foreground relative flex min-h-dvh flex-col items-center justify-center gap-6 overflow-hidden px-4 py-10 font-sans"
     >
@@ -76,7 +77,7 @@ export default async function SignInPage({
           ) : null}
 
           <div className="flex flex-col gap-2">
-            <h1 className="text-xl font-semibold">Sign in to War Weeker</h1>
+            <h1 className="text-xl font-semibold">Sign in to JG War Week</h1>
             <p className="text-foreground/70 text-sm">
               {`Use your @${JG_EMAIL_DOMAIN} Google account.`}
             </p>
@@ -107,10 +108,10 @@ export default async function SignInPage({
           href="/about"
           className="hover:text-foreground underline underline-offset-4"
         >
-          What War Weeker is
+          What the JG War Week app is
         </Link>
       </p>
       <SiteFooter className="relative py-0" />
-    </div>
+    </ThemeRoot>
   );
 }

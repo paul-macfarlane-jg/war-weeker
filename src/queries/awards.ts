@@ -159,6 +159,7 @@ export async function getAwardWarWeek(id: string, dbOrTx: DBOrTx = db) {
     .select({
       id: warWeekTable.id,
       edition: warWeekTable.edition,
+      status: warWeekTable.status,
       organizerEmails: warWeekTable.organizerEmails,
     })
     .from(award)

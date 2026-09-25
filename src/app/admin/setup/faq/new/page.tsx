@@ -8,16 +8,21 @@ import { loadAdminPage } from "../../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "New FAQ Item · War Weeker" };
+export const metadata: Metadata = { title: "New FAQ Item · JG War Week" };
 
 export default async function NewFaqItemPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     "/admin/setup/faq/new",
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <Link
           href="/admin/setup/faq"

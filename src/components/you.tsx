@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useId, useSyncExternalStore } from "react";
 
+import { EntityCombobox } from "@/components/entity-combobox";
+import { Button } from "@/components/ui/button";
 import type { RosterParticipant } from "@/lib/roster";
 import { type You, parseStoredYou, resolveYou, youStorageKey } from "@/lib/you";
 
@@ -82,6 +84,11 @@ export function YouProvider({
   );
 }
 
+/** Who "you" are in this War Week, or null when nobody is known. */
+export function useYou(): You {
+  return useContext(YouContext).you;
+}
+
 /** The "You" tag, rendered only in the signed-in person's own row. */
 export function YouTag({ participantId }: { participantId: string }) {
   const { you } = useContext(YouContext);
@@ -108,18 +115,8 @@ export function YouPicker({
 }) {
   const { you, pick } = useContext(YouContext);
   const inputId = useId();
-  const listId = useId();
 
   if (you?.via === "email") return null;
-
-  // Display names are unique within a War Week, so a name finds one person.
-  const pickByName = (value: string) => {
-    const name = value.trim().toLowerCase();
-    const found = participants.find(
-      (p) => p.displayName.toLowerCase() === name,
-    );
-    if (found) pick(found.id);
-  };
 
   const picked = you
     ? participants.find((p) => p.id === you.participantId)
@@ -131,13 +128,9 @@ export function YouPicker({
         <span className="flex-1">
           You picked <span className="font-semibold">{picked.displayName}</span>
         </span>
-        <button
-          type="button"
-          onClick={() => pick(null)}
-          className="text-primary font-medium underline-offset-2 hover:underline"
-        >
+        <Button type="button" variant="link" onClick={() => pick(null)}>
           Not me / clear
-        </button>
+        </Button>
       </div>
     );
   }
@@ -147,31 +140,18 @@ export function YouPicker({
       <label htmlFor={inputId} className="font-semibold">
         Which one is you?
       </label>
-      <input
+      <EntityCombobox
         id={inputId}
-        list={listId}
-        type="search"
-        autoComplete="off"
         placeholder="Start typing your name"
-        className="border-border bg-background rounded-md border px-2 py-1.5"
-        onChange={(event) => {
-          // Typing "Alex" mustn't pick Alex before "Alex Kelly" is finished:
-          // only a choice from the list picks as it changes (it has no
-          // typing inputType); typed names are picked on Enter or blur.
-          const { inputType } = event.nativeEvent as InputEvent;
-          if (inputType && inputType !== "insertReplacementText") return;
-          pickByName(event.target.value);
+        items={participants.map((p) => ({
+          id: p.id,
+          label: p.displayName,
+        }))}
+        value=""
+        onValueChange={(id) => {
+          if (id) pick(id);
         }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") pickByName(event.currentTarget.value);
-        }}
-        onBlur={(event) => pickByName(event.target.value)}
       />
-      <datalist id={listId}>
-        {participants.map((p) => (
-          <option key={p.id} value={p.displayName} />
-        ))}
-      </datalist>
       <p className="text-foreground/60 text-xs">
         Saved on this device only, to highlight you on the roster and
         leaderboard.

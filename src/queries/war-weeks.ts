@@ -48,11 +48,15 @@ function latestByStartDate(warWeeks: WarWeek[]): WarWeek {
   });
 }
 
+/** Every War Week, in no particular order. */
+export function getWarWeeks(dbOrTx: DBOrTx = db): Promise<WarWeek[]> {
+  return dbOrTx.select().from(warWeek);
+}
+
 export async function getCurrentWarWeek(
   dbOrTx: DBOrTx = db,
 ): Promise<WarWeek | undefined> {
-  const warWeeks = await dbOrTx.select().from(warWeek);
-  return selectCurrentWarWeek(warWeeks);
+  return selectCurrentWarWeek(await getWarWeeks(dbOrTx));
 }
 
 export async function getWarWeekByEdition(

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { BottomTabBar, TopNav } from "@/components/primary-nav";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
 import { YouProvider } from "@/components/you";
 import { warWeekThemeStyle } from "@/lib/theme";
 import { resolveYou } from "@/lib/you";
@@ -44,7 +45,7 @@ export default async function EditionLayout({
   });
 
   return (
-    <div
+    <ThemeRoot
       style={warWeekThemeStyle(warWeek)}
       className="bg-background text-foreground min-h-dvh pb-20 font-sans lg:pb-0"
     >
@@ -61,7 +62,12 @@ export default async function EditionLayout({
         {children}
       </YouProvider>
       <SiteFooter />
-      <BottomTabBar edition={warWeek.edition} />
-    </div>
+      <BottomTabBar
+        edition={warWeek.edition}
+        mode={warWeek.mode}
+        teamLabel={warWeek.teamLabel}
+        account={account}
+      />
+    </ThemeRoot>
   );
 }

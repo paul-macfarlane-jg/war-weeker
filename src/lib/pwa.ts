@@ -1,4 +1,4 @@
-export const APP_NAME = "War Weeker";
+export const APP_NAME = "JG War Week";
 export const APP_DESCRIPTION = "One place to follow War Week.";
 
 /**

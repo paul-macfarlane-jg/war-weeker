@@ -1,21 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useId, useState } from "react";
 
 import {
   createCompetition,
   deleteCompetition,
   updateCompetition,
 } from "@/actions/setup";
+import { OptionSelect } from "@/components/option-select";
+import { PlacementPointsRows } from "@/components/placement-points-rows";
 import {
   SetupRowButtons,
   SetupRowError,
-  setupFieldClass as fieldClass,
   usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
+import { SuggestionCombobox } from "@/components/suggestion-combobox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import type { WarWeek } from "@/db/schema";
-import { MAX_PLACEMENTS } from "@/lib/competitions";
+import { formatLabel } from "@/lib/bracket/view";
 import type { CompetitionInput } from "@/lib/setup";
 import type { SetupCompetition } from "@/queries/setup";
 
@@ -48,11 +55,14 @@ function CompetitionRow({
   competition,
   mode,
   teamLabel,
+  groupSuggestions,
 }: {
   competition?: SetupCompetition;
   mode: WarWeek["mode"];
   teamLabel: string;
+  groupSuggestions: string[];
 }) {
+  const id = useId();
   const [values, setValues] = useState(
     competition ? inputFrom(competition) : emptyCompetition(mode),
   );
@@ -61,12 +71,12 @@ function CompetitionRow({
   );
   const set =
     (field: Exclude<keyof CompetitionInput, "countsTowardTeam">) =>
-    (
-      event: React.ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >,
-    ) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setValues((v) => ({ ...v, [field]: event.target.value }));
+  const scoringOptions = [
+    ...(mode === "teams" ? [{ value: "team", label: teamLabel }] : []),
+    { value: "individual", label: "Individual" },
+  ];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,134 +86,150 @@ function CompetitionRow({
       countsTowardTeam:
         values.scoring === "individual" && values.countsTowardTeam,
     };
-    run(() =>
-      competition
-        ? updateCompetition(competition.id, input)
-        : createCompetition(input),
+    run(
+      () =>
+        competition
+          ? updateCompetition(competition.id, input)
+          : createCompetition(input),
+      "Competition saved",
     );
   }
+
+  const usage = competition
+    ? usageSummary([
+        [competition.pointsEntryCount, "Points Entry", "Points Entries"],
+        [competition.scheduleItemCount, "Schedule Item", "Schedule Items"],
+      ])
+    : "";
 
   return (
     <li className="border-border border-b py-4 last:border-b-0">
       <form
         onSubmit={submit}
         aria-label={competition ? competition.name : "New Competition"}
-        className="grid gap-3 sm:grid-cols-2"
       >
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Name
-          <input
-            name="name"
-            required
-            maxLength={120}
-            className={fieldClass}
-            value={values.name}
-            onChange={set("name")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Group
-          <input
-            name="group"
-            maxLength={120}
-            placeholder="Optional"
-            className={fieldClass}
-            value={values.group}
-            onChange={set("group")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
-          Description
-          <textarea
-            name="description"
-            maxLength={2000}
-            rows={2}
-            placeholder="Optional"
-            className={`${fieldClass} h-auto py-1.5`}
-            value={values.description}
-            onChange={set("description")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Scoring
-          <select
-            name="scoring"
-            className={fieldClass}
-            value={values.scoring}
-            onChange={set("scoring")}
-          >
-            {mode === "teams" && <option value="team">{teamLabel}</option>}
-            <option value="individual">Individual</option>
-          </select>
-        </label>
-        {mode === "teams" && (
-          <label className="flex items-center gap-2 text-sm font-medium sm:self-end sm:pb-2">
-            <input
-              type="checkbox"
-              name="countsTowardTeam"
-              disabled={values.scoring !== "individual"}
-              checked={
-                values.scoring === "individual" && values.countsTowardTeam
-              }
-              onChange={(event) =>
-                setValues((v) => ({
-                  ...v,
-                  countsTowardTeam: event.target.checked,
-                }))
-              }
+        <FieldGroup className="grid gap-3 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
+            <Input
+              id={`${id}-name`}
+              name="name"
+              required
+              maxLength={120}
+              className="h-11 sm:h-9"
+              value={values.name}
+              onChange={set("name")}
             />
-            Counts toward the {teamLabel}
-          </label>
-        )}
-        <label className="flex flex-col gap-1 text-sm font-medium sm:col-start-1">
-          Max points
-          <input
-            name="maxPoints"
-            inputMode="decimal"
-            placeholder="Optional"
-            className={fieldClass}
-            value={values.maxPoints}
-            onChange={set("maxPoints")}
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          Placement Points
-          <input
-            name="placementPoints"
-            placeholder={`e.g. 5, 3, 1 (up to ${MAX_PLACEMENTS} places)`}
-            className={fieldClass}
+          </Field>
+          <Field>
+            {/* SuggestionCombobox takes no id, so the label wraps it. */}
+            <FieldLabel className="w-full flex-col items-stretch">
+              Group
+              <SuggestionCombobox
+                name="group"
+                maxLength={120}
+                placeholder="Optional"
+                suggestions={groupSuggestions}
+                value={values.group}
+                onValueChange={(group) => setValues((v) => ({ ...v, group }))}
+              />
+            </FieldLabel>
+          </Field>
+          <Field className="sm:col-span-2">
+            <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
+            <Textarea
+              id={`${id}-description`}
+              name="description"
+              maxLength={2000}
+              rows={2}
+              placeholder="Optional"
+              value={values.description}
+              onChange={set("description")}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor={`${id}-scoring`}>Scoring</FieldLabel>
+            <OptionSelect
+              id={`${id}-scoring`}
+              name="scoring"
+              options={scoringOptions}
+              value={values.scoring}
+              onValueChange={(scoring) => setValues((v) => ({ ...v, scoring }))}
+            />
+          </Field>
+          {mode === "teams" && (
+            <Field
+              orientation="horizontal"
+              className="min-h-11 sm:min-h-9 sm:self-end"
+            >
+              <Switch
+                id={`${id}-counts`}
+                name="countsTowardTeam"
+                disabled={values.scoring !== "individual"}
+                checked={
+                  values.scoring === "individual" && values.countsTowardTeam
+                }
+                onCheckedChange={(countsTowardTeam) =>
+                  setValues((v) => ({ ...v, countsTowardTeam }))
+                }
+              />
+              <FieldLabel htmlFor={`${id}-counts`}>
+                Counts toward the {teamLabel}
+              </FieldLabel>
+            </Field>
+          )}
+          <Field className="sm:col-start-1">
+            <FieldLabel htmlFor={`${id}-max`}>Max points</FieldLabel>
+            <Input
+              id={`${id}-max`}
+              name="maxPoints"
+              inputMode="decimal"
+              placeholder="Optional"
+              className="h-11 sm:h-9"
+              value={values.maxPoints}
+              onChange={set("maxPoints")}
+            />
+          </Field>
+          <PlacementPointsRows
             value={values.placementPoints}
-            onChange={set("placementPoints")}
-          />
-        </label>
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
-          <p className="text-foreground/60 text-xs">
-            {competition &&
-              usageSummary([
-                [
-                  competition.pointsEntryCount,
-                  "Points Entry",
-                  "Points Entries",
-                ],
-                [
-                  competition.scheduleItemCount,
-                  "Schedule Item",
-                  "Schedule Items",
-                ],
-              ])}
-          </p>
-          <SetupRowButtons
-            pending={pending}
-            addLabel="Add Competition"
-            onDelete={
-              competition &&
-              (() => {
-                if (!window.confirm(`Delete ${competition.name}?`)) return;
-                run(() => deleteCompetition(competition.id));
-              })
+            maxPoints={values.maxPoints}
+            onChange={(placementPoints) =>
+              setValues((v) => ({ ...v, placementPoints }))
             }
           />
-        </div>
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:col-span-2">
+            <div className="flex flex-col gap-1">
+              {competition && (
+                <p className="text-sm">
+                  Format: {formatLabel(competition.format)} ·{" "}
+                  <Link
+                    href={`/admin/setup/competitions/${competition.id}/bracket`}
+                    className="text-primary inline-flex min-h-11 items-center underline-offset-4 hover:underline sm:min-h-0"
+                  >
+                    {competition.format === "points"
+                      ? "Run as a Bracket"
+                      : "Bracket"}
+                  </Link>
+                </p>
+              )}
+              <p className="text-foreground/60 text-xs">{usage}</p>
+            </div>
+            <SetupRowButtons
+              pending={pending}
+              addLabel="Add Competition"
+              onDelete={
+                competition &&
+                (() =>
+                  run(
+                    () => deleteCompetition(competition.id),
+                    "Competition deleted",
+                  ))
+              }
+              deleteTitle={competition && `Delete ${competition.name}?`}
+              deleteDescription={usage}
+            />
+          </div>
+        </FieldGroup>
       </form>
       <SetupRowError error={error} />
     </li>
@@ -215,10 +241,13 @@ export function CompetitionsEditor({
   competitions,
   mode,
   teamLabel,
+  groupSuggestions,
 }: {
   competitions: SetupCompetition[];
   mode: WarWeek["mode"];
   teamLabel: string;
+  /** Competition Groups already used in this War Week. */
+  groupSuggestions: string[];
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -233,6 +262,7 @@ export function CompetitionsEditor({
               competition={c}
               mode={mode}
               teamLabel={teamLabel}
+              groupSuggestions={groupSuggestions}
             />
           ))}
         </ul>
@@ -240,7 +270,11 @@ export function CompetitionsEditor({
       <section className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold">Add a Competition</h2>
         <ul>
-          <CompetitionRow mode={mode} teamLabel={teamLabel} />
+          <CompetitionRow
+            mode={mode}
+            teamLabel={teamLabel}
+            groupSuggestions={groupSuggestions}
+          />
         </ul>
       </section>
     </div>

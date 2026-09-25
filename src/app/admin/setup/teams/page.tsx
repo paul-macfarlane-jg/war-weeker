@@ -4,28 +4,39 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import { RosterEditor, TeamsEditor } from "@/components/teams-editor";
-import { getSetupParticipants, getSetupTeams } from "@/queries/setup";
+import { themeSwatches } from "@/lib/theme";
+import {
+  getCompanyTagSuggestions,
+  getSetupParticipants,
+  getSetupTeams,
+} from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Teams & roster · War Weeker" };
+export const metadata: Metadata = { title: "Teams & roster · JG War Week" };
 
 export default async function SetupTeamsPage() {
-  const { warWeek, email, isOrganizer } =
+  const { warWeek, email, isOrganizer, editions } =
     await loadAdminPage("/admin/setup/teams");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
-  const [teams, participants] = await Promise.all([
+  const [teams, participants, tagSuggestions] = await Promise.all([
     getSetupTeams(warWeek),
     getSetupParticipants(warWeek),
+    getCompanyTagSuggestions(),
   ]);
   const { teamLabel, leaderTitle } = warWeek;
   const isTeams = warWeek.mode === "teams";
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-5xl flex-col gap-4">
         <Link
           href="/admin/setup"
@@ -45,7 +56,11 @@ export default async function SetupTeamsPage() {
         {isTeams ? (
           <section className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold">{teamLabel}s</h2>
-            <TeamsEditor teams={teams} teamLabel={teamLabel} />
+            <TeamsEditor
+              teams={teams}
+              teamLabel={teamLabel}
+              themeSwatches={themeSwatches(warWeek)}
+            />
           </section>
         ) : (
           <p className="text-foreground/70 text-sm">
@@ -59,6 +74,7 @@ export default async function SetupTeamsPage() {
             teams={isTeams ? teams : []}
             teamLabel={teamLabel}
             leaderTitle={leaderTitle}
+            tagSuggestions={tagSuggestions}
           />
         </section>
       </section>

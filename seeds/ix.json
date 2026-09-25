@@ -10,7 +10,6 @@
   "teamLabel": "Genre",
   "leaderTitle": "Lead Singer",
   "slackChannelUrl": "https://jahnelgroup.slack.com",
-  "standingsHidden": false,
   "primary": "#ff2e88",
   "primaryForeground": "#120d1f",
   "accent": "#22d3ee",

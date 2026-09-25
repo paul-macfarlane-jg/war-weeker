@@ -11,13 +11,13 @@ import { loadAdminPage } from "../../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Edit FAQ Item · War Weeker" };
+export const metadata: Metadata = { title: "Edit FAQ Item · JG War Week" };
 
 export default async function EditFaqItemPage({
   params,
 }: PageProps<"/admin/setup/faq/[id]">) {
   const { id } = await params;
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     `/admin/setup/faq/${id}`,
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
@@ -29,7 +29,12 @@ export default async function EditFaqItemPage({
   const answer = sanitizeContent(item.answer);
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <Link
           href="/admin/setup/faq"

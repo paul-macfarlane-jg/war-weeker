@@ -1,22 +1,28 @@
 import {
-  EyeOff,
+  BookOpen,
   LayoutDashboard,
   Medal,
   Megaphone,
   PlusCircle,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
+import { AdminEditionSwitcher } from "@/components/admin-edition-switcher";
 import { SignOutButton } from "@/components/auth-buttons";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
+import { Toaster } from "@/components/ui/sonner";
 import type { WarWeek } from "@/db/schema";
+import type { AdminEdition } from "@/lib/access";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
+  { label: "Guide", icon: BookOpen, href: "/admin/guide" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
-  { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
+  { label: "Finale", icon: Sparkles, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
   { label: "Awards", icon: Medal, href: "/admin/awards" },
   { label: "Setup", icon: Settings, href: "/admin/setup" },
@@ -29,22 +35,43 @@ export type AdminSection = Extract<
 >["label"];
 
 /**
- * Frame for every Organizer page: header, nav and content. The nav is a
- * side column on desktop and a scrolling row on a phone.
+ * The banner under the admin header when the War Week being administered
+ * isn't the current one, or null.
+ */
+export function editingBanner(
+  warWeek: Pick<WarWeek, "edition" | "status">,
+  editions: AdminEdition[],
+): string | null {
+  const selected = editions.find((e) => e.edition === warWeek.edition);
+  if (!selected || selected.current) return null;
+  const name = `War Week ${warWeek.edition.toUpperCase()}`;
+  return warWeek.status === "complete"
+    ? `Editing the Archive: ${name}`
+    : `Editing ${warWeek.status} ${name}`;
+}
+
+/**
+ * Frame for every Organizer page: header (with the edition switcher), nav
+ * and content. The nav is a side column on desktop and a scrolling row on a
+ * phone.
  */
 export function AdminShell({
   warWeek,
   email,
+  editions = [],
   current,
   children,
 }: {
   warWeek: WarWeek;
   email: string;
+  /** Editions the Organizer may administer, for the switcher. */
+  editions?: AdminEdition[];
   current: AdminSection;
   children: React.ReactNode;
 }) {
+  const banner = editingBanner(warWeek, editions);
   return (
-    <div
+    <ThemeRoot
       style={warWeekThemeStyle(warWeek)}
       className="bg-background text-foreground flex min-h-dvh flex-col font-sans"
     >
@@ -53,17 +80,31 @@ export function AdminShell({
           War Week {warWeek.edition.toUpperCase()} admin
         </Link>
         <span className="text-foreground/60 text-sm">{warWeek.storyTheme}</span>
+        {editions.length > 1 && (
+          <AdminEditionSwitcher
+            editions={editions}
+            selected={warWeek.edition}
+          />
+        )}
         <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm md:ml-auto">
           <Link
             href={`/${warWeek.edition}`}
             className="text-primary underline-offset-4 hover:underline"
           >
-            View public site
+            Back to War Week {warWeek.edition.toUpperCase()}
           </Link>
           <span className="text-foreground/70 truncate">{email}</span>
           <SignOutButton />
         </div>
       </header>
+      {banner && (
+        <p
+          role="status"
+          className="bg-accent text-accent-foreground px-4 py-2 text-sm font-medium md:px-6"
+        >
+          {banner}
+        </p>
+      )}
       <div className="flex flex-1 flex-col md:flex-row">
         <nav
           aria-label="Admin sections"
@@ -107,7 +148,9 @@ export function AdminShell({
         <main className="min-w-0 flex-1 p-4 md:p-8">{children}</main>
       </div>
       <SiteFooter className="border-border border-t" />
-    </div>
+      {/* Inside the themed root so the edition's colors apply to toasts. */}
+      <Toaster position="bottom-center" closeButton />
+    </ThemeRoot>
   );
 }
 

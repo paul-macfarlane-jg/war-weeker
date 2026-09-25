@@ -14,6 +14,7 @@ import {
 } from "@/queries/points-entries";
 
 const NOT_FOUND = "That Points Entry no longer exists.";
+const FROM_BRACKET = "This Points Entry comes from a bracket. Change it there.";
 
 /**
  * The columns to write for a Points Entry of this War Week: the Competition
@@ -69,6 +70,19 @@ function inWarWeek(id: string, warWeekId: string, dbOrTx: DBOrTx) {
   );
 }
 
+/** Refuses a Points Entry a finalized Bracket generated. */
+async function generatedRefusal(
+  id: string,
+  warWeekId: string,
+  dbOrTx: DBOrTx,
+): Promise<MutationResult | null> {
+  const [found] = await dbOrTx
+    .select({ generatedByBracket: pointsEntry.generatedByBracket })
+    .from(pointsEntry)
+    .where(inWarWeek(id, warWeekId, dbOrTx));
+  return found?.generatedByBracket ? { ok: false, error: FROM_BRACKET } : null;
+}
+
 export async function createPointsEntry(
   input: PointsEntryValues,
   ctx: MutationContext,
@@ -93,6 +107,8 @@ export async function updatePointsEntry(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
+  const generated = await generatedRefusal(id, ctx.warWeekId, dbOrTx);
+  if (generated) return generated;
   const resolved = await resolveColumns(input, ctx.warWeekId, dbOrTx);
   if (!resolved.ok) return resolved;
 
@@ -110,6 +126,8 @@ export async function deletePointsEntry(
   ctx: MutationContext,
   dbOrTx: DBOrTx = db,
 ): Promise<MutationResult> {
+  const generated = await generatedRefusal(id, ctx.warWeekId, dbOrTx);
+  if (generated) return generated;
   const deleted = await dbOrTx
     .delete(pointsEntry)
     .where(inWarWeek(id, ctx.warWeekId, dbOrTx))

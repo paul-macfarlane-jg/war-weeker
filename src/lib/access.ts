@@ -32,30 +32,116 @@ export function isOrganizer(
   );
 }
 
+/**
+ * Who may change a War Week (`target`): an Organizer of that War Week, or,
+ * when it's `complete`, an Organizer of the current War Week, so past
+ * results can be corrected. Every admin page and Organizer action goes
+ * through this (via `loadAdminPage` / `requireOrganizer`).
+ */
+export function canAdministerWarWeek(
+  email: string | null | undefined,
+  target: Pick<WarWeek, "organizerEmails"> & { status?: WarWeek["status"] },
+  current: Pick<WarWeek, "organizerEmails"> | undefined,
+): boolean {
+  if (isOrganizer(email, target)) return true;
+  return (
+    target.status === "complete" &&
+    current !== undefined &&
+    isOrganizer(email, current)
+  );
+}
+
+type AdminWarWeek = Pick<
+  WarWeek,
+  "organizerEmails" | "status" | "editionNumber" | "startDate"
+>;
+
+/**
+ * The edition `/admin` opens on with no (valid) edition selected: the
+ * current War Week for its Organizers; otherwise the email's earliest
+ * `upcoming` edition, then their newest `complete` one. Falls back to the
+ * current War Week, where a non-Organizer sees the refusal.
+ */
+export function defaultAdminWarWeek<T extends AdminWarWeek>(
+  email: string | null | undefined,
+  warWeeks: T[],
+  current: T,
+): T {
+  if (isOrganizer(email, current)) return current;
+  const upcoming = warWeeks
+    .filter((w) => w.status === "upcoming" && isOrganizer(email, w))
+    .sort(
+      (a, b) =>
+        a.startDate.localeCompare(b.startDate) ||
+        a.editionNumber - b.editionNumber,
+    );
+  if (upcoming[0]) return upcoming[0];
+  const complete = warWeeks
+    .filter(
+      (w) => w.status === "complete" && canAdministerWarWeek(email, w, current),
+    )
+    .sort((a, b) => b.editionNumber - a.editionNumber);
+  return complete[0] ?? current;
+}
+
+/** One entry in the admin edition switcher. */
+export type AdminEdition = {
+  edition: string;
+  status: WarWeek["status"];
+  current: boolean;
+};
+
+/**
+ * The editions `email` may administer, newest first: their own editions,
+ * plus every `complete` one when they organize the current War Week.
+ */
+export function adminEditions(
+  email: string | null | undefined,
+  warWeeks: Pick<
+    WarWeek,
+    "id" | "edition" | "editionNumber" | "status" | "organizerEmails"
+  >[],
+  current: Pick<WarWeek, "id" | "organizerEmails">,
+): AdminEdition[] {
+  return warWeeks
+    .filter((w) => canAdministerWarWeek(email, w, current))
+    .sort((a, b) => b.editionNumber - a.editionNumber)
+    .map((w) => ({
+      edition: w.edition,
+      status: w.status,
+      current: w.id === current.id,
+    }));
+}
+
 export type AdminAccess = "anonymous" | "not-organizer" | "organizer";
 
 export function adminAccess(
   email: string | null | undefined,
-  warWeek: Pick<WarWeek, "organizerEmails">,
+  warWeek: Pick<WarWeek, "organizerEmails"> & { status?: WarWeek["status"] },
+  current?: Pick<WarWeek, "organizerEmails">,
 ): AdminAccess {
   if (!email) return "anonymous";
-  return isOrganizer(email, warWeek) ? "organizer" : "not-organizer";
+  return canAdministerWarWeek(email, warWeek, current)
+    ? "organizer"
+    : "not-organizer";
 }
 
 const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];
 /**
- * Exact public paths. `/about` is exact, not a prefix: the top-level
- * `[edition]` route would otherwise turn `/about/leaderboard` into a public
- * edition page.
+ * Exact public paths. `/about`, `/privacy` and `/terms` are exact, not
+ * prefixes: the top-level `[edition]` route would otherwise turn
+ * `/about/leaderboard` (or `/privacy/x`, `/terms/leaderboard`) into a
+ * public edition page.
  */
-const PUBLIC_PATHS = ["/about"];
+const PUBLIC_PATHS = ["/about", "/privacy", "/terms"];
 
 /**
  * The only paths reachable without a session: the sign-in page,
- * better-auth's own routes and the About page (static copy and media, no
- * War Week data). Everything else needs a Jahnel Group sign-in, except that
- * `/api/mcp` also takes `canUseMcp` (see CONTEXT.md, "Access rules").
- * A prefix matches itself or a `/`-separated subpath, never `/sign-inx`.
+ * better-auth's own routes and the About, Privacy and Terms pages (static
+ * copy and media, no War Week data). Everything else needs a Jahnel Group
+ * sign-in, except that `/api/mcp` also takes `canUseMcp` (see CONTEXT.md,
+ * "Access rules"). A prefix matches itself or a `/`-separated subpath,
+ * never `/sign-inx`.
  */
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;

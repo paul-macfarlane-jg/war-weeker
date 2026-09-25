@@ -23,9 +23,9 @@ export const CURRENT_EDITION = { label: "XI", href: "/xi" } as const;
 export const MAINTAINERS_GUIDE_URL = `${REPO_URL}/blob/main/docs/maintainers-guide.md`;
 
 /**
- * The six feature cards, in order. Each `slug` names a still at
+ * The eight feature cards, in order. Each `slug` names a still at
  * `public/about/<slug>.png`, written by `scripts/about-media.ts`; the
- * Reveal is the video hero, not a card.
+ * Finale is the video hero, not a card.
  */
 export const ABOUT_FEATURES = [
   {
@@ -53,6 +53,18 @@ export const ABOUT_FEATURES = [
     alt: "War Week XI's Announcements feed with an embedded welcome video.",
   },
   {
+    slug: "brackets",
+    title: "Brackets for knockout Competitions",
+    text: "Set a Competition's Format to single elimination, pick its Entrants (Teams or Participants) and Generate a Bracket. Tap in each Heat's winner as it's played; Finalize turns the Bracket's placings straight into Points Entries.",
+    alt: "A Participant's Bracket view: Heats grouped by Round, with the champion card at the end.",
+  },
+  {
+    slug: "lifecycle",
+    title: "One War Week live at a time",
+    text: "Start, End (with the Winner and highlights) and Reopen move a War Week through its lifecycle. Only one is ever live; Create next War Week starts the next edition without disturbing this one.",
+    alt: "The Admin Setup screen's Lifecycle box: Start, End and Reopen.",
+  },
+  {
     slug: "archive",
     title: "The Archive",
     text: "Every War Week since 2016, each in its own theme: the Story Theme, the Teams, the winner, the Awards and the highlights, with a link to the original wiki page.",
@@ -61,7 +73,7 @@ export const ABOUT_FEATURES = [
   {
     slug: "ask-claude",
     title: "Ask Claude",
-    text: "Add War Weeker to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, and it never spoils hidden Standings.",
-    alt: "A chat with Claude asking who's winning War Week XI, answered from War Weeker's MCP connector.",
+    text: "Add the JG War Week app to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, with the same Standings everyone sees.",
+    alt: "A chat with Claude asking who's winning War Week XI, answered from the JG War Week app's MCP connector.",
   },
 ] as const;

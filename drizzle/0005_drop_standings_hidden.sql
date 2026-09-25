@@ -1,0 +1,1 @@
+ALTER TABLE "war_week" DROP COLUMN "standings_hidden";

@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { requireOrganizer } from "@/auth/organizer";
-import type { WarWeek } from "@/db/schema";
+import { requireAdminWarWeek } from "@/auth/organizer";
 import {
   type CompetitionInput,
   type DayInput,
@@ -19,23 +18,8 @@ import {
 } from "@/lib/setup";
 import * as mutations from "@/mutations/setup";
 import type { MutationContext, MutationResult } from "@/mutations/types";
-import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type SetupActionResult = MutationResult;
-
-const NO_WAR_WEEK = "There's no current War Week.";
-
-/** The mutation context when the caller is an Organizer of `warWeek`. */
-async function organizerContext(
-  warWeek: Pick<WarWeek, "id" | "edition" | "organizerEmails">,
-) {
-  const organizer = await requireOrganizer(warWeek);
-  if (!organizer.ok) return organizer;
-  return {
-    ok: true as const,
-    ctx: { warWeekId: warWeek.id, actorEmail: organizer.email },
-  };
-}
 
 // The Appearance Theme and settings show on every page of the War Week,
 // the admin shell and the Archive, so revalidate the whole site.
@@ -46,7 +30,7 @@ function revalidateSite() {
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
 /**
- * Runs a setup write on the current War Week as its Organizer: refuses a
+ * Runs a setup write on the War Week selected in `/admin` as its Organizer: refuses a
  * non-Organizer, then an invalid `parsed` input or an `id` not shaped like a
  * row id, runs `write`, and revalidates the site on success. Every setup
  * action goes through here.
@@ -56,17 +40,16 @@ async function asOrganizer<T>(
   write: (value: T, ctx: MutationContext) => Promise<MutationResult>,
   id?: string,
 ): Promise<SetupActionResult> {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: NO_WAR_WEEK };
-  const organizer = await organizerContext(warWeek);
+  const organizer = await requireAdminWarWeek();
   if (!organizer.ok) return organizer;
+  const ctx = { warWeekId: organizer.warWeek.id, actorEmail: organizer.email };
   // A malformed id would make Postgres throw; it can't name a row anyway.
   if (id !== undefined && !z.uuid().safeParse(id).success) {
     return { ok: false, error: "That record no longer exists." };
   }
   if (!parsed.ok) return parsed;
 
-  const result = await write(parsed.value, organizer.ctx);
+  const result = await write(parsed.value, ctx);
   if (result.ok) revalidateSite();
   return result;
 }
@@ -86,7 +69,7 @@ export async function createDay(input: DayInput): Promise<SetupActionResult> {
   return asOrganizer(parseDayInput(input), mutations.createDay);
 }
 
-// Days (like every setup record) are the current War Week's only: the
+// Days (like every setup record) belong to the selected War Week only: the
 // mutations refuse a row of any other War Week.
 export async function updateDay(
   id: string,

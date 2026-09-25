@@ -22,7 +22,6 @@ export type StandingsPointsEntry = Pick<
 
 export type StandingsInput = {
   mode: WarWeek["mode"];
-  standingsHidden: boolean;
   teams: StandingsTeam[];
   participants: StandingsParticipant[];
   competitions: StandingsCompetition[];
@@ -47,14 +46,11 @@ export type IndividualStanding = {
 
 export type LeaderboardKind = "team" | "individual";
 
-export type Standings =
-  | { hidden: true }
-  | {
-      hidden: false;
-      main: LeaderboardKind;
-      team: TeamStanding[];
-      individual: IndividualStanding[];
-    };
+export type Standings = {
+  main: LeaderboardKind;
+  team: TeamStanding[];
+  individual: IndividualStanding[];
+};
 
 /**
  * The one place Standings are computed; every page and MCP tool calls this.
@@ -65,14 +61,11 @@ export type Standings =
  *   Competitions. Only Participants with at least one such entry are listed.
  * - Main leaderboard: team in `teams` mode, individual in `free-for-all`.
  * - Ordered by total descending (then name); tied totals share a rank.
- * - Hidden: returns `{ hidden: true }` and no numbers at all.
  *
  * Points are summed in hundredths (the database stores two decimal places)
  * so fractional totals like 0.1 + 0.2 come out exact.
  */
 export function computeStandings(input: StandingsInput): Standings {
-  if (input.standingsHidden) return { hidden: true };
-
   const competitions = new Map(input.competitions.map((c) => [c.id, c]));
   const teams = new Map(input.teams.map((t) => [t.id, t]));
   const participants = new Map(input.participants.map((p) => [p.id, p]));
@@ -131,7 +124,6 @@ export function computeStandings(input: StandingsInput): Standings {
   );
 
   return {
-    hidden: false,
     main: input.mode === "free-for-all" ? "individual" : "team",
     team,
     individual,

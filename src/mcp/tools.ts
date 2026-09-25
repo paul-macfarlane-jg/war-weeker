@@ -12,7 +12,7 @@ export const MCP_TOOLS = {
   get_leaderboard: {
     title: "Get leaderboard",
     description:
-      "Returns the current War Week's team or individual Standings, ranked by total points. While standings are hidden it returns only a 'hidden until closing ceremonies' message and no numbers.",
+      "Returns the current War Week's team or individual Standings, ranked by total points.",
   },
   get_schedule: {
     title: "Get schedule",

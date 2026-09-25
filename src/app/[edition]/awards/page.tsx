@@ -2,6 +2,7 @@ import { Medal } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { Avatar } from "@/components/avatar";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { YouTag } from "@/components/you";
 import { YOU_ROW_CLASS } from "@/lib/you";
 import { getAwards } from "@/queries/awards";
@@ -31,47 +32,48 @@ export default async function AwardsPage({
       ) : (
         <ul className="grid gap-3 md:grid-cols-2">
           {awards.map((award) => (
-            <li
-              key={award.id}
-              className="border-border flex flex-col gap-2 rounded-lg border p-4"
-            >
-              <div className="flex items-center gap-2">
-                <Medal aria-hidden className="text-primary size-5 shrink-0" />
-                <h2 className="text-lg font-semibold">{award.name}</h2>
-              </div>
-              {award.team ? (
-                <p className="flex items-center gap-2 text-sm font-medium">
-                  <span
-                    aria-hidden
-                    className="size-3 shrink-0 rounded-full"
-                    style={{ backgroundColor: award.team.color }}
-                  />
-                  {award.team.name}
-                </p>
-              ) : null}
-              {award.participants.length > 0 ? (
-                <ul className="flex flex-col gap-1">
-                  {award.participants.map((p) => (
-                    <li
-                      key={p.id}
-                      className={`text-primary flex items-center gap-2 text-sm font-medium ${YOU_ROW_CLASS}`}
-                    >
-                      <Avatar
-                        name={p.displayName}
-                        teamColor={p.teamColor}
-                        primaryColor={warWeek.primaryColor}
+            <li key={award.id}>
+              <Card className="h-full gap-2">
+                <CardHeader className="flex items-center gap-2">
+                  <Medal aria-hidden className="text-primary size-5 shrink-0" />
+                  <h2 className="text-lg font-semibold">{award.name}</h2>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2">
+                  {award.team ? (
+                    <p className="flex items-center gap-2 text-sm font-medium">
+                      <span
+                        aria-hidden
+                        className="size-3 shrink-0 rounded-full"
+                        style={{ backgroundColor: award.team.color }}
                       />
-                      {p.displayName}
-                      <YouTag participantId={p.id} />
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {award.description ? (
-                <p className="text-foreground/70 text-sm">
-                  {award.description}
-                </p>
-              ) : null}
+                      {award.team.name}
+                    </p>
+                  ) : null}
+                  {award.participants.length > 0 ? (
+                    <ul className="flex flex-col gap-1">
+                      {award.participants.map((p) => (
+                        <li
+                          key={p.id}
+                          className={`text-primary flex items-center gap-2 text-sm font-medium ${YOU_ROW_CLASS}`}
+                        >
+                          <Avatar
+                            name={p.displayName}
+                            teamColor={p.teamColor}
+                            primaryColor={warWeek.primaryColor}
+                          />
+                          {p.displayName}
+                          <YouTag participantId={p.id} />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {award.description ? (
+                    <p className="text-foreground/70 text-sm">
+                      {award.description}
+                    </p>
+                  ) : null}
+                </CardContent>
+              </Card>
             </li>
           ))}
         </ul>

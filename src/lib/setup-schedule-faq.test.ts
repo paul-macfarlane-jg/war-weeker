@@ -93,7 +93,7 @@ describe("parseScheduleItemInput", () => {
     expect(parsedItem({ category: "nap" })).toEqual({
       ok: false,
       error:
-        "Category must be one of competition, education, social, meal, work.",
+        "Category must be one of competition, education, social, meal, work, other.",
     });
     expect(parsedItem({ dayId: "" })).toEqual({
       ok: false,
@@ -103,6 +103,12 @@ describe("parseScheduleItemInput", () => {
       ok: false,
       error: "Description must be valid rich text.",
     });
+  });
+
+  it("accepts an `other` category", () => {
+    expect(parsedItem({ category: "other" })).toEqual(
+      expect.objectContaining({ ok: true }),
+    );
   });
 });
 

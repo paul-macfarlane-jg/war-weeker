@@ -16,7 +16,6 @@ export type CurrentWarWeekResult = {
   teamLabel: string;
   leaderTitle: string;
   slackChannelUrl: string;
-  standingsHidden: boolean;
 };
 
 /**
@@ -41,6 +40,5 @@ export function toCurrentWarWeekResult(
     teamLabel: warWeek.teamLabel,
     leaderTitle: warWeek.leaderTitle,
     slackChannelUrl: warWeek.slackChannelUrl,
-    standingsHidden: warWeek.standingsHidden,
   };
 }

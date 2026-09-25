@@ -1,7 +1,16 @@
 import { ArrowLeft, ExternalLink, Trophy } from "lucide-react";
 import Link from "next/link";
 
+import { ThemeRoot } from "@/components/theme-root";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { WarWeekHero } from "@/components/war-week-hero";
 import type { WarWeek } from "@/db/schema";
 import { type ArchiveDetail, awardRecipients, isLinkOnly } from "@/lib/archive";
@@ -61,18 +70,18 @@ export function ArchiveDetailView({ detail }: { detail: ArchiveDetail }) {
         </Link>
 
         {linkOnly ? (
-          <section className="border-border flex flex-col gap-4 rounded-lg border px-4 py-4">
+          <Card className="gap-4 px-4">
             <p className="text-foreground/80 text-sm">
               Most of War Week {warWeek.edition.toUpperCase()}&apos;s story
               lives on the original wiki page.
             </p>
             <Highlights highlights={warWeek.highlights} />
             <WikiLink wikiUrl={warWeek.wikiUrl} />
-          </section>
+          </Card>
         ) : (
           <>
             {warWeek.winner ? (
-              <section className="bg-primary text-primary-foreground flex items-center gap-3 rounded-lg px-4 py-4">
+              <Card className="bg-primary text-primary-foreground flex-row items-center gap-3 px-4 ring-0">
                 <Trophy aria-hidden className="size-8 shrink-0" />
                 <div className="flex flex-col">
                   <span className="text-xs font-medium tracking-wide uppercase opacity-80">
@@ -80,7 +89,7 @@ export function ArchiveDetailView({ detail }: { detail: ArchiveDetail }) {
                   </span>
                   <span className="text-xl font-bold">{warWeek.winner}</span>
                 </div>
-              </section>
+              </Card>
             ) : null}
 
             {teams.length > 0 ? (
@@ -88,16 +97,18 @@ export function ArchiveDetailView({ detail }: { detail: ArchiveDetail }) {
                 <h2 className="text-lg font-semibold">{warWeek.teamLabel}s</h2>
                 <ul className="grid grid-cols-2 gap-2 md:grid-cols-4">
                   {teams.map((team) => (
-                    <li
-                      key={team.name}
-                      className="border-border flex items-center gap-2 rounded-lg border px-3 py-2"
-                    >
-                      <span
-                        aria-hidden
-                        className="size-4 shrink-0 rounded-full"
-                        style={{ backgroundColor: team.color }}
-                      />
-                      <span className="font-medium">{team.name}</span>
+                    <li key={team.name}>
+                      <Card
+                        size="sm"
+                        className="flex-row items-center gap-2 px-3 py-2"
+                      >
+                        <span
+                          aria-hidden
+                          className="size-4 shrink-0 rounded-full"
+                          style={{ backgroundColor: team.color }}
+                        />
+                        <span className="font-medium">{team.name}</span>
+                      </Card>
                     </li>
                   ))}
                 </ul>
@@ -113,21 +124,28 @@ export function ArchiveDetailView({ detail }: { detail: ArchiveDetail }) {
                   {awards.map((award) => {
                     const recipients = awardRecipients(award);
                     return (
-                      <li
-                        key={award.name}
-                        className="border-border flex flex-col gap-1 rounded-lg border px-3 py-2"
-                      >
-                        <span className="font-semibold">{award.name}</span>
-                        {recipients ? (
-                          <span className="text-primary text-sm font-medium">
-                            {recipients}
-                          </span>
-                        ) : null}
-                        {award.description ? (
-                          <span className="text-foreground/70 text-sm">
-                            {award.description}
-                          </span>
-                        ) : null}
+                      <li key={award.name}>
+                        <Card size="sm" className="h-full gap-1">
+                          <CardHeader>
+                            <CardTitle className="font-semibold">
+                              {award.name}
+                            </CardTitle>
+                          </CardHeader>
+                          {recipients || award.description ? (
+                            <CardContent className="flex flex-col gap-1">
+                              {recipients ? (
+                                <span className="text-primary text-sm font-medium">
+                                  {recipients}
+                                </span>
+                              ) : null}
+                              {award.description ? (
+                                <span className="text-foreground/70 text-sm">
+                                  {award.description}
+                                </span>
+                              ) : null}
+                            </CardContent>
+                          ) : null}
+                        </Card>
                       </li>
                     );
                   })}
@@ -148,45 +166,50 @@ export function ArchiveCard({ warWeek }: { warWeek: WarWeek }) {
   const editionLabel = warWeek.edition.toUpperCase();
 
   return (
-    <li
+    <ThemeRoot
+      as="li"
       style={warWeekThemeStyle(warWeek)}
-      className="bg-background text-foreground border-border border-t-primary flex flex-col overflow-hidden rounded-lg border border-t-8 font-sans"
+      className="text-foreground flex flex-col font-sans"
     >
-      <Link
-        href={`/${warWeek.edition}`}
-        className="flex flex-1 flex-col gap-1 px-4 py-3"
-      >
-        <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
-          War Week {editionLabel} · {warWeek.year}
-        </span>
-        <span className="text-primary text-lg font-semibold">
-          {warWeek.storyTheme}
-        </span>
-        <span className="text-foreground/70 text-sm">
-          {formatDateRange(warWeek.startDate, warWeek.endDate)}
-        </span>
-        <span className="text-sm">
-          {warWeek.winner ? (
-            <>
-              <span className="text-foreground/60">Winner: </span>
-              <span className="font-medium">{warWeek.winner}</span>
-            </>
-          ) : (
-            <span className="text-foreground/60">No winner recorded</span>
-          )}
-        </span>
-      </Link>
-      {warWeek.wikiUrl ? (
-        <a
-          href={warWeek.wikiUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="border-border text-primary flex items-center gap-1 border-t px-4 py-2 text-xs font-medium"
+      <Card className="border-t-primary flex-1 gap-0 border-t-8 py-0">
+        <Link
+          href={`/${warWeek.edition}`}
+          className="flex flex-1 flex-col gap-1 px-4 py-3"
         >
-          Original wiki page
-          <ExternalLink aria-hidden className="size-3" />
-        </a>
-      ) : null}
-    </li>
+          <span className="text-foreground/60 text-xs font-medium tracking-wide uppercase">
+            War Week {editionLabel} · {warWeek.year}
+          </span>
+          <span className="text-primary text-lg font-semibold">
+            {warWeek.storyTheme}
+          </span>
+          <span className="text-foreground/70 text-sm">
+            {formatDateRange(warWeek.startDate, warWeek.endDate)}
+          </span>
+          <span className="text-sm">
+            {warWeek.winner ? (
+              <span className="flex flex-wrap items-center gap-2">
+                <Badge>Winner</Badge>
+                <span className="font-medium">{warWeek.winner}</span>
+              </span>
+            ) : (
+              <span className="text-foreground/60">No winner recorded</span>
+            )}
+          </span>
+        </Link>
+        {warWeek.wikiUrl ? (
+          <CardFooter className="p-0">
+            <a
+              href={warWeek.wikiUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary flex w-full items-center gap-1 px-4 py-2 text-xs font-medium"
+            >
+              Original wiki page
+              <ExternalLink aria-hidden className="size-3" />
+            </a>
+          </CardFooter>
+        ) : null}
+      </Card>
+    </ThemeRoot>
   );
 }

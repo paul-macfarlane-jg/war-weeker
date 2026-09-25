@@ -4,22 +4,34 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import { WarWeekSettingsForm } from "@/components/war-week-settings-form";
+import { normalizeHex } from "@/lib/color";
 import { settingsInputFrom } from "@/lib/setup";
+import { getSetupDays, getSetupTeams } from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "War Week settings · War Weeker" };
+export const metadata: Metadata = { title: "War Week settings · JG War Week" };
 
 export default async function WarWeekSettingsPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     "/admin/setup/war-week",
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
+  const [days, teams] = await Promise.all([
+    getSetupDays(warWeek),
+    getSetupTeams(warWeek),
+  ]);
+
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <Link
           href="/admin/setup"
@@ -32,6 +44,12 @@ export default async function WarWeekSettingsPage() {
         <WarWeekSettingsForm
           key={warWeek.updatedAt.toISOString()}
           initial={settingsInputFrom(warWeek)}
+          actorEmail={email}
+          dayDates={days.map((day) => day.date)}
+          teamSwatches={teams.flatMap((team) => {
+            const color = normalizeHex(team.color);
+            return color ? [{ color, label: team.name }] : [];
+          })}
         />
       </section>
     </AdminShell>

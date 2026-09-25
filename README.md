@@ -1,10 +1,11 @@
-# war-weeker
+# jg-war-week
 
-War Week: themes, schedule, teams, competitions, points, awards, and
-announcements for Jahnel Group's annual War Week, plus a curated War Week
-history. See `CONTEXT.md` for the domain glossary.
+War Week: themes, schedule, teams, competitions (including single-elimination
+Brackets), points, awards, announcements, and a closing-ceremony Finale, for
+Jahnel Group's annual War Week — one live edition at a time, with a curated
+Archive of every past one. See `CONTEXT.md` for the domain glossary.
 
-**Changing War Weeker?** Start with the
+**Changing the JG War Week app?** Start with the
 [maintainer's guide](./docs/maintainers-guide.md): access, where things
 live, the branch-to-production loop, and prompts to give Claude.
 
@@ -27,8 +28,7 @@ pnpm dev                      # http://localhost:3000
 `seeds/<edition>.json` holds one War Week each: `i.json` (2016) through
 `x.json` (2025) are the history, extracted from `old-wikis/` and fixed by
 hand; `xi.json` is War Week XI with its real schedule, Teams, roster and
-Competitions plus fictional mid-week demo data (close race, standings
-hidden). Edit a file and reload it; setup data follows the seed, while keyed
+Competitions plus fictional mid-week demo data (a close race). Edit a file and reload it; setup data follows the seed, while keyed
 Points Entries, Awards and Announcements are only inserted once (see
 `CONTEXT.md`, "Seed idempotence rules"). Organizers can also edit War Week
 settings, the Appearance Theme, Days, Teams, the roster, Competitions,
@@ -73,14 +73,14 @@ production build (`pnpm build`) before running `pnpm smoke`.
 lint, vitest, production build, then the smoke test —
 `pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke`.
 
-## Connect Claude to War Weeker
+## Connect Claude to JG War Week
 
 The app exposes a read-only Model Context Protocol server over Streamable
-HTTP at `/api/mcp` (production: `https://war-weeker.vercel.app/api/mcp`).
+HTTP at `/api/mcp` (production: `https://jg-war-week.vercel.app/api/mcp`).
 Its tools are `get_current_war_week`, `get_leaderboard`, `get_schedule`,
 `get_announcements`, `get_awards`, `get_faq`, `list_history` and
 `get_history`. Every tool is read-only and returns only what a signed-in
-Participant sees: hidden Standings stay hidden, and no tool returns an email
+Participant sees, and no tool returns an email
 or the Organizer allowlist (Announcement authors come back as the handle
 before the `@`).
 
@@ -100,14 +100,13 @@ pages and these tools for AI agents. Its tool list comes from
 (`openssl rand -base64 32`) in the environment, redeploy, then:
 
 ```bash
-claude mcp add --transport http war-weeker https://war-weeker.vercel.app/api/mcp --header "Authorization: Bearer <token>"
+claude mcp add --transport http jg-war-week https://jg-war-week.vercel.app/api/mcp --header "Authorization: Bearer <token>"
 ```
 
 **claude.ai / Claude Desktop custom connector.** Those connectors support
 only OAuth or no auth, so for a demo set `MCP_PUBLIC=true`, redeploy, and add
-`https://war-weeker.vercel.app/api/mcp` as a custom connector with no auth.
-While it's on, anyone with the URL can read the current War Week, Standings
-(only once revealed), schedule, Announcements, Awards, FAQ and history.
+`https://jg-war-week.vercel.app/api/mcp` as a custom connector with no auth.
+While it's on, anyone with the URL can read the current War Week, Standings, schedule, Announcements, Awards, FAQ and history.
 Unset it after the demo. MCP OAuth is post-hackathon.
 
 ## Organizer sign-in
@@ -134,12 +133,12 @@ allowlist can sign in but `/admin` refuses them.
 
 `/api/mcp` is locked too: without a session it answers 401 unless the
 request carries the `MCP_TOKEN` bearer token or `MCP_PUBLIC=true` is set; see
-"Connect Claude to War Weeker".
+"Connect Claude to JG War Week".
 
 ## Deployment (Vercel + Neon)
 
-Production: **https://war-weeker.vercel.app** (MCP at
-`https://war-weeker.vercel.app/api/mcp`).
+Production: **https://jg-war-week.vercel.app** (MCP at
+`https://jg-war-week.vercel.app/api/mcp`).
 
 - **Hosting:** the Vercel project is connected to this GitHub repo. A push to
   `main` builds and deploys to production; every other branch (including

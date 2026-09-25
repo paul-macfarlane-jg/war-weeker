@@ -5,6 +5,7 @@ import type { WarWeek } from "@/db/schema";
 import {
   contrastRatio,
   themeContrastWarnings,
+  themeSwatches,
   warWeekThemeStyle,
 } from "@/lib/theme";
 
@@ -21,7 +22,6 @@ const fixture: WarWeek = {
   teamLabel: "Team",
   leaderTitle: "Captain",
   slackChannelUrl: "https://jahnelgroup.slack.com/archives/war-week-xi",
-  standingsHidden: true,
   primaryColor: "#00ff41",
   primaryForegroundColor: "#000000",
   accentColor: "#008f11",
@@ -152,5 +152,32 @@ describe("themeContrastWarnings", () => {
     expect(
       themeContrastWarnings({ ...fixture, backgroundColor: "nope" }),
     ).toEqual([]);
+  });
+});
+
+describe("themeSwatches", () => {
+  it("offers each Appearance Theme color as a labelled swatch", () => {
+    expect(themeSwatches(fixture)).toEqual([
+      { color: "#00ff41", label: "Primary" },
+      { color: "#000000", label: "Primary text" },
+      { color: "#008f11", label: "Accent" },
+      { color: "#000000", label: "Background" },
+      { color: "#d1ffd6", label: "Text" },
+    ]);
+  });
+
+  it("expands shorthand hex and skips colors that aren't hex", () => {
+    expect(
+      themeSwatches({
+        ...fixture,
+        primaryColor: "#ABC",
+        primaryForegroundColor: "",
+        accentColor: "nope",
+      }),
+    ).toEqual([
+      { color: "#aabbcc", label: "Primary" },
+      { color: "#000000", label: "Background" },
+      { color: "#d1ffd6", label: "Text" },
+    ]);
   });
 });

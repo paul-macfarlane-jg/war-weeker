@@ -7,13 +7,15 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { Client } from "pg";
 
+import { ABOUT_FEATURES } from "@/lib/about";
 import { WAR_WEEK_TIME_ZONE } from "@/lib/schedule";
 import { YOU_ROW_CLASS } from "@/lib/you";
 import { MCP_TOOLS } from "@/mcp/tools";
 
 loadEnvConfig(process.cwd());
 
-const PORT = 3100;
+// SMOKE_PORT lets parallel worktrees run smoke side by side.
+const PORT = Number(process.env.SMOKE_PORT ?? 3100);
 const BASE_URL = `http://localhost:${PORT}`;
 const READY_TIMEOUT_MS = 30_000;
 
@@ -225,17 +227,17 @@ async function assertRootRedirect() {
 }
 
 async function assertXiHome() {
-  const check = "GET /xi renders War Week XI with Standings hidden";
+  const check = "GET /xi renders War Week XI with the Team Standings";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi`);
     const body = await res.text();
-    const hidden = body.includes("Standings hidden");
-    if (res.status === 200 && body.includes("War Week XI") && hidden) {
+    const standings = xiTeamsShown(body);
+    if (res.status === 200 && body.includes("War Week XI") && standings) {
       ok(check);
     } else {
       fail(
         check,
-        `status=${res.status} bodyIncludes=${body.includes("War Week XI")} hidden=${hidden}`,
+        `status=${res.status} bodyIncludes=${body.includes("War Week XI")} standings=${standings}`,
       );
     }
   } catch (error) {
@@ -243,17 +245,24 @@ async function assertXiHome() {
   }
 }
 
+/** Whether a page shows both XI Teams in a Standings list, with totals. */
+function xiTeamsShown(body: string): boolean {
+  return (
+    teamTotalIn(body, "Red") !== null && teamTotalIn(body, "Blue") !== null
+  );
+}
+
 async function assertLeaderboard() {
   const check =
-    "GET /xi/leaderboard responds and shows Standings hidden for the demo seed";
+    "GET /xi/leaderboard responds and shows the Team Standings for the demo seed";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/leaderboard`);
     const body = await res.text();
-    const hidden = body.includes("Standings hidden");
-    if (res.status === 200 && hidden) {
+    const standings = xiTeamsShown(body);
+    if (res.status === 200 && standings) {
       ok(check);
     } else {
-      fail(check, `status=${res.status} hidden=${hidden}`);
+      fail(check, `status=${res.status} standings=${standings}`);
     }
   } catch (error) {
     fail(check, String(error));
@@ -409,7 +418,7 @@ async function assertInstallable() {
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
       favicon: home.includes('rel="icon" href="/favicon.ico'),
       install:
-        install.status === 200 && installBody.includes("Install War Weeker"),
+        install.status === 200 && installBody.includes("Install JG War Week"),
       installFooter: installBody.includes("Jahnel Group"),
     };
     if (Object.values(checks).every(Boolean)) {
@@ -433,7 +442,7 @@ async function assertLlmsTxt() {
       contentType: (res.headers.get("content-type") ?? "").startsWith(
         "text/plain",
       ),
-      title: body.startsWith("# War Weeker\n"),
+      title: body.startsWith("# JG War Week\n"),
       tools: Object.keys(MCP_TOOLS).every((name) =>
         body.includes(`\`${name}\``),
       ),
@@ -586,39 +595,15 @@ async function assertCompetitionDetail() {
   const url = `${BASE_URL}/xi/competitions/${id}`;
   const note = "First to finish all 10 wellness tasks";
 
-  const hiddenCheck =
-    "GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden";
+  const shownCheck =
+    "GET /xi/competitions/[id] shows the Competition and lists its Points Entries (target, points, note)";
   try {
     const res = await signedInFetch(url);
     const body = await res.text();
     const checks = {
       name: body.includes("Winning the Day Challenge"),
-      hidden: body.includes("Points hidden"),
-      noEntry: !body.includes(note) && !body.includes("Dani Milliken"),
-    };
-    if (res.status === 200 && Object.values(checks).every(Boolean)) {
-      ok(hiddenCheck);
-    } else {
-      fail(hiddenCheck, `status=${res.status} ${JSON.stringify(checks)}`);
-    }
-  } catch (error) {
-    fail(hiddenCheck, String(error));
-  }
-
-  // Briefly reveal XI to see the ledger, then hide it again. The smoke
-  // resets every seed on its next run, so an interrupted run heals itself.
-  const shownCheck =
-    "GET /xi/competitions/[id] lists Points Entries (target, points, note) once standings are revealed";
-  try {
-    await runQuery(
-      "update war_week set standings_hidden = false where edition = 'xi'",
-    );
-    const res = await signedInFetch(url);
-    const body = await res.text();
-    const checks = {
       target: body.includes("Dani Milliken"),
       note: body.includes(note),
-      notHidden: !body.includes("Points hidden"),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(shownCheck);
@@ -627,10 +612,6 @@ async function assertCompetitionDetail() {
     }
   } catch (error) {
     fail(shownCheck, String(error));
-  } finally {
-    await runQuery(
-      "update war_week set standings_hidden = true where edition = 'xi'",
-    ).catch((error) => fail("hide XI standings again", String(error)));
   }
 
   for (const bad of ["00000000-0000-4000-8000-000000000000", "not-a-uuid"]) {
@@ -710,19 +691,12 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
      where w.edition = 'xi' and p.display_name = $1`,
     [YOU_PARTICIPANT],
   );
-  const [{ standings_hidden: wasHidden }] = await runQuery<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
   const setEmail = (email: string | null) =>
     runQuery(
       `update participant p set email = $1 from war_week w
        where w.id = p.war_week_id and w.edition = 'xi' and p.display_name = $2`,
       [email, YOU_PARTICIPANT],
     );
-  const setHidden = (hidden: boolean) =>
-    runQuery(`update war_week set standings_hidden = $1 where edition = 'xi'`, [
-      hidden,
-    ]);
 
   const get = async (target: string, session: SmokeSession) => {
     const res = await fetch(`${BASE_URL}${target}`, {
@@ -743,7 +717,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
     await setEmail(SMOKE_YOU_EMAIL);
     const you = await createSmokeSession(SMOKE_YOU_EMAIL);
 
-    await setHidden(false);
     const teams = await get("/xi/teams", you);
     report(
       "a signed-in user linked by email sees one 'You' on /xi/teams and no picker",
@@ -774,18 +747,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
       },
     );
 
-    await setHidden(true);
-    const hidden = await get("/xi/leaderboard", you);
-    report(
-      "hidden Standings show no 'You' and no names on /xi/leaderboard",
-      hidden.status,
-      {
-        noTag: !hidden.body.includes(YOU_TAG),
-        noParticipant: !hidden.body.includes(YOU_PARTICIPANT),
-        locked: hidden.body.includes("Standings hidden"),
-      },
-    );
-
     const unlinked = await get("/xi/teams", sessions.notOrganizer);
     report(
       "a signed-in user with no email match gets the 'Which one is you?' picker and no 'You'",
@@ -801,9 +762,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
   } finally {
     await setEmail(originalEmail).catch((error) =>
       fail(`restore ${YOU_PARTICIPANT}'s email`, String(error)),
-    );
-    await setHidden(wasHidden).catch((error) =>
-      fail("restore XI standings_hidden", String(error)),
     );
   }
 }
@@ -859,14 +817,15 @@ async function setSmokeOrganizer(on: boolean) {
 
 async function assertAboutPage() {
   const check =
-    "anonymous GET /about is 200 with the Reveal video, six feature cards, the XI link and no sign-in redirect";
+    "anonymous GET /about is 200 with the Finale video, every feature card, the XI link and no sign-in redirect";
   try {
     const res = await fetch(`${BASE_URL}/about`, { redirect: "manual" });
     const body = await res.text();
     const checks = {
-      video: body.includes('src="/about/reveal.mp4"'),
-      poster: body.includes('poster="/about/reveal-poster.png"'),
-      cards: (body.match(/data-feature="/g) ?? []).length === 6,
+      video: body.includes('src="/about/finale.mp4"'),
+      poster: body.includes('poster="/about/finale-poster.png"'),
+      cards:
+        (body.match(/data-feature="/g) ?? []).length === ABOUT_FEATURES.length,
       xi: body.includes('href="/xi"'),
       noTooling: !/claude code|atlas/i.test(body),
     };
@@ -897,6 +856,47 @@ async function assertAboutPage() {
   }
 }
 
+async function assertPrivacyAndTermsPages() {
+  for (const [pathname, title] of [
+    ["/privacy", "Privacy"],
+    ["/terms", "Terms"],
+  ] as const) {
+    const check = `anonymous GET ${pathname} is 200 with its "${title}" heading, "Last updated" and no sign-in redirect`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const body = await res.text();
+      if (
+        res.status === 200 &&
+        body.includes(`>${title}</h1>`) &&
+        body.includes("Last updated")
+      ) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+
+  // /privacy and /terms are exact matches: the [edition] route would
+  // otherwise make /privacy/x or /terms/leaderboard public edition pages.
+  for (const pathname of ["/privacy/x", "/termsx"]) {
+    const privateCheck = `anonymous GET ${pathname} redirects to sign-in`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const location = res.headers.get("location") ?? "";
+      if (res.status === 307 && location.includes("/sign-in")) {
+        ok(privateCheck);
+      } else {
+        fail(privateCheck, `status=${res.status} location=${location}`);
+      }
+    } catch (error) {
+      fail(privateCheck, String(error));
+    }
+  }
+}
+
 async function assertSignInPage() {
   const check =
     "GET /sign-in renders without OAuth credentials and says Google isn't configured";
@@ -904,7 +904,7 @@ async function assertSignInPage() {
     const res = await fetch(`${BASE_URL}/sign-in?callbackURL=%2Fadmin`);
     const body = await res.text();
     const checks = {
-      heading: body.includes("Sign in to War Weeker"),
+      heading: body.includes("Sign in to JG War Week"),
       domain: body.includes("Use your @jahnelgroup.com Google account."),
       notConfigured: body.includes("configured on this server"),
       about: body.includes('href="/about"'),
@@ -998,6 +998,31 @@ async function assertAdminGate(sessions: {
   }
 }
 
+async function assertAdminWording(sessions: { organizer: SmokeSession }) {
+  for (const route of ["/admin", "/admin/standings", "/admin/points"]) {
+    const check = `GET ${route} as an Organizer says 'Back to War Week XI' and never 'public site'`;
+    try {
+      const res = await fetch(`${BASE_URL}${route}`, {
+        headers: { cookie: sessions.organizer.cookie },
+      });
+      const body = await res.text();
+      const checks = {
+        // React SSR can split "Back to War Week " and "XI" with a hydration
+        // comment marker, so tolerate one between them.
+        backLink: /Back to War Week\s*(?:<!--\s*-->)?\s*XI/.test(body),
+        noPublicSite: !body.includes("public site"),
+      };
+      if (res.status === 200 && Object.values(checks).every(Boolean)) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
 // Points Entries the smoke creates carry this note prefix so cleanup can
 // find them (and never touch an Organizer's own entries).
 const SMOKE_NOTE_PREFIX = "smoke-points-";
@@ -1055,6 +1080,18 @@ async function callAction(
   return JSON.parse(line.slice(line.indexOf(":") + 1)) as ActionResult;
 }
 
+/**
+ * Whether a client component on the page was given `name` as a prop: the
+ * shadcn comboboxes and selects render their options only when opened, so
+ * the options reach the HTML as the page's serialized props instead.
+ */
+function hasNameProp(body: string, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\\\?"(?:name|label)\\\\?":\\\\?"${escaped}\\\\?"`).test(
+    body,
+  );
+}
+
 function escapeHtml(text: string) {
   return text
     .replace(/&/g, "&amp;")
@@ -1067,7 +1104,11 @@ function escapeHtml(text: string) {
 /** A Team's total on the public leaderboard page, or null when not shown. */
 async function leaderboardTeamTotal(teamName: string): Promise<number | null> {
   const res = await signedInFetch(`${BASE_URL}/xi/leaderboard`);
-  const body = await res.text();
+  return teamTotalIn(await res.text(), teamName);
+}
+
+/** A Team's total in a page's Team Standings list, or null when not shown. */
+function teamTotalIn(body: string, teamName: string): number | null {
   const match = body.match(
     new RegExp(
       `font-semibold">${escapeHtml(teamName)}</span><span class="[^"]*">([-\\d.,]+)</span>`,
@@ -1120,7 +1161,7 @@ async function assertAdminPointsPage(sessions: {
   notOrganizer: SmokeSession;
 }) {
   const check =
-    "GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and standings while hidden";
+    "GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and the current standings";
   try {
     const competitions = await runQuery<{ name: string }>(
       `select c.name from competition c join war_week w on w.id = c.war_week_id where w.edition = 'xi'`,
@@ -1140,15 +1181,17 @@ async function assertAdminPointsPage(sessions: {
     const body = await res.text();
     const missing = competitions
       .map((c) => c.name)
-      .filter((name) => !body.includes(`>${escapeHtml(name)} · `));
+      .filter((name) => !hasNameProp(body, name));
     const result = {
       status: res.status,
-      form: body.includes("Add a Points Entry"),
+      form:
+        body.includes("Add a Points Entry") &&
+        body.includes('aria-label="Points Entry"'),
       missing: missing.join("|"),
       unscheduled: Number(unscheduled.count),
       ledger: Boolean(enteredBy) && body.includes(escapeHtml(enteredBy.email)),
       standings:
-        body.includes("Hidden on the public site") &&
+        body.includes("Current standings") &&
         body.includes("Individual leaderboard") &&
         /tabular-nums">[\d.,]+<\/span>/.test(body),
     };
@@ -1219,10 +1262,6 @@ async function assertPointsEntryActions(sessions: {
      from team t join war_week w on w.id = t.war_week_id
      join participant p on p.team_id = t.id where w.edition = 'xi' order by t.name limit 1`,
   );
-  const [{ standings_hidden: wasHidden }] = await runQuery<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
-
   const overMax = Number(teamCompetition.max) + 7;
   const teamInput = {
     competitionId: teamCompetition.id,
@@ -1243,10 +1282,6 @@ async function assertPointsEntryActions(sessions: {
 
   try {
     await deleteSmokeEntries();
-    // The public-leaderboard check needs standings visible.
-    await runQuery(
-      `update war_week set standings_hidden = false where edition = 'xi'`,
-    );
     const before = await leaderboardTeamTotal(target.team_name);
 
     await run(
@@ -1312,7 +1347,7 @@ async function assertPointsEntryActions(sessions: {
     );
 
     await run(
-      "an entry saved in admin shows up on /xi/leaderboard (un-hidden) on the next refresh",
+      "an entry saved in admin shows up on /xi/leaderboard on the next refresh",
       async () => {
         const after = await leaderboardTeamTotal(target.team_name);
         return before !== null &&
@@ -1379,10 +1414,6 @@ async function assertPointsEntryActions(sessions: {
     await deleteSmokeEntries().catch((error) =>
       fail("delete smoke Points Entries", String(error)),
     );
-    await runQuery(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    ).catch((error) => fail("restore XI standings_hidden", String(error)));
   }
 }
 
@@ -1415,36 +1446,12 @@ async function mcpLeaderboard(kind: "team" | "individual") {
   return { text, parsed: text ? JSON.parse(text) : undefined };
 }
 
-async function xiStandingsHidden(): Promise<boolean> {
-  const [row] = await runQuery<{ standings_hidden: boolean }>(
-    `select standings_hidden from war_week where edition = 'xi'`,
-  );
-  return row.standings_hidden;
-}
-
 /**
- * Whether `/xi` and `/xi/leaderboard` both show the hidden state. When
- * hidden, their RSC payloads (what the client components receive) must
- * carry no totals either.
+ * The Finale (brackets ticket 1): `/xi/finale` opens on Start for any
+ * signed-in user, `/admin/standings` is the Organizer's way in, and MCP
+ * `get_leaderboard` always returns Standings.
  */
-async function publicPagesHidden(): Promise<{
-  hidden: boolean;
-  leak: boolean;
-}> {
-  let hidden = true;
-  let leak = false;
-  for (const target of ["/xi", "/xi/leaderboard"]) {
-    const html = await (await signedInFetch(`${BASE_URL}${target}`)).text();
-    const rsc = await (
-      await signedInFetch(`${BASE_URL}${target}`, { headers: { RSC: "1" } })
-    ).text();
-    hidden &&= html.includes("Standings hidden");
-    leak ||= html.includes('"total":') || rsc.includes('"total":');
-  }
-  return { hidden, leak };
-}
-
-async function assertHideAndReveal(sessions: {
+async function assertFinale(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;
 }) {
@@ -1457,33 +1464,22 @@ async function assertHideAndReveal(sessions: {
       fail(check, String(error));
     }
   };
+  const page = async (target: string, session: SmokeSession) => {
+    const res = await fetch(`${BASE_URL}${target}`, {
+      headers: { cookie: session.cookie },
+    });
+    return { status: res.status, body: await res.text() };
+  };
 
   await run(
-    "while hidden, /xi and /xi/leaderboard HTML and RSC payloads carry no totals",
+    "GET /xi/finale as a signed-in user shows the Start button",
     async () => {
-      const pages = await publicPagesHidden();
-      return pages.hidden && !pages.leak ? null : JSON.stringify(pages);
-    },
-  );
-
-  await run(
-    "GET /admin/standings shows the Reveal control to an Organizer and the refusal to a non-Organizer",
-    async () => {
-      const page = async (session: SmokeSession) =>
-        (
-          await fetch(`${BASE_URL}/admin/standings`, {
-            headers: { cookie: session.cookie },
-          })
-        ).text();
-      const organizer = await page(sessions.organizer);
-      const notOrganizer = await page(sessions.notOrganizer);
+      const { status, body } = await page("/xi/finale", sessions.notOrganizer);
       const checks = {
-        heading: organizer.includes("Standings visibility"),
-        state: organizer.includes("Standings are hidden"),
-        reveal: organizer.includes(">Reveal<"),
-        refused:
-          notOrganizer.includes("Organizers only") &&
-          !notOrganizer.includes(">Reveal<"),
+        status: status === 200,
+        start: /<button[^>]*>Start<\/button>/.test(body),
+        ready: body.includes('data-finale="ready"'),
+        heading: body.includes("Finale"),
       };
       return Object.values(checks).every(Boolean)
         ? null
@@ -1491,118 +1487,48 @@ async function assertHideAndReveal(sessions: {
     },
   );
 
-  const ids = serverActionIds();
-  const missing = ["hideStandings", "revealStandings"].filter(
-    (name) => !ids[name],
+  await run(
+    "GET /admin/standings shows the Finale page with Open Finale to an Organizer and the refusal to a non-Organizer",
+    async () => {
+      const organizer = await page("/admin/standings", sessions.organizer);
+      const notOrganizer = await page(
+        "/admin/standings",
+        sessions.notOrganizer,
+      );
+      const checks = {
+        heading: /<h1[^>]*>Finale<\/h1>/.test(organizer.body),
+        open:
+          organizer.body.includes("Open Finale") &&
+          organizer.body.includes('href="/xi/finale"'),
+        refused:
+          notOrganizer.body.includes("Organizers only") &&
+          !notOrganizer.body.includes("Open Finale"),
+      };
+      return Object.values(checks).every(Boolean)
+        ? null
+        : JSON.stringify(checks);
+    },
   );
-  if (missing.length > 0) {
-    fail("server action ids in the build manifest", missing.join(", "));
-    return;
-  }
 
-  const wasHidden = await xiStandingsHidden();
-  try {
-    await runQuery(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
-    );
-
-    await run(
-      "revealStandings rejects a signed-in JG user off the allowlist",
-      async () => {
-        const result = await callAction(
-          ids.revealStandings,
-          [],
-          sessions.notOrganizer,
-        );
-        const hidden = await xiStandingsHidden();
-        return !result.ok && /not an Organizer/.test(result.error) && hidden
-          ? null
-          : `result=${JSON.stringify(result)} hidden=${hidden}`;
-      },
-    );
-
-    await run(
-      "revealStandings as an Organizer shows Standings on /xi, /xi/leaderboard and MCP get_leaderboard",
-      async () => {
-        const result = await callAction(
-          ids.revealStandings,
-          [],
-          sessions.organizer,
-        );
-        const hidden = await xiStandingsHidden();
-        const pages = await publicPagesHidden();
-        const [{ name: teamName }] = await runQuery<{ name: string }>(
-          `select t.name from team t join war_week w on w.id = t.war_week_id where w.edition = 'xi' order by t.name limit 1`,
-        );
-        const total = await leaderboardTeamTotal(teamName);
-        const mcp = await mcpLeaderboard("team");
-        const checks = {
-          ok: result.ok,
-          flag: !hidden,
-          pages: !pages.hidden,
-          // Proves the no-totals check above can see totals when they exist.
-          totalsInPayload: pages.leak,
-          total: total !== null,
-          mcp:
-            mcp.parsed?.hidden === false &&
-            mcp.parsed.standings.length > 0 &&
-            mcp.parsed.standings.every(
-              (row: { total: unknown }) => typeof row.total === "number",
-            ),
-        };
-        return Object.values(checks).every(Boolean)
-          ? null
-          : `${JSON.stringify(checks)} result=${JSON.stringify(result)}`;
-      },
-    );
-
-    await run(
-      "hideStandings rejects a signed-in JG user off the allowlist",
-      async () => {
-        const result = await callAction(
-          ids.hideStandings,
-          [],
-          sessions.notOrganizer,
-        );
-        const hidden = await xiStandingsHidden();
-        return !result.ok && /not an Organizer/.test(result.error) && !hidden
-          ? null
-          : `result=${JSON.stringify(result)} hidden=${hidden}`;
-      },
-    );
-
-    await run(
-      "hideStandings as an Organizer returns /xi, /xi/leaderboard and MCP get_leaderboard to hidden",
-      async () => {
-        const result = await callAction(
-          ids.hideStandings,
-          [],
-          sessions.organizer,
-        );
-        const hidden = await xiStandingsHidden();
-        const pages = await publicPagesHidden();
-        const mcp = await Promise.all(
-          (["team", "individual"] as const).map(mcpLeaderboard),
-        );
-        const checks = {
-          ok: result.ok,
-          flag: hidden,
-          pages: pages.hidden && !pages.leak,
-          mcp: mcp.every(
-            ({ text, parsed }) => parsed?.hidden === true && !/\d/.test(text),
-          ),
-        };
-        return Object.values(checks).every(Boolean)
-          ? null
-          : `${JSON.stringify(checks)} result=${JSON.stringify(result)}`;
-      },
-    );
-  } finally {
-    await runQuery(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    ).catch((error) => fail("restore XI standings_hidden", String(error)));
-  }
+  await run(
+    "MCP get_leaderboard(team) returns the same Team totals as /xi/leaderboard",
+    async () => {
+      const mcp = await mcpLeaderboard("team");
+      const rows: { name: string; total: number }[] =
+        mcp.parsed?.standings ?? [];
+      const shown = await Promise.all(
+        rows.map((row) => leaderboardTeamTotal(row.name)),
+      );
+      const checks = {
+        rows: rows.length > 0,
+        noHiddenKey: mcp.parsed !== undefined && !("hidden" in mcp.parsed),
+        same: rows.every((row, i) => shown[i] === row.total),
+      };
+      return Object.values(checks).every(Boolean)
+        ? null
+        : `${JSON.stringify(checks)} text=${mcp.text}`;
+    },
+  );
 }
 
 /** AC1: pinned first, then newest first; AC2: an allow-listed embed. */
@@ -2523,8 +2449,8 @@ async function assertAwardAdminPages(sessions: {
     if (
       res.status === 200 &&
       body.includes('aria-label="Award"') &&
-      body.includes(">Red</option>") &&
-      body.includes("Anthony Conway")
+      hasNameProp(body, "Red") &&
+      hasNameProp(body, "Anthony Conway")
     ) {
       ok(newCheck);
     } else {
@@ -2560,8 +2486,244 @@ async function assertAwardAdminPages(sessions: {
 }
 
 /**
+ * Creates XII from XI, ends XI with a Winner and starts XII through the
+ * lifecycle actions, checks the site follows, and that an Organizer of
+ * only XI can still pick and edit XI but can't reopen it or create the
+ * next War Week. Then puts XI back (`live`, no Winner, its own Organizers)
+ * and deletes XII by SQL so the smoke can run again.
+ */
+async function assertWarWeekLifecycle(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const check =
+    "lifecycle: create XII, end XI with a Winner, start XII; an XI-only Organizer edits XI but can't reopen it; then restore";
+  const xiOnlyEmail = "smoke-xi-only@jahnelgroup.com";
+  const restore = async () => {
+    await runQuery("delete from war_week where edition in ('xii', 'xiii')");
+    await runQuery(
+      "update war_week set status = 'live', winner = null, highlights = '{}', organizer_emails = array_remove(organizer_emails, $1) where edition = 'xi'",
+      [xiOnlyEmail],
+    );
+  };
+  try {
+    const ids = serverActionIds();
+    const missing = [
+      "createNextWarWeek",
+      "endWarWeek",
+      "startWarWeek",
+      "reopenWarWeek",
+      "selectAdminEdition",
+      "updateWarWeekSettings",
+    ].filter((name) => !ids[name]);
+    if (missing.length > 0) {
+      fail(check, `missing action ids: ${missing.join(", ")}`);
+      return;
+    }
+    await restore();
+    const editionId = async (edition: string) =>
+      (
+        await runQuery<{ id: string }>(
+          "select id from war_week where edition = $1",
+          [edition],
+        )
+      )[0]?.id;
+    const xiId = await editionId("xi");
+    const xId = await editionId("x");
+    const problems: string[] = [];
+    const expectRefused = async (
+      label: string,
+      name: string,
+      args: unknown[],
+    ) => {
+      const result = await callAction(ids[name], args, sessions.notOrganizer);
+      if (result.ok || !/not an Organizer/.test(result.error)) {
+        problems.push(`${label}: ${JSON.stringify(result)}`);
+      }
+    };
+    const expectOk = async (label: string, name: string, args: unknown[]) => {
+      const result = await callAction(ids[name], args, sessions.organizer);
+      if (!result.ok) problems.push(`${label}: ${JSON.stringify(result)}`);
+    };
+
+    await expectRefused("non-Organizer ends XI", "endWarWeek", [
+      xiId,
+      { winner: "Nope", highlights: "" },
+    ]);
+    await expectRefused(
+      "non-Organizer reopens X (forged id)",
+      "reopenWarWeek",
+      [xId],
+    );
+    await expectOk("create XII", "createNextWarWeek", [
+      xiId,
+      {
+        edition: "XII",
+        editionNumber: "12",
+        year: "2027",
+        startDate: "2027-02-21",
+        endDate: "2027-02-26",
+        storyTheme: "Smoke XII",
+        copyOrganizers: true,
+        copySettings: true,
+      },
+    ]);
+    const xiiId = await editionId("xii");
+    if (!xiiId) problems.push("XII was not created");
+    const early = await callAction(
+      ids.startWarWeek,
+      [xiiId],
+      sessions.organizer,
+    );
+    if (early.ok || early.error !== "End XI first.") {
+      problems.push(`start XII while XI is live: ${JSON.stringify(early)}`);
+    }
+    await expectOk("end XI", "endWarWeek", [
+      xiId,
+      { winner: "Smoke Winner", highlights: "" },
+    ]);
+    await expectRefused("non-Organizer starts XII", "startWarWeek", [xiiId]);
+    await expectOk("start XII", "startWarWeek", [xiiId]);
+    await expectRefused("non-Organizer ends XII", "endWarWeek", [
+      xiiId,
+      { winner: "Nope", highlights: "" },
+    ]);
+
+    const root = await signedInFetch(`${BASE_URL}/`, { redirect: "manual" });
+    if (!root.headers.get("location")?.endsWith("/xii")) {
+      problems.push(`/ goes to ${root.headers.get("location")}`);
+    }
+    const history = await (await signedInFetch(`${BASE_URL}/history`)).text();
+    if (!history.includes('href="/xi"') || !history.includes("Smoke Winner")) {
+      problems.push("/history lacks XI with Smoke Winner");
+    }
+    const archiveAdmin = await (
+      await fetch(`${BASE_URL}/admin/setup`, {
+        headers: { cookie: `${sessions.organizer.cookie}; admin_edition=xi` },
+      })
+    ).text();
+    if (!archiveAdmin.includes("Editing the Archive: War Week XI")) {
+      problems.push("the switcher can't edit XI");
+    }
+
+    // A current (XII) Organizer may reopen XI, the latest ended edition,
+    // but the one-live rule still waits for XII to end.
+    const reopenWhileLive = await callAction(
+      ids.reopenWarWeek,
+      [xiId],
+      sessions.organizer,
+    );
+    if (reopenWhileLive.ok || reopenWhileLive.error !== "End XII first.") {
+      problems.push(
+        `XII Organizer reopens XI while XII is live: ${JSON.stringify(reopenWhileLive)}`,
+      );
+    }
+
+    // An Organizer of only XI, added after XII was created from it.
+    await runQuery(
+      "update war_week set organizer_emails = array_append(organizer_emails, $1) where edition = 'xi'",
+      [xiOnlyEmail],
+    );
+    const xiOnly = await createSmokeSession(xiOnlyEmail);
+    const xiOnlyDefault = await (
+      await fetch(`${BASE_URL}/admin/setup`, {
+        headers: { cookie: xiOnly.cookie },
+      })
+    ).text();
+    if (!xiOnlyDefault.includes("Editing the Archive: War Week XI")) {
+      problems.push("/admin doesn't open on XI for an XI-only Organizer");
+    }
+    const selected = await callAction(ids.selectAdminEdition, ["xi"], xiOnly);
+    if (!selected.ok) {
+      problems.push(
+        `XI-only Organizer selects XI: ${JSON.stringify(selected)}`,
+      );
+    }
+    const [xi] = await runQuery<Record<string, string | string[] | null>>(
+      `select story_theme, start_date::text, end_date::text, mode,
+         team_label, leader_title, slack_channel_url, wiki_url,
+         organizer_emails, primary_color, primary_foreground_color,
+         accent_color, background_color, foreground_color, logo_url,
+         banner_url, font_preset, winner
+       from war_week where edition = 'xi'`,
+    );
+    const saved = await callAction(
+      ids.updateWarWeekSettings,
+      [
+        {
+          storyTheme: xi.story_theme,
+          startDate: xi.start_date,
+          endDate: xi.end_date,
+          mode: xi.mode,
+          teamLabel: xi.team_label,
+          leaderTitle: xi.leader_title,
+          slackChannelUrl: xi.slack_channel_url,
+          wikiUrl: xi.wiki_url ?? "",
+          organizerEmails: (xi.organizer_emails as string[]).join("\n"),
+          primaryColor: xi.primary_color,
+          primaryForegroundColor: xi.primary_foreground_color,
+          accentColor: xi.accent_color,
+          backgroundColor: xi.background_color,
+          foregroundColor: xi.foreground_color,
+          logoUrl: xi.logo_url ?? "",
+          bannerUrl: xi.banner_url ?? "",
+          fontPreset: xi.font_preset,
+          winner: xi.winner ?? "",
+          highlights: "Smoke XI highlight",
+        },
+      ],
+      { cookie: `${xiOnly.cookie}; admin_edition=xi` },
+    );
+    const [xiAfter] = await runQuery<{ highlights: string[] }>(
+      "select highlights from war_week where edition = 'xi'",
+    );
+    if (!saved.ok || xiAfter.highlights.join() !== "Smoke XI highlight") {
+      problems.push(
+        `XI-only Organizer saves XI highlights: ${JSON.stringify(saved)} ${JSON.stringify(xiAfter.highlights)}`,
+      );
+    }
+    const takeover = await callAction(ids.reopenWarWeek, [xiId], xiOnly);
+    if (takeover.ok || !/the current War Week/.test(takeover.error)) {
+      problems.push(
+        `XI-only Organizer reopens XI while XII is live: ${JSON.stringify(takeover)}`,
+      );
+    }
+    const createFromXi = await callAction(
+      ids.createNextWarWeek,
+      [
+        xiId,
+        {
+          edition: "XIII",
+          editionNumber: "13",
+          year: "2028",
+          startDate: "2028-02-21",
+          endDate: "2028-02-26",
+          storyTheme: "Smoke XIII",
+        },
+      ],
+      xiOnly,
+    );
+    if (createFromXi.ok || !/the current War Week/.test(createFromXi.error)) {
+      problems.push(
+        `XI-only Organizer creates XIII: ${JSON.stringify(createFromXi)}`,
+      );
+    }
+
+    if (problems.length === 0) ok(check);
+    else fail(check, problems.join("; "));
+  } catch (error) {
+    fail(check, String(error));
+  } finally {
+    await restore().catch((error) =>
+      fail("restore XI after the lifecycle check", String(error)),
+    );
+  }
+}
+
+/**
  * /admin/setup: the landing, settings and Days pages, and one settings save
- * and one Day Theme edit that the public site reflects. Restores XI after.
+ * and one Day Theme edit that the War Week's own pages reflect. Restores XI
+ * after.
  */
 async function assertSetup(sessions: {
   organizer: SmokeSession;
@@ -2621,17 +2783,16 @@ async function assertSetup(sessions: {
   }
 
   const [xi] = await runQuery<Record<string, string | string[] | null>>(
-    `select story_theme, start_date::text, end_date::text, status, mode,
+    `select story_theme, start_date::text, end_date::text, mode,
        team_label, leader_title, slack_channel_url, wiki_url, organizer_emails,
        primary_color, primary_foreground_color, accent_color, background_color,
-       foreground_color, logo_url, banner_url, font_preset
+       foreground_color, logo_url, banner_url, font_preset, winner, highlights
      from war_week where edition = 'xi'`,
   );
   const input = {
     storyTheme: xi.story_theme,
     startDate: xi.start_date,
     endDate: xi.end_date,
-    status: xi.status,
     mode: xi.mode,
     teamLabel: xi.team_label,
     leaderTitle: xi.leader_title,
@@ -2646,6 +2807,8 @@ async function assertSetup(sessions: {
     logoUrl: xi.logo_url ?? "",
     bannerUrl: xi.banner_url ?? "",
     fontPreset: xi.font_preset,
+    winner: xi.winner ?? "",
+    highlights: (xi.highlights as string[]).join("\n"),
   };
   const [busyDay] = await runQuery<{ id: string; day_theme: string }>(
     `select d.id, d.day_theme from day d join war_week w on w.id = d.war_week_id
@@ -2924,7 +3087,7 @@ async function assertSetupTeamsAndCompetitions(sessions: {
 /**
  * /admin/setup/schedule and /admin/setup/faq: the pages, the Schedule Item
  * validation refusals, and one new Schedule Item and one new FAQ Item that
- * the public site shows. Deletes both after.
+ * the War Week's own pages show. Deletes both after.
  */
 async function assertSetupScheduleFaq(sessions: {
   organizer: SmokeSession;
@@ -3123,6 +3286,208 @@ async function assertSetupScheduleFaq(sessions: {
   }
 }
 
+// The bracket loop check's own Competition and extra Teams (XI has two
+// Teams), deleted after the check and before it, so it's rerunnable.
+const SMOKE_BRACKET_COMPETITION = "SMOKE TEST bracket";
+const SMOKE_BRACKET_TEAMS = ["SMOKE Bracket Gold", "SMOKE Bracket Green"];
+
+async function deleteSmokeBracket() {
+  await runQuery(
+    `delete from points_entry where competition_id in
+     (select id from competition where name = $1)`,
+    [SMOKE_BRACKET_COMPETITION],
+  );
+  // Deleting the Competition cascades its Entrants and Heats.
+  await runQuery(`delete from competition where name = $1`, [
+    SMOKE_BRACKET_COMPETITION,
+  ]);
+  await runQuery(`delete from team where name = any($1)`, [
+    SMOKE_BRACKET_TEAMS,
+  ]);
+}
+
+async function assertBracketLoop(sessions: { organizer: SmokeSession }) {
+  const check =
+    "bracket loop: an Organizer sets single elimination on a Competition, enters 4 Teams, generates, records 3 Heat Results, finalizes; GET /xi/competitions/<id> shows the champion and /xi/leaderboard includes the generated points; un-finalize removes them; then cleans up";
+  const ids = serverActionIds();
+  const missing = [
+    "createCompetition",
+    "setCompetitionFormat",
+    "replaceEntrants",
+    "generateBracket",
+    "recordHeatResult",
+    "finalizeBracket",
+    "unfinalizeBracket",
+  ].filter((name) => !ids[name]);
+  if (missing.length > 0) {
+    fail("bracket action ids", missing.join(", "));
+    return;
+  }
+  const organizer = sessions.organizer;
+  const get = (route: string) =>
+    fetch(`${BASE_URL}${route}`, { headers: { cookie: organizer.cookie } });
+
+  try {
+    await deleteSmokeBracket();
+    for (const [name, color] of [
+      [SMOKE_BRACKET_TEAMS[0], "#ca8a04"],
+      [SMOKE_BRACKET_TEAMS[1], "#16a34a"],
+    ]) {
+      await runQuery(
+        `insert into team (war_week_id, name, color)
+         select id, $1, $2 from war_week where edition = 'xi'`,
+        [name, color],
+      );
+    }
+    const problems: string[] = [];
+    const expectOk = (
+      step: string,
+      result: { ok: boolean; error?: string },
+    ) => {
+      if (!result.ok) problems.push(`${step}: ${result.error}`);
+    };
+
+    expectOk(
+      "createCompetition",
+      await callAction(
+        ids.createCompetition,
+        [
+          {
+            name: SMOKE_BRACKET_COMPETITION,
+            description: "",
+            scoring: "team",
+            maxPoints: "",
+            placementPoints: "10, 6, 3",
+            countsTowardTeam: false,
+            group: "",
+          },
+        ],
+        organizer,
+      ),
+    );
+    const [competition] = await runQuery<{ id: string }>(
+      `select c.id from competition c join war_week w on w.id = c.war_week_id
+       where w.edition = 'xi' and c.name = $1`,
+      [SMOKE_BRACKET_COMPETITION],
+    );
+    if (!competition) throw new Error(problems.join("; ") || "not created");
+    const id = competition.id;
+
+    expectOk(
+      "setCompetitionFormat",
+      await callAction(
+        ids.setCompetitionFormat,
+        [id, { format: "single-elimination" }],
+        organizer,
+      ),
+    );
+    const teams = await runQuery<{ id: string }>(
+      `select t.id from team t join war_week w on w.id = t.war_week_id
+       where w.edition = 'xi' order by t.name`,
+    );
+    if (teams.length !== 4) problems.push(`XI has ${teams.length} Teams`);
+    expectOk(
+      "replaceEntrants",
+      await callAction(
+        ids.replaceEntrants,
+        [id, { targetIds: teams.map((t) => t.id) }],
+        organizer,
+      ),
+    );
+    expectOk(
+      "generateBracket",
+      await callAction(ids.generateBracket, [id, {}], organizer),
+    );
+
+    const before = await leaderboardTeamTotal("Red");
+    // Red wins every Heat it's in, so it's the champion; otherwise the
+    // first slot wins.
+    let recorded = 0;
+    for (const round of [1, 2]) {
+      const slots = await runQuery<{
+        heat_id: string;
+        entrant_id: string;
+        team_name: string;
+      }>(
+        `select h.id as heat_id, he.entrant_id, t.name as team_name
+         from heat h join heat_entrant he on he.heat_id = h.id
+         join entrant e on e.id = he.entrant_id join team t on t.id = e.team_id
+         where h.competition_id = $1 and h.round = $2
+         order by h.position, he.slot`,
+        [id, round],
+      );
+      for (const heatId of [...new Set(slots.map((s) => s.heat_id))]) {
+        const inHeat = slots.filter((s) => s.heat_id === heatId);
+        const order = [
+          ...inHeat.filter((s) => s.team_name === "Red"),
+          ...inHeat.filter((s) => s.team_name !== "Red"),
+        ].map((s) => s.entrant_id);
+        const result = await callAction(
+          ids.recordHeatResult,
+          [id, heatId, { order, scores: { [order[0]]: "21" } }],
+          organizer,
+        );
+        expectOk(`recordHeatResult round ${round}`, result);
+        if (result.ok) recorded += 1;
+      }
+    }
+    if (recorded !== 3) problems.push(`recorded ${recorded} Heat Results`);
+
+    for (const route of [
+      `/admin/setup/competitions/${id}/bracket`,
+      `/admin/brackets/${id}`,
+    ]) {
+      const res = await get(route);
+      const body = await res.text();
+      if (res.status !== 200 || !body.includes(SMOKE_BRACKET_COMPETITION)) {
+        problems.push(`${route} status=${res.status}`);
+      }
+    }
+
+    expectOk(
+      "finalizeBracket",
+      await callAction(ids.finalizeBracket, [id], organizer),
+    );
+    const page = await (
+      await signedInFetch(`${BASE_URL}/xi/competitions/${id}`)
+    ).text();
+    if (!/aria-label="Champion"(?:(?!aria-label=)[\s\S])*?>Red</.test(page)) {
+      problems.push("the Competition page shows no Red champion");
+    }
+    const finalized = await leaderboardTeamTotal("Red");
+    if (before === null || finalized !== before + 10) {
+      problems.push(`Red total ${before} → ${finalized}, expected +10`);
+    }
+    const ledger = await (await get("/admin/points")).text();
+    if (!ledger.includes("From bracket")) {
+      problems.push("/admin/points shows no From bracket row");
+    }
+
+    expectOk(
+      "unfinalizeBracket",
+      await callAction(ids.unfinalizeBracket, [id], organizer),
+    );
+    const unfinalized = await leaderboardTeamTotal("Red");
+    if (unfinalized !== before) {
+      problems.push(`Red total after un-finalize ${unfinalized} != ${before}`);
+    }
+    const [{ count }] = await runQuery<{ count: string }>(
+      `select count(*) from points_entry where competition_id = $1`,
+      [id],
+    );
+    if (Number(count) !== 0) problems.push(`${count} Points Entries remain`);
+
+    if (problems.length === 0) ok(check);
+    else fail(check, problems.join("; "));
+  } catch (error) {
+    fail(check, String(error));
+  } finally {
+    await deleteSmokeBracket().catch((error) =>
+      fail("delete the smoke bracket", String(error)),
+    );
+  }
+}
+
 async function assertSignInRequired() {
   for (const target of ["/", "/xi", "/xi/leaderboard"]) {
     const check = `anonymous GET ${target} redirects to sign-in`;
@@ -3230,6 +3595,48 @@ async function assertMcpBearerToken() {
     }
   } catch (error) {
     fail(check, String(error));
+  }
+}
+
+async function assertAdminGuidePage(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const organizerCheck =
+    "GET /admin/guide as an Organizer shows the guide, linked in the admin nav";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.organizer.cookie },
+    });
+    const body = await res.text();
+    if (
+      res.status === 200 &&
+      body.includes("Organizer guide") &&
+      body.includes("Placement Points") &&
+      body.includes('href="/admin/guide"')
+    ) {
+      ok(organizerCheck);
+    } else {
+      fail(organizerCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(organizerCheck, String(error));
+  }
+
+  const refusalCheck =
+    "GET /admin/guide as a signed-in non-Organizer shows the refusal";
+  try {
+    const res = await fetch(`${BASE_URL}/admin/guide`, {
+      headers: { cookie: sessions.notOrganizer.cookie },
+    });
+    const body = await res.text();
+    if (res.status === 200 && body.includes("Organizers only")) {
+      ok(refusalCheck);
+    } else {
+      fail(refusalCheck, `status=${res.status}`);
+    }
+  } catch (error) {
+    fail(refusalCheck, String(error));
   }
 }
 
@@ -3377,7 +3784,7 @@ async function assertMcp() {
       [4, "team"],
       [5, "individual"],
     ] as const) {
-      const check = `MCP get_leaderboard(${kind}) returns the hidden result with no numbers`;
+      const check = `MCP get_leaderboard(${kind}) returns Standings with numeric totals`;
       const leaderboard = await mcpRequest(
         {
           jsonrpc: "2.0",
@@ -3393,9 +3800,13 @@ async function assertMcp() {
       )?.content?.[0]?.text;
       const parsed = text ? JSON.parse(text) : undefined;
       if (
-        parsed?.hidden === true &&
-        String(parsed.message).includes("hidden until closing ceremonies") &&
-        !/\d/.test(text!)
+        parsed?.kind === kind &&
+        !("hidden" in parsed) &&
+        Array.isArray(parsed.standings) &&
+        parsed.standings.length > 0 &&
+        parsed.standings.every(
+          (row: { total: unknown }) => typeof row.total === "number",
+        )
       ) {
         ok(check);
       } else {
@@ -3722,13 +4133,16 @@ async function main() {
       await assertYouHighlight(sessions);
       await assertMcp();
       await assertAboutPage();
+      await assertPrivacyAndTermsPages();
       await assertSignInPage();
       await assertAdminGate(sessions);
+      await assertAdminWording(sessions);
       await assertSignInRequired();
       await assertAdminLink(sessions);
+      await assertAdminGuidePage(sessions);
       await assertAdminPointsPage(sessions);
       await assertPointsEntryActions(sessions);
-      await assertHideAndReveal(sessions);
+      await assertFinale(sessions);
       await assertAnnouncementFeed();
       await assertAnnouncementHomePinned();
       await assertAnnouncementActions(sessions);
@@ -3741,6 +4155,9 @@ async function main() {
       await assertSetup(sessions);
       await assertSetupTeamsAndCompetitions(sessions);
       await assertSetupScheduleFaq(sessions);
+      await assertBracketLoop(sessions);
+      // Last: it changes which War Week is current, then restores XI.
+      await assertWarWeekLifecycle(sessions);
     }
   } finally {
     await killServer(server);

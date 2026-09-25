@@ -14,18 +14,18 @@ describe("AboutPage", () => {
   const html = renderToStaticMarkup(<AboutPage />);
   const text = html.replace(/<[^>]+>/g, " ");
 
-  it("shows the Reveal as a looping muted video with a poster fallback", () => {
-    expect(html).toContain('src="/about/reveal.mp4"');
-    expect(html).toContain('poster="/about/reveal-poster.png"');
+  it("shows the Finale as a looping muted video with a poster fallback", () => {
+    expect(html).toContain('src="/about/finale.mp4"');
+    expect(html).toContain('poster="/about/finale-poster.png"');
     expect(html).toMatch(/<video[^>]*\bautoplay\b/i);
     expect(html).toMatch(/<video[^>]*\bmuted\b/i);
     expect(html).toMatch(/<video[^>]*\bloop\b/i);
     expect(html).toMatch(/<video[^>]*\bplaysinline\b/i);
-    expect(html).toContain('src="/about/reveal-poster.png"');
+    expect(html).toContain('src="/about/finale-poster.png"');
   });
 
-  it("has the six feature cards, each with its still", () => {
-    expect(ABOUT_FEATURES).toHaveLength(6);
+  it("has the eight feature cards, each with its still", () => {
+    expect(ABOUT_FEATURES).toHaveLength(8);
     for (const feature of ABOUT_FEATURES) {
       expect(html).toContain(`data-feature="${feature.slug}"`);
       expect(html).toContain(`src="/about/${feature.slug}.png"`);
@@ -39,12 +39,18 @@ describe("AboutPage", () => {
     expect(html).toContain(`href="${MAINTAINERS_GUIDE_URL}"`);
   });
 
-  it("tells Paul's story and mentions the one-sentence features", () => {
-    expect(text).toContain("Why I built this");
+  it("tells the team's story and mentions the one-sentence features", () => {
+    expect(text).toContain("Why we built this");
+    expect(text).toContain("Jahnel Group War Week · since 2016");
+    expect(text).toContain("Install app");
     expect(text).toContain("2016");
-    expect(text).toContain("Competiscore");
-    expect(text).toMatch(/home screen/i);
-    expect(text).toMatch(/Appearance Theme/);
+    expect(text.match(/Competiscore/g)).toHaveLength(1);
+    expect(text).not.toContain("points are gone");
+    expect(text).not.toContain("Why I built this");
+    expect(text).not.toContain("Paul Macfarlane");
+    expect(text).not.toContain("Appearance Theme");
+    expect(text).not.toMatch(/\blost\b/i);
+    expect(html).not.toContain('href="/install"');
   });
 
   it("mentions no build tooling and no banned terms", () => {

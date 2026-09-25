@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { CategoryBadge } from "@/components/schedule-item";
+import { Card } from "@/components/ui/card";
 import {
   type NowNext,
   type ScheduleEntry,
@@ -38,7 +39,7 @@ export function NowNextSection({
   if (!today && !next && now.length === 0) return null;
 
   return (
-    <section className="border-border flex flex-col gap-4 rounded-lg border px-4 py-4">
+    <Card className="gap-4 px-4">
       <div className="flex items-baseline justify-between">
         {today ? (
           <div className="flex flex-col">
@@ -96,6 +97,6 @@ export function NowNextSection({
           </ul>
         </div>
       ) : null}
-    </section>
+    </Card>
   );
 }

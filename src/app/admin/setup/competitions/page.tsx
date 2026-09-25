@@ -4,24 +4,35 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { CompetitionsEditor } from "@/components/competitions-editor";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
-import { getSetupCompetitions } from "@/queries/setup";
+import {
+  getCompetitionGroupSuggestions,
+  getSetupCompetitions,
+} from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Competitions · War Weeker" };
+export const metadata: Metadata = { title: "Competitions · JG War Week" };
 
 export default async function SetupCompetitionsPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage(
+  const { warWeek, email, isOrganizer, editions } = await loadAdminPage(
     "/admin/setup/competitions",
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
-  const competitions = await getSetupCompetitions(warWeek);
+  const [competitions, groupSuggestions] = await Promise.all([
+    getSetupCompetitions(warWeek),
+    getCompetitionGroupSuggestions(warWeek),
+  ]);
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Setup">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Setup"
+    >
       <section className="flex max-w-3xl flex-col gap-4">
         <Link
           href="/admin/setup"
@@ -39,6 +50,7 @@ export default async function SetupCompetitionsPage() {
         <SeedOverwriteWarning />
         <CompetitionsEditor
           competitions={competitions}
+          groupSuggestions={groupSuggestions}
           mode={warWeek.mode}
           teamLabel={warWeek.teamLabel}
         />

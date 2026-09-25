@@ -7,6 +7,7 @@ import {
   competitionGuardError,
   dayDeleteGuardError,
   dayGuardError,
+  dayOutsideRangeError,
   inUseError,
   parseCompetitionInput,
   parseDayInput,
@@ -22,7 +23,6 @@ const input: WarWeekSettingsInput = {
   storyTheme: "  The Matrix ",
   startDate: "2026-02-22",
   endDate: "2026-02-27",
-  status: "live",
   mode: "teams",
   teamLabel: "Team",
   leaderTitle: "Captain",
@@ -37,6 +37,8 @@ const input: WarWeekSettingsInput = {
   logoUrl: "/themes/xi/logo.svg",
   bannerUrl: " ",
   fontPreset: "mono",
+  winner: " ",
+  highlights: "",
 };
 
 function parsed(overrides: Partial<WarWeekSettingsInput> = {}) {
@@ -51,7 +53,6 @@ describe("parseWarWeekSettingsInput", () => {
         storyTheme: "The Matrix",
         startDate: "2026-02-22",
         endDate: "2026-02-27",
-        status: "live",
         mode: "teams",
         teamLabel: "Team",
         leaderTitle: "Captain",
@@ -69,8 +70,28 @@ describe("parseWarWeekSettingsInput", () => {
         logoUrl: "/themes/xi/logo.svg",
         bannerUrl: null,
         fontPreset: "mono",
+        winner: null,
+        highlights: [],
       },
     });
+  });
+
+  it("takes the Winner and one highlight per line, skipping blank lines", () => {
+    const result = parsed({
+      winner: " Red & Blue ",
+      highlights: " Red won Captain Clash \n\n  Blue took the trivia crown\r\n",
+    });
+    expect(result.ok && [result.value.winner, result.value.highlights]).toEqual(
+      ["Red & Blue", ["Red won Captain Clash", "Blue took the trivia crown"]],
+    );
+  });
+
+  it("never carries a status, so a settings save can't change it", () => {
+    const result = parseWarWeekSettingsInput({
+      ...input,
+      status: "complete",
+    } as WarWeekSettingsInput);
+    expect(result.ok && "status" in result.value).toBe(false);
   });
 
   it("drops duplicate organizer emails", () => {
@@ -99,12 +120,20 @@ describe("parseWarWeekSettingsInput", () => {
       "Logo URL must be a root-relative path or an https URL.",
     ],
     [{ startDate: "2026-02-30" }, "Start date must be a date."],
-    [{ status: "paused" }, "Status must be one of upcoming, live, complete."],
+    [{ winner: "x".repeat(201) }, "Winner must be at most 200 characters."],
+    [
+      { highlights: `ok\n${"x".repeat(501)}` },
+      "Highlights must be at most 500 characters.",
+    ],
     [{ fontPreset: "comic" }, "Font must be one of sans, serif, mono."],
     [{ organizerEmails: " " }, "Add at least one organizer email."],
     [
       { organizerEmails: "a@jahnelgroup.com, not-an-email" },
-      'Organizer email "not-an-email" must be a valid email.',
+      'Organizer email "not-an-email" must be an @jahnelgroup.com address.',
+    ],
+    [
+      { organizerEmails: "a@jahnelgroup.com, someone@gmail.com" },
+      'Organizer email "someone@gmail.com" must be an @jahnelgroup.com address.',
     ],
     [
       { startDate: "2026-02-28", endDate: "2026-02-27" },
@@ -112,6 +141,33 @@ describe("parseWarWeekSettingsInput", () => {
     ],
   ])("refuses %o", (overrides, error) => {
     expect(parsed(overrides)).toEqual({ ok: false, error });
+  });
+
+  it("accepts a mixed-case Jahnel Group organizer email", () => {
+    const result = parsed({ organizerEmails: "A@JahnelGroup.Com" });
+    expect(result.ok && result.value.organizerEmails).toEqual([
+      "a@jahnelgroup.com",
+    ]);
+  });
+});
+
+describe("dayOutsideRangeError", () => {
+  const dayDates = ["2026-02-27", "2026-02-22", "2026-02-24"];
+
+  it("allows dates that keep every Day inside", () => {
+    expect(
+      dayOutsideRangeError(dayDates, "2026-02-22", "2026-02-27"),
+    ).toBeNull();
+    expect(dayOutsideRangeError([], "2026-03-01", "2026-03-02")).toBeNull();
+  });
+
+  it("names the earliest Day the new dates would leave outside", () => {
+    expect(dayOutsideRangeError(dayDates, "2026-02-25", "2026-02-26")).toBe(
+      "The Day on 2026-02-22 falls outside the new dates. Move or delete it first.",
+    );
+    expect(dayOutsideRangeError(dayDates, "2026-02-22", "2026-02-26")).toBe(
+      "The Day on 2026-02-27 falls outside the new dates. Move or delete it first.",
+    );
   });
 });
 
@@ -130,7 +186,7 @@ describe("settingsGuardError", () => {
   it("allows a save that keeps the Organizer, Teams and Days consistent", () => {
     expect(settingsGuardError(value(), ctx)).toBeNull();
     expect(settingsGuardError(value({ mode: "free-for-all" }), ctx)).toBeNull();
-    expect(settingsGuardError(value({ status: "complete" }), ctx)).toBeNull();
+    expect(settingsGuardError(value({ winner: "Red" }), ctx)).toBeNull();
   });
 
   it("refuses switching to free-for-all while Teams exist", () => {

@@ -7,20 +7,25 @@ import { loadAdminPage } from "./gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Admin · War Weeker" };
+export const metadata: Metadata = { title: "Admin · JG War Week" };
 
 export default async function AdminPage() {
-  const { warWeek, email, isOrganizer } = await loadAdminPage("/admin");
+  const { warWeek, email, isOrganizer, editions } =
+    await loadAdminPage("/admin");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Overview">
+    <AdminShell
+      warWeek={warWeek}
+      email={email}
+      editions={editions}
+      current="Overview"
+    >
       <div className="flex max-w-2xl flex-col gap-3">
         <h1 className="text-2xl font-bold">Organizer overview</h1>
         <p className="text-foreground/70">
           You&apos;re signed in as an Organizer for War Week{" "}
-          {warWeek.edition.toUpperCase()} ({warWeek.status}). Standings are{" "}
-          {warWeek.standingsHidden ? "hidden" : "visible"} on the public site.
+          {warWeek.edition.toUpperCase()} ({warWeek.status}).
         </p>
         <p className="text-foreground/70">
           <Link
@@ -34,7 +39,7 @@ export default async function AdminPage() {
             href="/admin/standings"
             className="text-primary underline underline-offset-4"
           >
-            hide or reveal them
+            open the Finale
           </Link>
           ,{" "}
           <Link

@@ -3,8 +3,18 @@
 import { Home, ListChecks, Menu, Newspaper, Trophy } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import { SignOutButton } from "@/components/auth-buttons";
+import { MoreMenu } from "@/components/more-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import type { WarWeek } from "@/db/schema";
 
 /** The signed-in user, as shown in the navigation. */
 export type NavAccount = { email: string; isOrganizer: boolean };
@@ -45,11 +55,33 @@ function isActive(pathname: string, destination: Destination, edition: string) {
   );
 }
 
+const TAB_CLASS = "flex flex-col items-center gap-1 py-2 text-xs";
+
 /**
  * Mobile and tablet (below `lg`): a fixed bottom tab bar for one-thumb use.
+ * The More tab opens a Sheet instead of navigating to `/[edition]/more`.
  */
-export function BottomTabBar({ edition }: { edition: string }) {
+export function BottomTabBar({
+  edition,
+  mode,
+  teamLabel,
+  account,
+}: {
+  edition: string;
+  mode: WarWeek["mode"];
+  teamLabel: string;
+  account: NavAccount;
+}) {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
+  // Close the More Sheet on route change (e.g. a link inside it navigated).
+  // Adjusting state during render, rather than in an effect, avoids an
+  // extra render pass: https://react.dev/learn/you-might-not-need-an-effect
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMoreOpen(false);
+  }
 
   return (
     <nav
@@ -60,14 +92,47 @@ export function BottomTabBar({ edition }: { edition: string }) {
         {destinationsFor(edition).map((destination) => {
           const { label, href, icon: Icon } = destination;
           const active = isActive(pathname, destination, edition);
+          const tabClassName = `${TAB_CLASS} ${
+            active ? "text-primary" : "text-foreground/60"
+          }`;
+
+          if (label === "More") {
+            return (
+              <li key={href} className="flex-1">
+                <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+                  <SheetTrigger
+                    aria-current={active ? "page" : undefined}
+                    className={`w-full ${tabClassName}`}
+                  >
+                    <Icon className="size-5" aria-hidden="true" />
+                    {label}
+                  </SheetTrigger>
+                  <SheetContent
+                    side="bottom"
+                    className="max-h-[85dvh] w-full overflow-y-auto"
+                  >
+                    <SheetHeader>
+                      <SheetTitle>More</SheetTitle>
+                    </SheetHeader>
+                    <MoreMenu
+                      edition={edition}
+                      mode={mode}
+                      teamLabel={teamLabel}
+                      account={account}
+                      onNavigate={() => setMoreOpen(false)}
+                    />
+                  </SheetContent>
+                </Sheet>
+              </li>
+            );
+          }
+
           return (
             <li key={href} className="flex-1">
               <Link
                 href={href}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 py-2 text-xs ${
-                  active ? "text-primary" : "text-foreground/60"
-                }`}
+                className={tabClassName}
               >
                 <Icon className="size-5" aria-hidden="true" />
                 {label}
