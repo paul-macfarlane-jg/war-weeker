@@ -1,100 +1,100 @@
-# pnpm gate at 8c5fbae on private DB war_weeker_ci_gatec (2026-09-25T09:48:58Z)
+# pnpm gate at cd9517a on private DB war_weeker_ci_gatef (2026-09-25T09:55:45Z)
 
-> war-weeker@0.1.0 db:migrate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 db:migrate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > drizzle-kit migrate
 
 No config path provided, using default 'drizzle.config.ts'
-Reading config file '/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/drizzle.config.ts'
+Reading config file '/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/drizzle.config.ts'
 Using 'pg' driver for database querying
 [⣷] applying migrations...[2K[1G[✓] migrations applied successfully!
-> war-weeker@0.1.0 gate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 gate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm smoke
 
 
-> war-weeker@0.1.0 typecheck /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 typecheck /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > next typegen && tsc --noEmit
 
 Generating route types...
 ✓ Types generated successfully
 
-> war-weeker@0.1.0 lint /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 lint /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > eslint .
 
 
-/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/src/app/sign-in/page.tsx
+/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/src/app/sign-in/page.tsx
   49:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
   60:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/src/components/about-feature-grid.tsx
+/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/src/components/about-feature-grid.tsx
   20:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/src/components/about-reveal-demo.tsx
-  27:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/src/components/about-finale-demo.tsx
+  28:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/src/components/roster.tsx
+/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/src/components/roster.tsx
   72:11  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
-/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/src/components/war-week-hero.tsx
+/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/src/components/war-week-hero.tsx
   15:9   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
   29:13  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
 
 ✖ 7 problems (0 errors, 7 warnings)
 
 
-> war-weeker@0.1.0 test /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 test /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > vitest run
 
 (!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
   - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
 Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
 
- RUN  v4.1.11 /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+ RUN  v4.1.11 /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 
-(node:11216) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(node:17612) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 
  Test Files  53 passed (53)
-      Tests  618 passed (618)
-   Start at  05:49:09
-   Duration  4.17s (transform 2.45s, setup 0ms, import 16.12s, tests 8.32s, environment 3ms)
+      Tests  612 passed (612)
+   Start at  05:56:00
+   Duration  4.42s (transform 2.65s, setup 0ms, import 18.30s, tests 8.33s, environment 17ms)
 
 
-> war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 build /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > next build
 
 ▲ Next.js 16.3.6 (Turbopack)
 ✓ Running next.config.ts took 56ms
 
   Creating an optimized production build ...
-✓ Compiled successfully in 904ms
+✓ Compiled successfully in 957ms
   Running TypeScript ...
-  Finished TypeScript in 1984ms ...
+  Finished TypeScript in 2.0s ...
   Collecting page data using 9 workers ...
-2026-09-25T09:49:18.477Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.105Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.508Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.112Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.516Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.115Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.533Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.139Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.531Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.147Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.558Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.156Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.622Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.156Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.653Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.177Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.708Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.280Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
-2026-09-25T09:49:18.713Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
+2026-09-25T09:56:10.282Z WARN [Better Auth]: [better-auth] Base URL is not set. Set the baseURL option or BETTER_AUTH_URL env, or use a dynamic baseURL with allowedHosts for multi-host setups. Without it the origin is derived from the incoming request, and callbacks and redirects may not work correctly.
 [Error [BetterAuthError]: You are using the default secret. Please set `BETTER_AUTH_SECRET` in your environment variables or pass `secret` in your auth config.]
   Generating static pages using 9 workers (0/8) ...
   Generating static pages using 9 workers (2/8) 
   Generating static pages using 9 workers (4/8) 
   Generating static pages using 9 workers (6/8) 
-✓ Generating static pages using 9 workers (8/8) in 139ms
+✓ Generating static pages using 9 workers (8/8) in 133ms
   Finalizing page optimization ...
 
 Route (app)
@@ -105,6 +105,7 @@ Route (app)
 ├ ƒ /[edition]/competitions
 ├ ƒ /[edition]/competitions/[id]
 ├ ƒ /[edition]/faq
+├ ƒ /[edition]/finale
 ├ ƒ /[edition]/leaderboard
 ├ ƒ /[edition]/more
 ├ ƒ /[edition]/news
@@ -150,19 +151,19 @@ Route (app)
 ƒ  (Dynamic)  server-rendered on demand
 
 
-> war-weeker@0.1.0 smoke /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 smoke /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > tsx scripts/smoke.ts
 
 
-> war-weeker@0.1.0 db:migrate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 db:migrate /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > drizzle-kit migrate
 
 No config path provided, using default 'drizzle.config.ts'
-Reading config file '/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker/drizzle.config.ts'
+Reading config file '/Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf/drizzle.config.ts'
 Using 'pg' driver for database querying
 [⣷] applying migrations...[2K[1G[✓] migrations applied successfully!ok - pnpm db:migrate
 
-> war-weeker@0.1.0 seed:load /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 seed:load /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > tsx scripts/seed-load.ts --reset seeds/i.json seeds/ii.json seeds/iii.json seeds/iv.json seeds/ix.json seeds/v.json seeds/vi.json seeds/vii.json seeds/viii.json seeds/x.json seeds/xi.json
 
 Loaded War Week i (reset)
@@ -178,7 +179,7 @@ Loaded War Week x (reset)
 Loaded War Week xi (reset)
 ok - pnpm seed:load --reset (11 seeds, load 1)
 
-> war-weeker@0.1.0 seed:load /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
+> war-weeker@0.1.0 seed:load /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
 > tsx scripts/seed-load.ts seeds/i.json seeds/ii.json seeds/iii.json seeds/iv.json seeds/ix.json seeds/v.json seeds/vi.json seeds/vii.json seeds/viii.json seeds/x.json seeds/xi.json
 
 Loaded War Week i
@@ -206,19 +207,19 @@ ok - after loading the seed twice, War Week XI has 6 faq_item rows
 ok - the database rejects a Points Entry with both a Team and a Participant
 ok - the XI seed loads 5/3/1 Placement Points for Catan and none for Beast Mode
 
-> war-weeker@0.1.0 start /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/custom-inputs-c/war-weeker
-> next start -p 3152
+> war-weeker@0.1.0 start /Users/pmacfarlane/jg-code/jg-war-week/.claude/worktrees/brackets/gf
+> next start -p 3191
 
 ▲ Next.js 16.3.6
-- Local:         http://localhost:3152
-- Network:       http://172.20.10.4:3152
+- Local:         http://localhost:3191
+- Network:       http://172.20.10.4:3191
 ✓ Ready in 89ms
-✓ Running next.config.ts took 20ms
+✓ Running next.config.ts took 21ms
 ok - server ready
 ok - signed-in GET / redirects to /xi
-ok - GET /xi renders War Week XI with Standings hidden
+ok - GET /xi renders War Week XI with the Team Standings
 ok - GET /zz returns 404
-ok - GET /xi/leaderboard responds and shows Standings hidden for the demo seed
+ok - GET /xi/leaderboard responds and shows the Team Standings for the demo seed
 ok - GET /xi/schedule groups by Day with Day Themes, ET times and Competition links
 ok - GET /xi?at=<Tue Feb 24 12:30 ET> shows today's Day Theme and now/next
 ok - GET /xi/more links to Competitions, Teams, Awards, FAQ, history, Install app and About
@@ -228,8 +229,7 @@ ok - GET /history lists every complete War Week, newest first, each in its own t
 ok - GET /viii renders 2023 in its Harry Potter theme with stored winner, Houses, Awards, highlights and wiki link
 ok - GET /i, /ii, /iii render as link-only cards with the wiki link
 ok - GET /xi/competitions groups Competitions with max points and scoring
-ok - GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden
-ok - GET /xi/competitions/[id] lists Points Entries (target, points, note) once standings are revealed
+ok - GET /xi/competitions/[id] shows the Competition and lists its Points Entries (target, points, note)
 ok - GET /xi/competitions/00000000-0000-4000-8000-000000000000 returns 404
 ok - GET /xi/competitions/not-a-uuid returns 404
 ok - GET /xi/teams shows each Team with Leaders marked by Leader Title and Company Tags
@@ -237,7 +237,6 @@ ok - GET /iv/teams shows one roster of all Participants for a free-for-all War W
 ok - a signed-in user linked by email sees one 'You' on /xi/teams and no picker
 ok - a signed-in user linked by email sees one 'You' on the individual leaderboard
 ok - a signed-in user linked by email sees 'You' on their Award on /xi/awards
-ok - hidden Standings show no 'You' and no names on /xi/leaderboard
 ok - a signed-in user with no email match gets the 'Which one is you?' picker and no 'You'
 ok - MCP tools/list includes get_current_war_week
 ok - MCP tools/list includes get_leaderboard
@@ -248,8 +247,8 @@ ok - MCP tools/list includes get_faq
 ok - MCP tools/list includes list_history
 ok - MCP tools/list includes get_history
 ok - MCP tools/call get_current_war_week returns edition xi
-ok - MCP get_leaderboard(team) returns the hidden result with no numbers
-ok - MCP get_leaderboard(individual) returns the hidden result with no numbers
+ok - MCP get_leaderboard(team) returns Standings with numeric totals
+ok - MCP get_leaderboard(individual) returns Standings with numeric totals
 ok - MCP get_schedule(2026-02-24) returns only that Day
 ok - MCP get_schedule() returns all six XI Days
 ok - MCP get_announcements(limit: 2) returns edition xi, 2 Announcements, welcome pinned first with its video and body
@@ -260,7 +259,7 @@ ok - MCP list_history returns 2025 down to 2016
 ok - MCP get_history(2023) returns the stored winner, Houses, Awards and wiki link
 ok - MCP get_history(2030) returns a clear not-found result
 ok - MCP get_history(2026) returns a clear not-found result
-ok - anonymous GET /about is 200 with the Reveal video, six feature cards, the XI link and no sign-in redirect
+ok - anonymous GET /about is 200 with the Finale video, six feature cards, the XI link and no sign-in redirect
 ok - anonymous GET /about/leaderboard redirects to sign-in
 ok - anonymous GET /aboutx redirects to sign-in
 ok - anonymous GET /privacy is 200 with its "Privacy" heading, "Last updated" and no sign-in redirect
@@ -286,21 +285,18 @@ ok - GET /xi/more as an Organizer shows the Admin link and shows the account
 ok - GET /xi/more as a non-Organizer hides the Admin link and shows the account
 ok - GET /admin/guide as an Organizer shows the guide, linked in the admin nav
 ok - GET /admin/guide as a signed-in non-Organizer shows the refusal
-ok - GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and standings while hidden (16 unscheduled Competitions offered)
+ok - GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and the current standings (16 unscheduled Competitions offered)
 ok - GET /admin/points as a non-Organizer shows the refusal
 ok - createPointsEntry rejects a signed-in JG user off the allowlist
 ok - createPointsEntry rejects a Participant in a team Competition and a Team in an individual one
 ok - createPointsEntry as an Organizer saves an over-max decimal entry with entered-by
-ok - an entry saved in admin shows up on /xi/leaderboard (un-hidden) on the next refresh
+ok - an entry saved in admin shows up on /xi/leaderboard on the next refresh
 ok - updatePointsEntry and deletePointsEntry reject a non-Organizer
 ok - updatePointsEntry as an Organizer edits points and keeps entered-by
 ok - deletePointsEntry as an Organizer removes it
-ok - while hidden, /xi and /xi/leaderboard HTML and RSC payloads carry no totals
-ok - GET /admin/standings shows the Reveal control to an Organizer and the refusal to a non-Organizer
-ok - revealStandings rejects a signed-in JG user off the allowlist
-ok - revealStandings as an Organizer shows Standings on /xi, /xi/leaderboard and MCP get_leaderboard
-ok - hideStandings rejects a signed-in JG user off the allowlist
-ok - hideStandings as an Organizer returns /xi, /xi/leaderboard and MCP get_leaderboard to hidden
+ok - GET /xi/finale as a signed-in user shows the Start button
+ok - GET /admin/standings shows the Finale page with Open Finale to an Organizer and the refusal to a non-Organizer
+ok - MCP get_leaderboard(team) returns the same Team totals as /xi/leaderboard
 ok - GET /xi/news orders the pinned welcome first, then Wellness Wednesday, then Tournament Night recap
 ok - GET /xi/news embeds the welcome Announcement's video as a YouTube iframe
 ok - GET /xi shows a Pinned section with the welcome Announcement
