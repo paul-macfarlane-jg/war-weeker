@@ -22,7 +22,6 @@ const fixture: WarWeek = {
   teamLabel: "Team",
   leaderTitle: "Captain",
   slackChannelUrl: "https://jahnelgroup.slack.com/archives/war-week-xi",
-  standingsHidden: true,
   primaryColor: "#00ff41",
   primaryForegroundColor: "#000000",
   accentColor: "#008f11",

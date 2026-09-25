@@ -10,7 +10,6 @@
   "teamLabel": "Tribe",
   "leaderTitle": "Tribal Chief",
   "slackChannelUrl": "https://jahnelgroup.slack.com",
-  "standingsHidden": false,
   "primary": "#c2410c",
   "primaryForeground": "#ffffff",
   "accent": "#0f766e",

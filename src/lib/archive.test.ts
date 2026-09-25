@@ -23,7 +23,6 @@ function warWeekFixture(overrides: Partial<WarWeek>): WarWeek {
     teamLabel: "Team",
     leaderTitle: "Captain",
     slackChannelUrl: "https://example.slack.com",
-    standingsHidden: false,
     primaryColor: "#000000",
     primaryForegroundColor: "#ffffff",
     accentColor: "#000000",

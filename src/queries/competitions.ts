@@ -48,11 +48,10 @@ function toLedgerTeam(name: string | null, color: string | null) {
 
 /**
  * Loads one Competition of a War Week and its ledger. Returns `undefined`
- * when `id` is not a Competition of this War Week. While standings are
- * hidden it skips the Points Entries query.
+ * when `id` is not a Competition of this War Week.
  */
 export async function getCompetitionWithLedger(
-  warWeek: Pick<WarWeek, "id" | "standingsHidden">,
+  warWeek: Pick<WarWeek, "id">,
   id: string,
   dbOrTx: DBOrTx = db,
 ): Promise<
@@ -66,13 +65,6 @@ export async function getCompetitionWithLedger(
     .where(and(eq(competition.id, id), eq(competition.warWeekId, warWeek.id)))
     .limit(1);
   if (!found) return undefined;
-
-  if (warWeek.standingsHidden) {
-    return {
-      competition: found,
-      ledger: buildCompetitionLedger({ standingsHidden: true, rows: [] }),
-    };
-  }
 
   const rows = await dbOrTx
     .select({
@@ -95,7 +87,6 @@ export async function getCompetitionWithLedger(
   return {
     competition: found,
     ledger: buildCompetitionLedger({
-      standingsHidden: false,
       rows: rows.map((row) => ({
         id: row.id,
         points: row.points,

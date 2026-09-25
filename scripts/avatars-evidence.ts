@@ -1,11 +1,9 @@
 /**
  * Captures Avatar screenshots (ticket 16) at 390px: /xi/teams,
- * /xi/leaderboard (revealed, then hidden to show no Avatars or names leak)
- * and /xi/awards. Screenshots land in test-results/16-avatars/.
+ * /xi/leaderboard and /xi/awards. Screenshots land in test-results/16-avatars/.
  *
  * Needs a production build, the seeded local Postgres (run `pnpm smoke`
- * first), and Google Chrome. Starts its own server on port 3200 and
- * restores XI's Standings visibility afterwards:
+ * first), and Google Chrome. Starts its own server on port 3200:
  *   pnpm tsx scripts/avatars-evidence.ts
  */
 import { loadEnvConfig } from "@next/env";
@@ -29,14 +27,9 @@ const AUTH_SECRET = `evidence-only-secret-${randomUUID()}`;
 const EMAIL = "avatars-evidence@jahnelgroup.com";
 
 const SHOTS = [
-  { file: "phone-teams.png", target: "/xi/teams", hidden: true },
-  { file: "phone-leaderboard.png", target: "/xi/leaderboard", hidden: false },
-  {
-    file: "phone-leaderboard-hidden.png",
-    target: "/xi/leaderboard",
-    hidden: true,
-  },
-  { file: "phone-awards.png", target: "/xi/awards", hidden: true },
+  { file: "phone-teams.png", target: "/xi/teams" },
+  { file: "phone-leaderboard.png", target: "/xi/leaderboard" },
+  { file: "phone-awards.png", target: "/xi/awards" },
 ];
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -46,24 +39,6 @@ async function query(sql: string, params: unknown[] = []) {
   await client.connect();
   try {
     await client.query(sql, params);
-  } finally {
-    await client.end();
-  }
-}
-
-/** Sets XI's Standings visibility; returns what it was. */
-async function setHidden(hidden: boolean): Promise<boolean> {
-  const client = new Client({ connectionString: process.env.DATABASE_URL });
-  await client.connect();
-  try {
-    const { rows } = await client.query(
-      `select standings_hidden from war_week where edition = 'xi'`,
-    );
-    await client.query(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [hidden],
-    );
-    return rows[0].standings_hidden;
   } finally {
     await client.end();
   }
@@ -117,7 +92,6 @@ async function connect(wsUrl: string) {
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
-  const wasHidden = await setHidden(true);
   const cookie = await createSession();
   const server = spawn("pnpm", ["start", "-p", String(PORT)], {
     env: {
@@ -184,7 +158,6 @@ async function main() {
       mobile: true,
     });
     for (const shot of SHOTS) {
-      await setHidden(shot.hidden);
       await page.send("Page.navigate", { url: `${BASE_URL}${shot.target}` });
       await sleep(2_500);
       const { data } = await page.send<{ data: string }>(
@@ -199,7 +172,6 @@ async function main() {
     chrome?.kill();
     if (server.pid) process.kill(-server.pid, "SIGTERM");
     await query(`delete from "user" where email = $1`, [EMAIL]);
-    await setHidden(wasHidden);
     rmSync(dir, { recursive: true, force: true, maxRetries: 10 });
   }
 }

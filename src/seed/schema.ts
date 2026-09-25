@@ -223,7 +223,6 @@ export const warWeekSeedSchema = z
     editionNumber: z.number().int().positive(),
     year: z.number().int(),
     ...warWeekSettingsSeedShape,
-    standingsHidden: z.boolean(),
     winner: z.string().max(200).nullish(),
     highlights: z.array(z.string().max(500)).default([]),
     days: z.array(daySeedSchema),

@@ -1,73 +1,59 @@
+import { Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
-import { StandingsVisibilityControls } from "@/components/standings-visibility-controls";
+import { buttonVariants } from "@/components/ui/button";
 
 import { loadAdminPage } from "../gate";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Standings visibility · JG War Week",
+  title: "Finale · JG War Week",
 };
 
-export default async function AdminStandingsPage() {
+/**
+ * The Organizer's way into the Finale. Finalized brackets add a
+ * "Finale: <Competition>" option here once they exist (brackets ticket 6);
+ * add them to the list below.
+ */
+export default async function AdminFinalePage() {
   const { warWeek, email, isOrganizer } =
     await loadAdminPage("/admin/standings");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
-  const hidden = warWeek.standingsHidden;
   const edition = warWeek.edition;
 
   return (
-    <AdminShell warWeek={warWeek} email={email} current="Standings visibility">
+    <AdminShell warWeek={warWeek} email={email} current="Finale">
       <div className="flex max-w-2xl flex-col gap-4">
-        <h1 className="text-2xl font-bold">Standings visibility</h1>
-        <p className="text-lg font-semibold">
-          {hidden
-            ? "Standings are hidden 🔒"
-            : "Standings are visible to Participants"}
-        </p>
+        <h1 className="text-2xl font-bold">Finale</h1>
         <p className="text-foreground/70">
-          {hidden ? (
-            <>
-              The home page, leaderboard, Competition pages and Claude show
-              &ldquo;hidden&rdquo; and no numbers. Press Reveal at closing
-              ceremonies: every open{" "}
-              <Link
-                href={`/${edition}`}
-                className="text-primary underline underline-offset-4"
-              >
-                home
-              </Link>{" "}
-              and{" "}
-              <Link
-                href={`/${edition}/leaderboard`}
-                className="text-primary underline underline-offset-4"
-              >
-                leaderboard
-              </Link>{" "}
-              page, on the projector and on phones, plays the Reveal within
-              about 10 seconds.
-            </>
-          ) : (
-            <>
-              Everyone sees the Standings, and Claude answers with them. Hide
-              them again to keep the final days a secret; pressing Reveal later
-              plays the animation again.
-            </>
-          )}
-        </p>
-        <StandingsVisibilityControls hidden={hidden} />
-        <p className="text-foreground/70 text-sm">
+          The Finale is the closing-ceremony screen. Open it on the projector
+          and press Start (or Space): the Standings count in from last place to
+          first, tied places together, and every total lands at once. Replay
+          runs it again. It plays the same Standings as the{" "}
           <Link
-            href="/admin/points"
+            href={`/${edition}/leaderboard`}
             className="text-primary underline underline-offset-4"
           >
-            Points Entries
+            leaderboard
           </Link>{" "}
-          always shows the real Standings to Organizers.
+          and never changes them. Anyone signed in can watch it at{" "}
+          <code>/{edition}/finale</code>.
+        </p>
+        <div>
+          <Link
+            href={`/${edition}/finale`}
+            className={buttonVariants({ size: "lg" })}
+          >
+            <Sparkles aria-hidden />
+            Open Finale
+          </Link>
+        </div>
+        <p className="text-foreground/70 text-sm">
+          Finalized brackets will appear here later, each with its own Finale.
         </p>
       </div>
     </AdminShell>

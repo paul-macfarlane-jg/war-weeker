@@ -14,7 +14,7 @@ import {
   getAdminLedger,
   getPointsEntryFormOptions,
 } from "@/queries/points-entries";
-import { getOrganizerStandings } from "@/queries/standings";
+import { getStandings } from "@/queries/standings";
 
 import { loadAdminPage } from "../gate";
 
@@ -29,7 +29,7 @@ export default async function AdminPointsPage() {
   const [options, ledger, standings] = await Promise.all([
     getPointsEntryFormOptions(warWeek),
     getAdminLedger(warWeek),
-    getOrganizerStandings(warWeek),
+    getStandings(warWeek),
   ]);
 
   return (
@@ -44,14 +44,7 @@ export default async function AdminPointsPage() {
           className="flex min-w-0 flex-col gap-4"
           aria-label="Admin standings"
         >
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold">Current standings</h2>
-            {warWeek.standingsHidden && (
-              <p className="text-foreground/70 text-sm">
-                Hidden from Participants 🔒 Only Organizers see these.
-              </p>
-            )}
-          </div>
+          <h2 className="text-lg font-semibold">Current standings</h2>
           <div className="grid gap-6 xl:grid-cols-2">
             {(standings.main === "team" || standings.team.length > 0) && (
               <div className="flex flex-col gap-2">

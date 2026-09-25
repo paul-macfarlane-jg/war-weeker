@@ -14,14 +14,14 @@ describe("AboutPage", () => {
   const html = renderToStaticMarkup(<AboutPage />);
   const text = html.replace(/<[^>]+>/g, " ");
 
-  it("shows the Reveal as a looping muted video with a poster fallback", () => {
-    expect(html).toContain('src="/about/reveal.mp4"');
-    expect(html).toContain('poster="/about/reveal-poster.png"');
+  it("shows the Finale as a looping muted video with a poster fallback", () => {
+    expect(html).toContain('src="/about/finale.mp4"');
+    expect(html).toContain('poster="/about/finale-poster.png"');
     expect(html).toMatch(/<video[^>]*\bautoplay\b/i);
     expect(html).toMatch(/<video[^>]*\bmuted\b/i);
     expect(html).toMatch(/<video[^>]*\bloop\b/i);
     expect(html).toMatch(/<video[^>]*\bplaysinline\b/i);
-    expect(html).toContain('src="/about/reveal-poster.png"');
+    expect(html).toContain('src="/about/finale-poster.png"');
   });
 
   it("has the six feature cards, each with its still", () => {

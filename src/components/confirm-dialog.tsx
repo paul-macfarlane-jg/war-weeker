@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 /**
- * The one confirm for destructive or hard-to-undo actions. `title` names what will be
- * deleted (or hidden, revealed…); `description` carries what the caller
+ * The one confirm for destructive or hard-to-undo actions. `title` names
+ * what will be deleted (or removed, reset…); `description` carries what the caller
  * knows about it, such as the counts the server reported. Replaces
  * `window.confirm`, so the dialog is themed and reads its text.
  */

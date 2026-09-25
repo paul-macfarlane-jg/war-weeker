@@ -44,7 +44,6 @@ function participantEntry(
 function input(overrides: Partial<StandingsInput>): StandingsInput {
   return {
     mode: "teams",
-    standingsHidden: false,
     teams: [red, blue],
     participants: [neo, trinity, morpheus],
     competitions: [tug, chess, wellness],
@@ -179,7 +178,6 @@ describe("computeStandings", () => {
 
   it.each(cases)("$name", ({ input, main, team, individual }) => {
     const standings = computeStandings(input);
-    if (standings.hidden) throw new Error("expected visible standings");
 
     expect(standings.main).toBe(main);
     expect(rows(standings.team)).toEqual(team);
@@ -188,7 +186,6 @@ describe("computeStandings", () => {
 
   it("carries each Team's color", () => {
     const standings = computeStandings(input({}));
-    if (standings.hidden) throw new Error("expected visible standings");
 
     expect(standings.team.map((row) => row.color)).toEqual([
       blue.color,
@@ -205,25 +202,10 @@ describe("computeStandings", () => {
         ],
       }),
     );
-    if (standings.hidden) throw new Error("expected visible standings");
 
     expect(standings.individual.map((row) => row.team)).toEqual([
       { name: red.name, color: red.color },
       null,
     ]);
-  });
-
-  it("hides both leaderboards, with no numbers, when standings are hidden", () => {
-    const standings = computeStandings(
-      input({
-        standingsHidden: true,
-        pointsEntries: [
-          teamEntry(tug.id, red.id, 3),
-          participantEntry(chess.id, neo.id, 2),
-        ],
-      }),
-    );
-
-    expect(standings).toEqual({ hidden: true });
   });
 });

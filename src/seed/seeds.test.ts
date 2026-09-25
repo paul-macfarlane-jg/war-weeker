@@ -66,12 +66,11 @@ describe("War Week history", () => {
 describe("War Week XI demo", () => {
   const xi = seeds.find((s) => s.edition === "xi")!;
 
-  it("is live, The Matrix, Red vs. Blue, in green on black, standings hidden", () => {
+  it("is live, The Matrix, Red vs. Blue, in green on black", () => {
     expect(xi).toMatchObject({
       year: 2026,
       status: "live",
       storyTheme: "The Matrix",
-      standingsHidden: true,
       primary: "#00ff41",
       background: "#000000",
     });

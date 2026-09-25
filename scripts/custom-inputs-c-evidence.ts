@@ -446,11 +446,6 @@ async function main() {
     );
 
     // --- Check: /xi/leaderboard HTML still matches the smoke regex -------
-    // XI's seed hides Standings until the Finale work lands; reveal them for
-    // this check (restored below) so the team rows render.
-    await query(
-      `update war_week set standings_hidden = false where edition = 'xi'`,
-    );
     const leaderboardBody = await fetch(`${BASE_URL}/xi/leaderboard`, {
       headers: { cookie: `better-auth.session_token=${cookie}` },
     }).then((r) => r.text());
@@ -466,9 +461,6 @@ async function main() {
       `/xi/leaderboard HTML still matches the smoke regex for team "${teamRow?.name}"`,
       smokeRegexMatch,
       `teamRow=${JSON.stringify(teamRow)}`,
-    );
-    await query(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
     );
 
     // --- Check: data-slot="card" count > 0 on each participant page ------

@@ -1,0 +1,24 @@
+leaderboard Team totals: {"Blue":"20","Red":"19.5"}
+ok the leaderboard shows Team totals
+ok 375: opens ready on Start with no Standings rows
+captured 375-1-before-start.png
+captured 375-2-mid-countdown.png
+ok 375: click starts it; mid-countdown last place is shown before first
+ok 375: ends on Replay with the leaderboard's totals
+375: final {"Blue":"20","Red":"19.5"}
+captured 375-3-final.png
+ok 375: no horizontal overflow
+ok 375: Replay plays it again
+ok 1280: opens ready on Start with no Standings rows
+captured 1280-1-before-start.png
+captured 1280-2-mid-countdown.png
+ok 1280: space starts it; mid-countdown last place is shown before first
+ok 1280: ends on Replay with the leaderboard's totals
+1280: final {"Blue":"20","Red":"19.5"}
+captured 1280-3-final.png
+ok 1280: no horizontal overflow
+ok 1280: Replay plays it again
+ok 375: reduced motion goes straight to the final state
+captured 375-4-reduced-motion-final.png
+ok 1280: reduced motion goes straight to the final state
+captured 1280-4-reduced-motion-final.png

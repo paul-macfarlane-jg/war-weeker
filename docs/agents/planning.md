@@ -14,9 +14,9 @@ invoked skill.
 |---|---|---|
 | confirmed team policy | Drizzle schema change | Red-team the plan; update the demo seed and migration together; confirm smoke still passes on seeded local Postgres. |
 | confirmed team policy | Auth or access-control change | Red-team the plan; preserve Google-only sign-in and rejection of non-@jahnelgroup.com emails. |
-| confirmed team policy | Standings hidden/reveal change | Red-team the plan; MCP get_leaderboard must return the hidden result while hidden. |
-| discovered repository fact | Any vertical slice | Gate: type-check, lint, vitest, production build, and smoke (/xi, /xi/leaderboard, /api/mcp) must pass; on failure stop and report. |
-| discovered repository fact | MCP tool change | /api/mcp stays read-only and accepts a signed-in @jahnelgroup.com session, `Authorization: Bearer <MCP_TOKEN>`, or anyone while `MCP_PUBLIC=true` (ticket 21); never expose hidden standings, emails, or the organizer allowlist, since public mode may be on. |
+| confirmed team policy | Finale change | Red-team not required; the Finale must never reorder or recompute Standings. |
+| discovered repository fact | Any vertical slice | Gate: type-check, lint, vitest, production build, and smoke (/xi, /xi/leaderboard, /xi/finale, /api/mcp) must pass; on failure stop and report. |
+| discovered repository fact | MCP tool change | /api/mcp stays read-only and accepts a signed-in @jahnelgroup.com session, `Authorization: Bearer <MCP_TOKEN>`, or anyone while `MCP_PUBLIC=true` (ticket 21); never expose emails or the organizer allowlist, since public mode may be on. |
 | Atlas recommendation | Ticket lacks a clear problem, outcome, or bounded decision | Return to /grill-with-docs, /to-spec, or /to-tickets as appropriate. |
 | unresolved question | Stairs app integration | No documented owner or access for the Stairs deploy; do not plan work that depends on it. |
 
@@ -42,7 +42,7 @@ tickets from unresolved material.
 
 ## Review and publication
 
-Red-team policy: Required only for plans that change the Drizzle schema, better-auth / @jahnelgroup.com access restriction, or standings-hidden/reveal logic; skipped otherwise.
+Red-team policy: Required only for plans that change the Drizzle schema or the better-auth / @jahnelgroup.com access restriction; skipped otherwise (Finale changes included).
 
 Storage: **repository**. Drafts before approval:
 **false**. A repository spec uses

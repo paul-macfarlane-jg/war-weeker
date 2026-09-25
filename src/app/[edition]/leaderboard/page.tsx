@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { AutoRefresh } from "@/components/auto-refresh";
-import { LeaderboardStandings } from "@/components/reveal-standings";
+import { LeaderboardStandings } from "@/components/standings";
 import { getStandings } from "@/queries/standings";
 
 import { getWarWeekForEdition } from "../war-week";

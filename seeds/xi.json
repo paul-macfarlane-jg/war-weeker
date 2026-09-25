@@ -10,7 +10,6 @@
   "teamLabel": "Team",
   "leaderTitle": "Captain",
   "slackChannelUrl": "https://jahnelgroup.slack.com/archives/war-week-xi",
-  "standingsHidden": true,
   "primary": "#00ff41",
   "primaryForeground": "#000000",
   "accent": "#008f11",

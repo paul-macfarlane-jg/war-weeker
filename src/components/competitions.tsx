@@ -66,17 +66,6 @@ export function CompetitionList({
   );
 }
 
-export function PointsHidden() {
-  return (
-    <Card className="gap-1 px-4 py-6 text-center">
-      <p className="text-base font-semibold">Points hidden 🔒</p>
-      <p className="text-foreground/70 text-sm">
-        Points Entries stay hidden until closing ceremonies.
-      </p>
-    </Card>
-  );
-}
-
 export function PointsEntryList({ entries }: { entries: LedgerEntry[] }) {
   if (entries.length === 0) {
     return <p className="text-foreground/70 text-sm">No points yet.</p>;

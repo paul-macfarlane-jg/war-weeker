@@ -3,11 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { AutoRefresh } from "@/components/auto-refresh";
-import {
-  CompetitionFacts,
-  PointsEntryList,
-  PointsHidden,
-} from "@/components/competitions";
+import { CompetitionFacts, PointsEntryList } from "@/components/competitions";
 import { getCompetitionWithLedger } from "@/queries/competitions";
 
 import { getWarWeekForEdition } from "../../war-week";
@@ -49,11 +45,7 @@ export default async function CompetitionPage({
       ) : null}
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">Points Entries</h2>
-        {ledger.hidden ? (
-          <PointsHidden />
-        ) : (
-          <PointsEntryList entries={ledger.entries} />
-        )}
+        <PointsEntryList entries={ledger.entries} />
       </section>
       <AutoRefresh />
     </main>

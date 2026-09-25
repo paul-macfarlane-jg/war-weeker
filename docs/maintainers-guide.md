@@ -78,7 +78,7 @@ before it says it's done.
 | Organizer screens                          | `src/app/admin/` (setup, points, standings, announcements, awards)     |
 | Server actions behind admin forms          | `src/actions/`                                                         |
 | Database reads / writes                    | `src/queries/`, `src/mutations/`                                       |
-| Rules with unit tests (standings, schedule, reveal, access…) | `src/lib/` (`*.test.ts` next to each file)           |
+| Rules with unit tests (standings, schedule, Finale, access…) | `src/lib/` (`*.test.ts` next to each file)           |
 | Database schema                            | `src/db/schema.ts`                                                     |
 | Migrations (generated, never hand-edited)  | `drizzle/`                                                             |
 | Seed data, one file per War Week           | `seeds/i.json` … `seeds/xi.json`                                       |
@@ -95,7 +95,7 @@ The words in code come from [`CONTEXT.md`](../CONTEXT.md). The ones you'll
 see most: **War Week** (one year), **Edition** (`xi`, used in URLs),
 **Story Theme** / **Day Theme** / **Appearance Theme**, **Team**,
 **Participant**, **Organizer**, **Competition**, **Points Entry**,
-**Standings**, **Reveal**, **Award**, **Announcement**, **FAQ Item**,
+**Standings**, **Finale**, **Award**, **Announcement**, **FAQ Item**,
 **Archive**. `CONTEXT.md` also bans a few words in code ("Event", "Member",
 "Match", "Tournament"…); Claude knows, but that's why it renames yours.
 
@@ -140,7 +140,7 @@ Organizer screens already cover most of it. Sign in and go to `/admin`:
 - **`/admin/setup`**: War Week settings (Story Theme, dates, status, mode,
   Team Label, Leader Title, links, Organizers), the Appearance Theme
   (colors, font, logo, banner) and Days with their Day Themes.
-- **`/admin/points`**, **`/admin/standings`** (hide / Reveal),
+- **`/admin/points`**, **`/admin/standings`** (Run the Finale: "Open Finale" at closing ceremonies),
   **`/admin/announcements`**, **`/admin/awards`**.
 
 Teams and roster, Competitions, Schedule and FAQ screens show "Soon" until
@@ -226,7 +226,7 @@ linked from <nav / More>. It needs a JG sign-in like every other page.
 Follow the existing tools in src/mcp/ (metadata in src/mcp/tools.ts, a
 test next to it, registered in src/app/api/mcp/route.ts) and add it to the
 README tool list. It must only return what a signed-in Participant sees: no
-hidden Standings or points while Standings are hidden, no emails.
+emails.
 ```
 
 `/llms.txt` picks the new tool up from `src/mcp/tools.ts`.

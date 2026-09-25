@@ -1,11 +1,11 @@
 import {
   BookOpen,
-  EyeOff,
   LayoutDashboard,
   Medal,
   Megaphone,
   PlusCircle,
   Settings,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -20,7 +20,7 @@ const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
   { label: "Guide", icon: BookOpen, href: "/admin/guide" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
-  { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
+  { label: "Finale", icon: Sparkles, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
   { label: "Awards", icon: Medal, href: "/admin/awards" },
   { label: "Setup", icon: Settings, href: "/admin/setup" },
