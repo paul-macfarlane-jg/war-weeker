@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type SetupScheduleFaqActionResult,
@@ -10,10 +11,14 @@ import {
 } from "@/actions/setup-schedule-faq";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import type { Content } from "@/lib/rich-text/content";
-
-const fieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
 
 const EMPTY_ANSWER: Content = { type: "doc", content: [] };
 
@@ -46,7 +51,11 @@ export function FaqItemForm({
         ? await updateFaqItem(itemId, input)
         : await createFaqItem(input);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success("FAQ Item saved");
       router.push(BACK);
       router.refresh();
     });
@@ -58,22 +67,29 @@ export function FaqItemForm({
       className="flex flex-col gap-5"
       aria-label="FAQ Item"
     >
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Question
-        <input
-          name="question"
-          required
-          maxLength={300}
-          className={fieldClass}
-          value={question}
-          onChange={(event) => setQuestion(event.target.value)}
-        />
-      </label>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="faq-question">Question</FieldLabel>
+          <Input
+            id="faq-question"
+            name="question"
+            required
+            maxLength={300}
+            className="h-11 sm:h-9"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+          />
+        </Field>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Answer</span>
-        <RichTextEditor content={answer} onChange={setAnswer} label="Answer" />
-      </div>
+        <Field>
+          <FieldLabel>Answer</FieldLabel>
+          <RichTextEditor
+            content={answer}
+            onChange={setAnswer}
+            label="Answer"
+          />
+        </Field>
+      </FieldGroup>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" size="lg" disabled={pending}>
@@ -87,12 +103,10 @@ export function FaqItemForm({
         >
           Cancel
         </Button>
-        {result && !result.ok && !pending && (
-          <p role="alert" className="text-destructive text-sm">
-            {result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }

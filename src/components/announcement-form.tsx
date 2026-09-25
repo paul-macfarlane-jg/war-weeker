@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type AnnouncementActionResult,
@@ -10,8 +11,16 @@ import {
 } from "@/actions/announcements";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { Button } from "@/components/ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ANNOUNCEMENT_TITLE_MAX, MAX_VIDEO_LINKS } from "@/lib/announcements";
 import type { Content } from "@/lib/rich-text/content";
@@ -67,7 +76,13 @@ export function AnnouncementForm({
         ? await updateAnnouncement(announcementId, input)
         : await createAnnouncement(input);
       setResult(saved);
-      if (!saved.ok) return;
+      if (!saved.ok) {
+        toast.error(saved.error);
+        return;
+      }
+      toast.success(
+        announcementId ? "Announcement saved" : "Announcement posted",
+      );
       router.push("/admin/announcements");
       router.refresh();
     });
@@ -79,78 +94,92 @@ export function AnnouncementForm({
       className="flex flex-col gap-5"
       aria-label="Announcement"
     >
-      <label className="flex flex-col gap-1 text-sm font-medium">
-        Title
-        <Input
-          name="title"
-          required
-          maxLength={ANNOUNCEMENT_TITLE_MAX}
-          className="h-11 sm:h-9"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-        />
-      </label>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="announcement-title">Title</FieldLabel>
+          <Input
+            id="announcement-title"
+            name="title"
+            required
+            maxLength={ANNOUNCEMENT_TITLE_MAX}
+            className="h-11 sm:h-9"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+        </Field>
 
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Body</span>
-        <RichTextEditor content={body} onChange={setBody} label="Body" />
-      </div>
+        <Field>
+          <FieldLabel>Body</FieldLabel>
+          <RichTextEditor content={body} onChange={setBody} label="Body" />
+        </Field>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="text-sm font-medium">Video links</legend>
-        <p className="text-foreground/60 text-xs">
-          YouTube, Loom, Vimeo or Google Drive links only
-        </p>
-        {videoUrls.map((url, index) => {
-          const hint =
-            url.trim() !== "" && videoEmbedUrl(url.trim()) === null
-              ? "Not a recognized YouTube, Loom, Vimeo or Google Drive video link"
-              : null;
-          return (
-            <div key={index} className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <Input
-                  type="url"
-                  aria-label={`Video link ${index + 1}`}
-                  className="h-11 flex-1 sm:h-9"
-                  value={url}
-                  onChange={(event) => setVideoUrl(index, event.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setVideoUrls((urls) => urls.filter((_, i) => i !== index))
-                  }
-                >
-                  Remove
-                </Button>
-              </div>
-              {hint && (
-                <p className="text-xs font-medium text-amber-600">{hint}</p>
-              )}
+        <FieldSet>
+          <FieldLegend variant="label">Video links</FieldLegend>
+          <FieldDescription>
+            YouTube, Loom, Vimeo or Google Drive links only
+          </FieldDescription>
+          <FieldGroup>
+            {videoUrls.map((url, index) => {
+              const hint =
+                url.trim() !== "" && videoEmbedUrl(url.trim()) === null
+                  ? "Not a recognized YouTube, Loom, Vimeo or Google Drive video link"
+                  : null;
+              return (
+                <Field key={index}>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="url"
+                      aria-label={`Video link ${index + 1}`}
+                      className="h-11 flex-1 sm:h-9"
+                      value={url}
+                      onChange={(event) =>
+                        setVideoUrl(index, event.target.value)
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setVideoUrls((urls) =>
+                          urls.filter((_, i) => i !== index),
+                        )
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                  {hint && <FieldError>{hint}</FieldError>}
+                </Field>
+              );
+            })}
+          </FieldGroup>
+          {videoUrls.length < MAX_VIDEO_LINKS && (
+            <div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setVideoUrls((urls) => [...urls, ""])}
+              >
+                Add video link
+              </Button>
             </div>
-          );
-        })}
-        {videoUrls.length < MAX_VIDEO_LINKS && (
-          <div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setVideoUrls((urls) => [...urls, ""])}
-            >
-              Add video link
-            </Button>
-          </div>
-        )}
-      </fieldset>
+          )}
+        </FieldSet>
 
-      <Label className="min-h-11">
-        <Switch name="pinned" checked={pinned} onCheckedChange={setPinned} />
-        Pinned (shown first in the feed and on the home page)
-      </Label>
+        <Field orientation="horizontal">
+          <Switch
+            id="announcement-pinned"
+            name="pinned"
+            checked={pinned}
+            onCheckedChange={setPinned}
+          />
+          <FieldLabel htmlFor="announcement-pinned">
+            Pinned (shown first in the feed and on the home page)
+          </FieldLabel>
+        </Field>
+      </FieldGroup>
 
       <div className="flex items-center gap-3">
         <Button type="submit" size="lg" disabled={pending}>
@@ -168,12 +197,10 @@ export function AnnouncementForm({
         >
           Cancel
         </Button>
-        {result && !result.ok && !pending && (
-          <p role="alert" className="text-destructive text-sm">
-            {result.error}
-          </p>
-        )}
       </div>
+      {result && !result.ok && !pending && (
+        <FieldError>{result.error}</FieldError>
+      )}
     </form>
   );
 }
