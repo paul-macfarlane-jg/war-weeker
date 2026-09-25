@@ -42,7 +42,8 @@ export function OrganizerEmailChips({
   }
 
   function remove(email: string) {
-    onChange(inputFromEmails(emails.filter((e) => e !== email)));
+    const target = email.toLowerCase();
+    onChange(inputFromEmails(emails.filter((e) => e.toLowerCase() !== target)));
   }
 
   return (
@@ -82,7 +83,8 @@ export function OrganizerEmailChips({
         })}
       </ul>
       <Input
-        aria-label="Add Organizer emails"
+        aria-labelledby="organizer-emails-label"
+        aria-describedby="organizer-emails-help"
         type="text"
         inputMode="email"
         autoComplete="off"
@@ -93,7 +95,10 @@ export function OrganizerEmailChips({
         onChange={(event) => {
           const text = event.target.value;
           if (text.includes(",")) add(text);
-          else setDraft(text);
+          else {
+            setDraft(text);
+            setRejected([]);
+          }
         }}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === ",") {
@@ -103,7 +108,13 @@ export function OrganizerEmailChips({
         }}
         onPaste={(event) => {
           event.preventDefault();
-          add(`${draft} ${event.clipboardData.getData("text")}`);
+          const pasted = event.clipboardData.getData("text");
+          const input = event.currentTarget;
+          const start = input.selectionStart ?? draft.length;
+          const end = input.selectionEnd ?? draft.length;
+          const combined = draft.slice(0, start) + pasted + draft.slice(end);
+          if (/[\s,]/.test(combined)) add(combined);
+          else setDraft(combined);
         }}
         onBlur={() => {
           if (draft.trim()) add(draft);
@@ -115,7 +126,7 @@ export function OrganizerEmailChips({
           {rejected.join(", ")}
         </p>
       )}
-      <p className="text-foreground/60 text-xs">
+      <p id="organizer-emails-help" className="text-foreground/60 text-xs">
         Press Enter or a comma to add, or paste a list. Everyone listed can use
         these admin pages.
       </p>

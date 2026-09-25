@@ -4,9 +4,8 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { placementLabel } from "@/lib/competitions";
+import { MAX_PLACEMENTS, placementLabel } from "@/lib/competitions";
 import {
-  MAX_PLACES,
   QUICK_FILL,
   placementPointsFromRows,
   placementRowErrors,
@@ -28,9 +27,19 @@ export function PlacementPointsRows({
   onChange: (value: string) => void;
 }) {
   const [rows, setRowsState] = useState(() => rowsFromPlacementPoints(value));
-  // Follow the form when it resets (the add row clears after saving).
-  if (placementPointsFromRows(rows) !== value) {
-    setRowsState(rowsFromPlacementPoints(value));
+  // Tracks the last `value` this render saw, so the rows only resync when
+  // the form actually resets `value` out from under them (typing or adding
+  // a blank row also changes `value`, via our own `onChange` below, but
+  // that's not a reset). Comparing canonicalized forms keeps a
+  // non-canonical `value` (e.g. "5,3,1") from mismatching itself forever.
+  const [lastValue, setLastValue] = useState(value);
+  if (value !== lastValue) {
+    setLastValue(value);
+    const isReset =
+      value === "" ||
+      placementPointsFromRows(rows) !==
+        placementPointsFromRows(rowsFromPlacementPoints(value));
+    if (isReset) setRowsState(rowsFromPlacementPoints(value));
   }
 
   function setRows(next: string[]) {
@@ -78,7 +87,7 @@ export function PlacementPointsRows({
         </ol>
       )}
       <div className="flex flex-wrap gap-2">
-        {rows.length < MAX_PLACES && (
+        {rows.length < MAX_PLACEMENTS && (
           <Button
             type="button"
             variant="outline"

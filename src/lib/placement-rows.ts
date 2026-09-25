@@ -1,11 +1,10 @@
 /**
  * Placement Points as numbered rows (1st, 2nd…) in the Competition form.
  * The rows still submit the comma-separated text `parseCompetitionInput`
- * validates; these live errors only mirror its wording.
+ * validates; these live errors mirror the server's rules, reusing its
+ * wording where it already has one.
  */
 import { MAX_PLACEMENTS } from "@/lib/competitions";
-
-export const MAX_PLACES = MAX_PLACEMENTS;
 
 /** The "5 · 3 · 1" quick fill. */
 export const QUICK_FILL = ["5", "3", "1"];
@@ -32,8 +31,15 @@ export function placementRowErrors(
 ): string[] {
   const values = rows.map((row) => row.trim()).filter(Boolean);
   const errors: string[] = [];
-  if (values.length > MAX_PLACES) {
-    errors.push(`Placement Points cover at most ${MAX_PLACES} places.`);
+  const lastFilled = rows.reduce(
+    (last, row, index) => (row.trim() ? index : last),
+    -1,
+  );
+  if (rows.slice(0, lastFilled).some((row) => !row.trim())) {
+    errors.push("Fill in every place above the last one, or remove it.");
+  }
+  if (values.length > MAX_PLACEMENTS) {
+    errors.push(`Placement Points cover at most ${MAX_PLACEMENTS} places.`);
   }
   if (!values.every((value) => NUMBER.test(value))) {
     errors.push("Each place's Placement Points must be a number.");

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { MAX_PLACEMENTS } from "@/lib/competitions";
 import {
-  MAX_PLACES,
   QUICK_FILL,
   placementPointsFromRows,
   placementRowErrors,
@@ -68,10 +68,20 @@ describe("placementRowErrors", () => {
   });
 
   it("caps the rows at five places", () => {
-    expect(MAX_PLACES).toBe(5);
+    expect(MAX_PLACEMENTS).toBe(5);
     expect(placementRowErrors(["6", "5", "4", "3", "2", "1"], "")).toEqual([
       "Placement Points cover at most 5 places.",
     ]);
+  });
+
+  it("flags a blank row sitting above a filled one", () => {
+    expect(placementRowErrors(["5", "", "1"], "")).toEqual([
+      "Fill in every place above the last one, or remove it.",
+    ]);
+  });
+
+  it("ignores a blank trailing row", () => {
+    expect(placementRowErrors(["5", "3", ""], "")).toEqual([]);
   });
 
   it("offers a 5 · 3 · 1 quick fill that is itself valid", () => {

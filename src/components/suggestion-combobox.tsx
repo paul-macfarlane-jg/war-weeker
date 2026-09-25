@@ -48,6 +48,7 @@ export function SuggestionCombobox({
         placeholder={placeholder}
         maxLength={maxLength}
         autoComplete="off"
+        showTrigger={false}
         className="border-border h-9 w-full"
       />
       <ComboboxContent>

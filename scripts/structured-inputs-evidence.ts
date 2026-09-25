@@ -259,8 +259,6 @@ async function main() {
     };
     const byText = (scope: string, selector: string, text: string) =>
       `[...(${scope}).querySelectorAll(${JSON.stringify(selector)})].find((e) => e.textContent.trim() === ${JSON.stringify(text)})`;
-    const comboTrigger = (input: string) =>
-      `(${input}).closest('[data-slot="input-group"]').querySelector("button")`;
     const openItems = () =>
       evaluate<string[]>(
         `[...document.querySelectorAll('[data-slot="combobox-item"]')].map((e) => e.textContent.trim())`,
@@ -272,7 +270,10 @@ async function main() {
     await open("/admin/setup/competitions");
     const newCompetition = `document.querySelector('form[aria-label="New Competition"]')`;
     const groupInput = `(${newCompetition}).querySelector('input[name="group"]')`;
-    await click(comboTrigger(groupInput), "start");
+    // The suggestion trigger button has no accessible name (fix 4), so the
+    // combobox opens on an input click instead (Base UI's default
+    // `openOnInputClick`).
+    await click(groupInput, "start");
     const groups = await openItems();
     check(
       "Group combobox suggests this War Week's Competition Groups",
@@ -341,7 +342,7 @@ async function main() {
     // Company Tag combobox, open with tags from every War Week.
     await open("/admin/setup/teams");
     const tagInput = `document.querySelector('form[aria-label="New Participant"] input[name="companyTag"]')`;
-    await click(comboTrigger(tagInput), "start");
+    await click(tagInput, "start");
     const tags = await openItems();
     check(
       "Company Tag combobox suggests tags from any War Week",
@@ -365,7 +366,7 @@ async function main() {
         selfRemove.title === "You can't remove your own email",
       JSON.stringify(selfRemove),
     );
-    const chipInput = `document.querySelector('input[aria-label="Add Organizer emails"]')`;
+    const chipInput = `document.querySelector('input[aria-labelledby="organizer-emails-label"]')`;
     await click(chipInput);
     await type(`${REJECTED}, ${NEW_ORGANIZER}`);
     const alert = await evaluate<string>(
