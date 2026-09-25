@@ -4,7 +4,11 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import { RosterEditor, TeamsEditor } from "@/components/teams-editor";
-import { getSetupParticipants, getSetupTeams } from "@/queries/setup";
+import {
+  getCompanyTagSuggestions,
+  getSetupParticipants,
+  getSetupTeams,
+} from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
@@ -17,9 +21,10 @@ export default async function SetupTeamsPage() {
     await loadAdminPage("/admin/setup/teams");
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
-  const [teams, participants] = await Promise.all([
+  const [teams, participants, tagSuggestions] = await Promise.all([
     getSetupTeams(warWeek),
     getSetupParticipants(warWeek),
+    getCompanyTagSuggestions(),
   ]);
   const { teamLabel, leaderTitle } = warWeek;
   const isTeams = warWeek.mode === "teams";
@@ -59,6 +64,7 @@ export default async function SetupTeamsPage() {
             teams={isTeams ? teams : []}
             teamLabel={teamLabel}
             leaderTitle={leaderTitle}
+            tagSuggestions={tagSuggestions}
           />
         </section>
       </section>

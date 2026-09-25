@@ -32,6 +32,7 @@ export default async function WarWeekSettingsPage() {
         <WarWeekSettingsForm
           key={warWeek.updatedAt.toISOString()}
           initial={settingsInputFrom(warWeek)}
+          actorEmail={email}
         />
       </section>
     </AdminShell>

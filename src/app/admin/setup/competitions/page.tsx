@@ -4,7 +4,10 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { CompetitionsEditor } from "@/components/competitions-editor";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
-import { getSetupCompetitions } from "@/queries/setup";
+import {
+  getCompetitionGroupSuggestions,
+  getSetupCompetitions,
+} from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
@@ -18,7 +21,10 @@ export default async function SetupCompetitionsPage() {
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
 
-  const competitions = await getSetupCompetitions(warWeek);
+  const [competitions, groupSuggestions] = await Promise.all([
+    getSetupCompetitions(warWeek),
+    getCompetitionGroupSuggestions(warWeek),
+  ]);
 
   return (
     <AdminShell warWeek={warWeek} email={email} current="Setup">
@@ -39,6 +45,7 @@ export default async function SetupCompetitionsPage() {
         <SeedOverwriteWarning />
         <CompetitionsEditor
           competitions={competitions}
+          groupSuggestions={groupSuggestions}
           mode={warWeek.mode}
           teamLabel={warWeek.teamLabel}
         />

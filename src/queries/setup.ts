@@ -1,4 +1,4 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq, isNotNull } from "drizzle-orm";
 
 import { DBOrTx, db } from "@/db";
 import {
@@ -149,4 +149,34 @@ export async function getSetupCompetitions(
     .from(competition)
     .where(eq(competition.warWeekId, warWeek.id))
     .orderBy(asc(competition.name));
+}
+
+/** Competition Groups already used in a War Week, sorted, for suggestions. */
+export async function getCompetitionGroupSuggestions(
+  warWeek: Pick<WarWeek, "id">,
+  dbOrTx: DBOrTx = db,
+): Promise<string[]> {
+  const rows = await dbOrTx
+    .selectDistinct({ group: competition.competitionGroup })
+    .from(competition)
+    .where(
+      and(
+        eq(competition.warWeekId, warWeek.id),
+        isNotNull(competition.competitionGroup),
+      ),
+    )
+    .orderBy(asc(competition.competitionGroup));
+  return rows.flatMap((row) => (row.group ? [row.group] : []));
+}
+
+/** Company Tags used in any War Week, sorted by name, for suggestions. */
+export async function getCompanyTagSuggestions(
+  dbOrTx: DBOrTx = db,
+): Promise<string[]> {
+  const rows = await dbOrTx
+    .selectDistinct({ tag: participant.companyTag })
+    .from(participant)
+    .where(isNotNull(participant.companyTag))
+    .orderBy(asc(participant.companyTag));
+  return rows.flatMap((row) => (row.tag ? [row.tag] : []));
 }
