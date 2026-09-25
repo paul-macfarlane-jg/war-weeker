@@ -8,7 +8,9 @@ import {
   createPointsEntry,
   updatePointsEntry,
 } from "@/actions/points-entries";
+import { EntityCombobox } from "@/components/entity-combobox";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   formatMaxPoints,
   placementLabel,
@@ -16,13 +18,7 @@ import {
 } from "@/lib/competitions";
 import { formatPoints } from "@/lib/points";
 import { overMaxWarning } from "@/lib/points-entry";
-import type {
-  PointsEntryFormOptions,
-  PointsEntryFormTarget,
-} from "@/queries/points-entries";
-
-const fieldClass =
-  "border-border bg-background h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
+import type { PointsEntryFormOptions } from "@/queries/points-entries";
 
 type Initial = {
   competitionId: string;
@@ -30,10 +26,6 @@ type Initial = {
   points: string;
   note: string;
 };
-
-function targetLabel(target: PointsEntryFormTarget) {
-  return target.team ? `${target.name} (${target.team})` : target.name;
-}
 
 /**
  * Add or edit one Points Entry. The target list follows the chosen
@@ -106,60 +98,57 @@ export function PointsEntryForm({
     >
       <label className="flex flex-col gap-1 text-sm font-medium">
         Competition
-        <select
-          name="competitionId"
+        <EntityCombobox
+          aria-label="Competition"
           required
-          className={fieldClass}
+          placeholder="Choose a Competition…"
+          items={options.competitions.map((c) => ({
+            id: c.id,
+            label: c.name,
+            detail: `${c.scoring === "team" ? teamLabel : "Individual"} · ${formatMaxPoints(c.maxPoints)}`,
+          }))}
           value={competitionId}
-          onChange={(event) => {
-            setCompetitionId(event.target.value);
+          onValueChange={(id) => {
+            setCompetitionId(id);
             setTargetId("");
             setResult(null);
           }}
-        >
-          <option value="">Choose a Competition…</option>
-          {options.competitions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {`${c.name} · ${c.scoring === "team" ? teamLabel : "Individual"} · ${formatMaxPoints(c.maxPoints)}`}
-            </option>
-          ))}
-        </select>
+        />
       </label>
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         {competition?.scoring === "individual" ? "Participant" : teamLabel}
-        <select
-          name="targetId"
+        <EntityCombobox
+          aria-label={
+            competition?.scoring === "individual" ? "Participant" : teamLabel
+          }
           required
           disabled={!competition}
-          className={fieldClass}
-          value={targetId}
-          onChange={(event) => setTargetId(event.target.value)}
-        >
-          <option value="">
-            {competition
+          placeholder={
+            competition
               ? competition.scoring === "team"
                 ? `Choose a ${teamLabel}…`
                 : "Choose a Participant…"
-              : "Choose a Competition first"}
-          </option>
-          {targets.map((t) => (
-            <option key={t.id} value={t.id}>
-              {targetLabel(t)}
-            </option>
-          ))}
-        </select>
+              : "Choose a Competition first"
+          }
+          items={targets.map((t) => ({
+            id: t.id,
+            label: t.name,
+            detail: t.team ?? undefined,
+          }))}
+          value={targetId}
+          onValueChange={setTargetId}
+        />
       </label>
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         Points
-        <input
+        <Input
           name="points"
           required
           type="number"
           step="0.01"
           inputMode="decimal"
-          className={fieldClass}
           value={points}
           onChange={(event) => setPoints(event.target.value)}
         />
@@ -193,10 +182,9 @@ export function PointsEntryForm({
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         Note (optional)
-        <input
+        <Input
           name="note"
           maxLength={500}
-          className={fieldClass}
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />
