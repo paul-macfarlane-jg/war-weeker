@@ -137,7 +137,7 @@ export function WarWeekSettingsForm({
     >
       <FieldSet>
         <FieldLegend className="mb-2 font-semibold">Story</FieldLegend>
-        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
             {text("storyTheme", "Story Theme", {
               required: true,
@@ -178,7 +178,7 @@ export function WarWeekSettingsForm({
 
       <FieldSet>
         <FieldLegend className="mb-2 font-semibold">Links</FieldLegend>
-        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {text("slackChannelUrl", "Slack URL", {
             type: "url",
             required: true,
@@ -205,7 +205,7 @@ export function WarWeekSettingsForm({
         <FieldLegend className="mb-2 font-semibold">
           Appearance Theme
         </FieldLegend>
-        <FieldGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLOR_FIELDS.map(({ field, label }) => (
             <Field key={field}>
               <FieldLabel htmlFor={field}>{label} color</FieldLabel>
@@ -229,7 +229,7 @@ export function WarWeekSettingsForm({
             />
           </Field>
         </FieldGroup>
-        <FieldGroup className="grid gap-4 sm:grid-cols-2">
+        <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {text("logoUrl", "Logo URL", {
             placeholder: "/themes/… or https://…",
           })}
