@@ -94,6 +94,7 @@ export async function getAdminLedger(
     .select({
       id: pointsEntry.id,
       competition: competition.name,
+      competitionId: competition.id,
       teamName: team.name,
       participantName: participant.displayName,
       points: pointsEntry.points,
@@ -102,6 +103,7 @@ export async function getAdminLedger(
       enteredAt: pointsEntry.enteredAt,
       createdAt: pointsEntry.createdAt,
       updatedAt: pointsEntry.updatedAt,
+      generatedByBracket: pointsEntry.generatedByBracket,
     })
     .from(pointsEntry)
     .innerJoin(competition, eq(competition.id, pointsEntry.competitionId))

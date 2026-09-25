@@ -5,6 +5,7 @@ import {
   sql,
 } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -48,6 +49,24 @@ export const scheduleItemCategory = pgEnum("schedule_item_category", [
 export const competitionScoring = pgEnum("competition_scoring", [
   "team",
   "individual",
+]);
+
+export const competitionFormat = pgEnum("competition_format", [
+  "points",
+  "single-elimination",
+]);
+
+export const bracketPoints = pgEnum("bracket_points", [
+  "placings",
+  "per-heat",
+  "both",
+]);
+
+export const heatStatus = pgEnum("heat_status", [
+  "pending",
+  "ready",
+  "played",
+  "forfeit",
 ]);
 
 export const warWeek = pgTable(
@@ -175,6 +194,12 @@ export const competition = pgTable(
     scoring: competitionScoring("scoring").notNull(),
     countsTowardTeam: boolean("counts_toward_team").notNull().default(false),
     competitionGroup: varchar("competition_group", { length: 120 }),
+    format: competitionFormat("format").notNull().default("points"),
+    bracketPoints: bracketPoints("bracket_points")
+      .notNull()
+      .default("placings"),
+    // Set while the Bracket's generated Points Entries exist.
+    finalizedAt: timestamp("finalized_at", { withTimezone: true }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -237,6 +262,10 @@ export const pointsEntry = pgTable(
       .defaultNow(),
     // Set only on rows that came from a seed file; see CONTEXT.md.
     seedKey: varchar("seed_key", { length: 80 }),
+    // Written by finalizing a Bracket; changed only through the Bracket.
+    generatedByBracket: boolean("generated_by_bracket")
+      .notNull()
+      .default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -246,6 +275,77 @@ export const pointsEntry = pgTable(
       "points_entry_exactly_one_target",
       sql`num_nonnulls(${table.teamId}, ${table.participantId}) = 1`,
     ),
+  ],
+);
+
+/** A Team or Participant entered in a Competition's Bracket. */
+export const entrant = pgTable(
+  "entrant",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competition.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references(() => team.id, {
+      onDelete: "cascade",
+    }),
+    participantId: uuid("participant_id").references(() => participant.id, {
+      onDelete: "cascade",
+    }),
+    seedPosition: integer("seed_position").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    unique().on(table.competitionId, table.teamId),
+    unique().on(table.competitionId, table.participantId),
+    unique().on(table.competitionId, table.seedPosition),
+    check(
+      "entrant_exactly_one_target",
+      sql`num_nonnulls(${table.teamId}, ${table.participantId}) = 1`,
+    ),
+  ],
+);
+
+/** One game of a single-stage Bracket; its winner feeds `winnerToHeatId`. */
+export const heat = pgTable(
+  "heat",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    competitionId: uuid("competition_id")
+      .notNull()
+      .references(() => competition.id, { onDelete: "cascade" }),
+    round: integer("round").notNull(),
+    position: integer("position").notNull(),
+    status: heatStatus("status").notNull().default("pending"),
+    winnerToHeatId: uuid("winner_to_heat_id").references(
+      (): AnyPgColumn => heat.id,
+      { onDelete: "set null" },
+    ),
+    winnerToSlot: integer("winner_to_slot"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [unique().on(table.competitionId, table.round, table.position)],
+);
+
+/** An Entrant in a Heat's slot, with its place and score once decided. */
+export const heatEntrant = pgTable(
+  "heat_entrant",
+  {
+    heatId: uuid("heat_id")
+      .notNull()
+      .references(() => heat.id, { onDelete: "cascade" }),
+    entrantId: uuid("entrant_id")
+      .notNull()
+      .references(() => entrant.id, { onDelete: "cascade" }),
+    slot: integer("slot").notNull(),
+    place: integer("place"),
+    score: varchar("score", { length: 40 }),
+    forfeited: boolean("forfeited").notNull().default(false),
+  },
+  (table) => [
+    primaryKey({ columns: [table.heatId, table.slot] }),
+    unique().on(table.heatId, table.entrantId),
   ],
 );
 
@@ -502,3 +602,6 @@ export type Award = InferSelectModel<typeof award>;
 export type AwardParticipant = InferSelectModel<typeof awardParticipant>;
 export type Announcement = InferSelectModel<typeof announcement>;
 export type FaqItem = InferSelectModel<typeof faqItem>;
+export type EntrantRow = InferSelectModel<typeof entrant>;
+export type HeatRow = InferSelectModel<typeof heat>;
+export type HeatEntrantRow = InferSelectModel<typeof heatEntrant>;

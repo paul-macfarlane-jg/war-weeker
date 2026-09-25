@@ -6,6 +6,7 @@ import {
   awardParticipant,
   competition,
   day,
+  entrant,
   participant,
   pointsEntry,
   scheduleItem,
@@ -319,6 +320,11 @@ export async function deleteTeam(
           "Points Entries",
         ],
         [await tx.$count(award, eq(award.teamId, id)), "Award", "Awards"],
+        [
+          await tx.$count(entrant, eq(entrant.teamId, id)),
+          "Bracket Entrant",
+          "Bracket Entrants",
+        ],
       ],
       "Move or delete them first.",
     );
@@ -447,6 +453,11 @@ export async function deleteParticipant(
           "Award",
           "Awards",
         ],
+        [
+          await tx.$count(entrant, eq(entrant.participantId, id)),
+          "Bracket Entrant",
+          "Bracket Entrants",
+        ],
       ],
       "Delete them or remove the Participant from them first.",
     );
@@ -492,7 +503,7 @@ async function competitionRefusal(
       ),
     };
   }
-  return competitionGuardError(values, {
+  const refusal = competitionGuardError(values, {
     mode,
     nameTaken: await taken(
       tx,
@@ -503,6 +514,21 @@ async function competitionRefusal(
     ),
     existing,
   });
+  if (refusal || !exceptId || existing?.scoring === values.scoring) {
+    return refusal;
+  }
+  // A Bracket's Entrants are Teams or Participants by its scoring.
+  return inUseError(
+    "Competition",
+    [
+      [
+        await tx.$count(entrant, eq(entrant.competitionId, exceptId)),
+        "Entrant",
+        "Entrants",
+      ],
+    ],
+    "Remove them before changing its scoring.",
+  );
 }
 
 export async function createCompetition(

@@ -84,6 +84,11 @@ export function YouProvider({
   );
 }
 
+/** Who "you" are in this War Week, or null when nobody is known. */
+export function useYou(): You {
+  return useContext(YouContext).you;
+}
+
 /** The "You" tag, rendered only in the signed-in person's own row. */
 export function YouTag({ participantId }: { participantId: string }) {
   const { you } = useContext(YouContext);

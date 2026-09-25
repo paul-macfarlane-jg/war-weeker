@@ -131,15 +131,24 @@ export type AdminLedgerRow = Pick<
   | "enteredAt"
   | "createdAt"
   | "updatedAt"
+  | "generatedByBracket"
 > & {
   competition: string;
+  competitionId: string;
   teamName: string | null;
   participantName: string | null;
 };
 
 export type AdminLedgerEntry = Pick<
   AdminLedgerRow,
-  "id" | "competition" | "points" | "note" | "enteredByEmail" | "enteredAt"
+  | "id"
+  | "competition"
+  | "competitionId"
+  | "points"
+  | "note"
+  | "enteredByEmail"
+  | "enteredAt"
+  | "generatedByBracket"
 > & {
   target: string;
   /** When the entry was last edited, or null if it never was. */
@@ -161,11 +170,13 @@ export function buildAdminLedger(rows: AdminLedgerRow[]): AdminLedgerEntry[] {
     .map((row) => ({
       id: row.id,
       competition: row.competition,
+      competitionId: row.competitionId,
       target: row.participantName ?? row.teamName ?? "Unknown",
       points: row.points,
       note: row.note,
       enteredByEmail: row.enteredByEmail,
       enteredAt: row.enteredAt,
+      generatedByBracket: row.generatedByBracket,
       editedAt:
         row.updatedAt.getTime() - row.createdAt.getTime() > 1000
           ? row.updatedAt

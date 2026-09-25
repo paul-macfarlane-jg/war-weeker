@@ -101,3 +101,34 @@ Two fresh-context reviews (opus): technical/spec/access (adversarial, since this
 | `pnpm gate` | PASS | `test-results/brackets-lifecycle-gate/gate.txt` (698 tests, smoke 144 ok) |
 
 Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3192 pnpm db:migrate && pnpm gate`.
+
+## [AI CODE REVIEW] — Bracket core loop (PR 3)
+
+One fresh-context review (opus), both axes on the engine/schema and UI commits.
+
+| Axis | Severity | Finding | Disposition |
+|---|---|---|---|
+| technical | blocking | Re-roll disabled after Generate (Entrants compared in Seed Position order) | resolved `3111d69` (compared as a set) |
+| technical | blocking | A seed reload could reset a Bracket's Format to `points` and strand it | resolved `3111d69` (`format` insert-only) |
+| technical | blocking | Bracket smoke check wrote the dropped `standings_hidden` (gate failed after the stack merge) | resolved `3111d69` |
+| technical | non-blocking | `per-heat` / `both` accepted but ignored | resolved `3111d69` (placings only) |
+| technical | non-blocking | Editing a decided Heat resets later Heats even when only a score changes; the reset count includes Heats with no result | accepted (story 16 read literally); refine later |
+| technical | non-blocking | No check constraints on `slot`/`place`; no composite FK from `heat_entrant` to the Competition | accepted: the engine is the only writer |
+| technical | non-blocking | Participant page sends the War Week's Participant→Team id map (ids only) | accepted |
+| standards | non-blocking | a raw `<button>` overlay on Heat cards; "Record result" copy; Format set only in the builder (story 7 says on create) | accepted |
+
+## [CLOSEOUT] — Bracket core loop (PR 3)
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| Engine (single elimination): generation 2–17 with byes, advancement, forfeits, reset of later Heats, final placings and ties, `pointsFor` placings | PASS | `src/lib/bracket/*.test.ts` in the gate (772 tests) |
+| Finalize: generated entries in Standings; un-finalize removes; re-finalize same; hand-entered untouched | PASS | `test-results/brackets-loop/round-trips.txt` (9 ok); `src/mutations/brackets.test.ts`; smoke "bracket loop" |
+| "From bracket" in the ledger, not editable there | PASS | round-trips; mutation guard tests |
+| Screenshots 375/1280 of the builder, results screen and participant view, XI + dark IX | PASS | `test-results/brackets-loop/*.png` |
+| Zero horizontal overflow 375/768/1280 | PASS | `test-results/brackets-overflow/overflow.txt` (all 0px, incl. the Heat Sheet open) |
+| Other Formats, Squads, self-report, Now/Next, MCP `get_bracket`, Archive, seeds, Slack | DEFERRED | spec Decisions |
+| `pnpm gate` | PASS | `test-results/brackets-core-gate/gate.txt` (772 tests, smoke 145 ok) |
+
+Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3193 pnpm db:migrate && pnpm gate`; evidence `pnpm db:migrate && pnpm seed:all && pnpm build && pnpm tsx scripts/brackets-evidence.ts`.
+
+Isolation check: K2 and K3 ran in parallel from the Phase B head as planned. Their only overlap was the migration journal/snapshot (both generated 0005) plus `src/db/schema.ts`, `CONTEXT.md` and `scripts/smoke.ts` hunks. All of it was resolved at integration by regenerating the migrations in stack order.

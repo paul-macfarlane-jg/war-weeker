@@ -306,7 +306,7 @@ Each ticket is a vertical slice that passes `pnpm gate` alone.
 Recorded overnight 2026-09-25 by the orchestrator (Paul asleep); each is Paul's to overrule.
 
 - **Red-team adjudication** (`/atlas-red-team`, 2 blocking, 6 warnings, 10 minors):
-  - B1 (Squads have no Points Entry target) and B2 (the Slack champion post needs the unbuilt webhook): Squads and the Slack post are deferred, so neither blocks this delivery. B1 needs a product decision before ticket 11.
+  - B1 (Squads have no Points Entry target) and B2 (the Slack champion post needs the unbuilt webhook): Squads and the Slack post are deferred, so neither blocks this delivery. B1 resolved by Paul (2026-09-25 morning): Squads generally stay inside one Team, so a Squad's points go to its Team in team scoring. Proposed for ticket 11: refuse a Squad whose Participants span Teams.
   - W1: `status`, `winner` and `highlights` are seed-initialized-only (set on insert, never overwritten on reload).
   - W2: manual drag seeding is deferred; seeding is random with a one-tap re-roll.
   - W3: the "banned-term scan" is the ticket 1 grep over `src scripts seeds docs CONTEXT.md README.md`.
