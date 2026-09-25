@@ -1,19 +1,9 @@
-import {
-  ChevronRight,
-  CircleHelp,
-  Download,
-  History,
-  Info,
-  Medal,
-  Shield,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SignOutButton } from "@/components/auth-buttons";
-import { rosterHeading } from "@/lib/roster";
+import { moreLinks } from "@/components/more-menu";
 
 import { getNavAccount, getWarWeekForEdition } from "../war-week";
 
@@ -25,26 +15,12 @@ export default async function MorePage({
   if (!warWeek) notFound();
   const account = await getNavAccount();
 
-  const links = [
-    {
-      label: "Competitions",
-      href: `/${warWeek.edition}/competitions`,
-      icon: Trophy,
-    },
-    {
-      label: rosterHeading(warWeek.mode, warWeek.teamLabel),
-      href: `/${warWeek.edition}/teams`,
-      icon: Users,
-    },
-    { label: "Awards", href: `/${warWeek.edition}/awards`, icon: Medal },
-    { label: "FAQ", href: `/${warWeek.edition}/faq`, icon: CircleHelp },
-    { label: "War Week history", href: "/history", icon: History },
-    { label: "Install app", href: "/install", icon: Download },
-    { label: "About JG War Week", href: "/about", icon: Info },
-    ...(account.isOrganizer
-      ? [{ label: "Admin", href: "/admin", icon: Shield }]
-      : []),
-  ];
+  const links = moreLinks({
+    edition: warWeek.edition,
+    mode: warWeek.mode,
+    teamLabel: warWeek.teamLabel,
+    isOrganizer: account.isOrganizer,
+  });
 
   return (
     <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl">
