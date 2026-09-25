@@ -65,3 +65,6 @@ evidence (CDP script inserts a session).
 ## [PROGRESS]
 
 - 2026-09-25 01:44Z: claimed; branch and worktree created; plan recorded.
+- 2026-09-25 ~02:10Z: D1 (shadcn components + `ThemeRoot`), D2a (time/date/range pickers, Days editor), D2b (`EntityCombobox`, `ColorField`, Points Entry form, You picker) and D3 (Award + Announcement forms, shadcn rule in `CLAUDE.md` and the maintainer's guide) accepted and integrated. Orchestrator fix `c54ba70`: the Award Team Select showed the raw id (Base UI needs `items`). Old evidence dirs `32-*`/`33-*` removed with Paul's OK.
+- Paused for the night: D4 (evidence script) stopped mid-run. Its partial `scripts/custom-inputs-evidence.ts` and `test-results/custom-inputs-a-*` stay uncommitted in the worktree. D5 waits for the admin-polish PRs to merge into `staging`.
+- Form pattern (Paul: "ideally best practice"): the wrappers post named hidden inputs, so they're ready for `useActionState`. The full `useActionState` migration stays in ticket 18 unless Paul pulls it in.
