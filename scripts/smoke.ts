@@ -897,6 +897,47 @@ async function assertAboutPage() {
   }
 }
 
+async function assertPrivacyAndTermsPages() {
+  for (const [pathname, title] of [
+    ["/privacy", "Privacy"],
+    ["/terms", "Terms"],
+  ] as const) {
+    const check = `anonymous GET ${pathname} is 200 with its "${title}" heading, "Last updated" and no sign-in redirect`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const body = await res.text();
+      if (
+        res.status === 200 &&
+        body.includes(`>${title}</h1>`) &&
+        body.includes("Last updated")
+      ) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+
+  // /privacy and /terms are exact matches: the [edition] route would
+  // otherwise make /privacy/x or /terms/leaderboard public edition pages.
+  for (const pathname of ["/privacy/x", "/termsx"]) {
+    const privateCheck = `anonymous GET ${pathname} redirects to sign-in`;
+    try {
+      const res = await fetch(`${BASE_URL}${pathname}`, { redirect: "manual" });
+      const location = res.headers.get("location") ?? "";
+      if (res.status === 307 && location.includes("/sign-in")) {
+        ok(privateCheck);
+      } else {
+        fail(privateCheck, `status=${res.status} location=${location}`);
+      }
+    } catch (error) {
+      fail(privateCheck, String(error));
+    }
+  }
+}
+
 async function assertSignInPage() {
   const check =
     "GET /sign-in renders without OAuth credentials and says Google isn't configured";
@@ -3790,6 +3831,7 @@ async function main() {
       await assertYouHighlight(sessions);
       await assertMcp();
       await assertAboutPage();
+      await assertPrivacyAndTermsPages();
       await assertSignInPage();
       await assertAdminGate(sessions);
       await assertAdminWording(sessions);

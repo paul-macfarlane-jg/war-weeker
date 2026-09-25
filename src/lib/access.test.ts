@@ -90,12 +90,16 @@ describe("adminAccess", () => {
 });
 
 describe("isPublicPath", () => {
-  it.each(["/sign-in", "/api/auth", "/api/auth/callback/google", "/about"])(
-    "keeps %j public",
-    (pathname) => {
-      expect(isPublicPath(pathname)).toBe(true);
-    },
-  );
+  it.each([
+    "/sign-in",
+    "/api/auth",
+    "/api/auth/callback/google",
+    "/about",
+    "/privacy",
+    "/terms",
+  ])("keeps %j public", (pathname) => {
+    expect(isPublicPath(pathname)).toBe(true);
+  });
 
   it.each([
     "/",
@@ -113,6 +117,11 @@ describe("isPublicPath", () => {
     "/about/leaderboard",
     "/about/x",
     "/about%2Fxi",
+    "/privacy/x",
+    "/termsx",
+    "/privacy/",
+    "/Privacy",
+    "/terms/leaderboard",
   ])("requires sign-in for %j", (pathname) => {
     expect(isPublicPath(pathname)).toBe(false);
   });
