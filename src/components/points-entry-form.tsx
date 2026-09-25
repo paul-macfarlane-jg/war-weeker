@@ -13,6 +13,7 @@ import { EntityCombobox } from "@/components/entity-combobox";
 import { Button } from "@/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -174,7 +175,14 @@ export function PointsEntryForm({
             value={points}
             onChange={(event) => setPoints(event.target.value)}
           />
-          {warning && <FieldError>⚠️ {warning}</FieldError>}
+          {warning && (
+            <FieldDescription
+              role="status"
+              className="font-medium text-amber-600"
+            >
+              ⚠️ {warning}
+            </FieldDescription>
+          )}
         </Field>
         {competition && places.length > 0 && (
           <div
@@ -212,7 +220,12 @@ export function PointsEntryForm({
       </FieldGroup>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : entryId ? "Save changes" : "Add Points Entry"}
         </Button>
         {entryId && (
@@ -220,6 +233,7 @@ export function PointsEntryForm({
             type="button"
             variant="outline"
             size="lg"
+            className="min-h-11 sm:min-h-9"
             onClick={() => router.push("/admin/points")}
           >
             Cancel
