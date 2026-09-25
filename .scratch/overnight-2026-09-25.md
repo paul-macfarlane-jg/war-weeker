@@ -13,7 +13,7 @@ Each PR is stacked on the one before it. Merge them in order; after each merge G
 | 3 | [#67](https://github.com/paul-macfarlane/jg-war-week/pull/67) Brackets 1/3: Finale | Hiding removed; `/<edition>/finale` closing-ceremony countdown (Start/Space, last-to-first, reduced motion, Replay); `/admin/standings` is the Finale page | **No.** After the 10:00 submission (drops a column) |
 | 4 | [#68](https://github.com/paul-macfarlane/jg-war-week/pull/68) Brackets 2/3: lifecycle | Start / End (Winner + highlights) / Reopen; one live War Week (DB index); Create next War Week with copy options; admin edition switcher + Archive banner | **No.** After submission (schema + access change) |
 | 5 | [#69](https://github.com/paul-macfarlane/jg-war-week/pull/69) Brackets 3/3: single elimination | Format on a Competition; builder with random Seed Positions and Re-roll; Heat Results in a phone Sheet; Finalize → "From bracket" Points Entries; participant bracket view | **No.** After submission (schema change) |
-| 6 | SHOWCASE_PR | About page, `/admin/guide`, maintainer's guide, README, CONTEXT.md and llms.txt match what was built; About media re-recorded (Finale, a Bracket, lifecycle) | **No.** After submission (depends on 3–5) |
+| 6 | [#70](https://github.com/paul-macfarlane/jg-war-week/pull/70) Showcase | About page, `/admin/guide`, maintainer's guide, README, CONTEXT.md and llms.txt match what was built; About media re-recorded (Finale, a Bracket, lifecycle) | **No.** After submission (depends on 3–5) |
 
 Every PR has `pnpm gate` passing on a private Postgres DB, with the output committed under `test-results/`. Each also has screenshots at 375 and 1280 (XI and dark IX) and a zero-overflow sweep, and GitHub CI is green.
 
