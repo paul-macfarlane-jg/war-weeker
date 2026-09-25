@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 
+import { FormValueInput } from "@/components/form-value-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,8 +39,8 @@ export function ColorField({
   id?: string;
   "aria-label"?: string;
 }) {
-  const [draft, setDraft] = React.useState(value);
-  const [error, setError] = React.useState<string | null>(null);
+  const [draft, setDraft] = useState(value);
+  const [error, setError] = useState<string | null>(null);
 
   function commit(input: string) {
     const normalized = normalizeHex(input);
@@ -79,7 +80,7 @@ export function ColorField({
         />
         <span className="font-mono text-sm">{value}</span>
       </PopoverTrigger>
-      <PopoverContent className="w-64 max-w-[calc(100vw-2rem)]">
+      <PopoverContent className="max-w-[calc(100vw-2rem)]">
         <div className="flex flex-col gap-2">
           <Input
             value={draft}
@@ -97,13 +98,17 @@ export function ColorField({
             placeholder="#1a2b3c"
           />
           {error && <p className="text-destructive text-xs">{error}</p>}
-          <div className="grid grid-cols-6 gap-1.5">
-            {swatches.map((swatch) => (
-              <button
-                key={swatch.color}
+          {/* Five 44px swatches per row fit the popover on a 320px phone. */}
+          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6">
+            {swatches.map((swatch, index) => (
+              <Button
+                // Theme and Team colors can repeat.
+                key={`${swatch.label}-${index}`}
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label={swatch.label}
-                className="border-border size-11 shrink-0 rounded-md border"
+                className="size-11 sm:size-8"
                 style={{ backgroundColor: swatch.color }}
                 onClick={() => {
                   setDraft(swatch.color);
@@ -115,7 +120,7 @@ export function ColorField({
           </div>
         </div>
       </PopoverContent>
-      {name && <input type="hidden" name={name} value={value} />}
+      {name && <FormValueInput name={name} value={value} />}
     </Popover>
   );
 }

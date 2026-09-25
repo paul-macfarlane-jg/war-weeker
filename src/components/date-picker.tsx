@@ -1,10 +1,10 @@
 "use client";
 
-import { format, parse } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import type { Matcher } from "react-day-picker";
 
+import { FormValueInput } from "@/components/form-value-input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -12,23 +12,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-/** A `YYYY-MM-DD` date as a local calendar date (no UTC shift). */
-export function parseDateValue(value: string): Date | undefined {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined;
-  const date = parse(value, "yyyy-MM-dd", new Date());
-  return Number.isNaN(date.getTime()) ? undefined : date;
-}
-
-/** A local calendar date as `YYYY-MM-DD`. */
-export function formatDateValue(date: Date): string {
-  return format(date, "yyyy-MM-dd");
-}
-
-/** "Mon, Sep 21, 2026". */
-export function formatDateLabel(date: Date): string {
-  return format(date, "EEE, MMM d, yyyy");
-}
+import {
+  formatDateLabel,
+  formatDateValue,
+  parseDateValue,
+} from "@/lib/date-value";
 
 type DatePickerProps = {
   name: string;
@@ -104,16 +92,7 @@ export function DatePicker({
           />
         </PopoverContent>
       </Popover>
-      <input
-        name={name}
-        value={value}
-        onChange={() => {}}
-        required={required}
-        tabIndex={-1}
-        aria-hidden
-        type={required ? "text" : "hidden"}
-        className="pointer-events-none absolute bottom-0 left-0 h-px w-px opacity-0"
-      />
+      <FormValueInput name={name} value={value} required={required} />
     </span>
   );
 }

@@ -8,10 +8,10 @@ const HEX_PATTERN = /^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
  */
 export function normalizeHex(input: string): string | null {
   const trimmed = input.trim();
-  const match = HEX_PATTERN.exec(trimmed);
-  if (!match) return null;
+  const parts = HEX_PATTERN.exec(trimmed);
+  if (!parts) return null;
 
-  const hex = match[1].toLowerCase();
+  const hex = parts[1].toLowerCase();
   const expanded =
     hex.length === 3
       ? hex

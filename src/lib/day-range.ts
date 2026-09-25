@@ -1,0 +1,49 @@
+/**
+ * Refuses War Week dates that would leave an existing Day outside them,
+ * naming the earliest such Day. Shared by the settings save and the date
+ * range picker, so both show the same text.
+ */
+export function dayOutsideRangeError(
+  dayDates: string[],
+  startDate: string,
+  endDate: string,
+): string | null {
+  const outside = [...dayDates]
+    .sort()
+    .find((date) => date < startDate || date > endDate);
+  if (outside) {
+    return `The Day on ${outside} falls outside the new dates. Move or delete it first.`;
+  }
+  return null;
+}
+
+/** A range being picked, `YYYY-MM-DD`: just a start, or a refused range. */
+export type PendingRange = { from: string; to?: string };
+
+export type RangeSelection = {
+  /** What stays on screen: a held start, a refused range, or nothing. */
+  pending: PendingRange | null;
+  /** Set when the tap finished a range the Days allow. */
+  commit?: { start: string; end: string };
+  /** Set when the tap finished a range that leaves a Day outside it. */
+  error?: string;
+};
+
+/**
+ * One tap on the War Week date range calendar. The first tap holds a start;
+ * the second finishes the range (in date order, whichever came first) and
+ * either commits it or refuses it with `dayOutsideRangeError`. A tap after
+ * a refused range starts over.
+ */
+export function nextRangeSelection(
+  pending: PendingRange | null,
+  tapped: string,
+  days: string[],
+): RangeSelection {
+  if (!pending || pending.to) return { pending: { from: tapped } };
+  const [start, end] =
+    tapped < pending.from ? [tapped, pending.from] : [pending.from, tapped];
+  const error = dayOutsideRangeError(days, start, end);
+  if (error) return { pending: { from: start, to: end }, error };
+  return { pending: null, commit: { start, end } };
+}

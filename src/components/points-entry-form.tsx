@@ -99,6 +99,7 @@ export function PointsEntryForm({
       <label className="flex flex-col gap-1 text-sm font-medium">
         Competition
         <EntityCombobox
+          name="competitionId"
           aria-label="Competition"
           required
           placeholder="Choose a Competition…"
@@ -119,6 +120,7 @@ export function PointsEntryForm({
       <label className="flex flex-col gap-1 text-sm font-medium">
         {competition?.scoring === "individual" ? "Participant" : teamLabel}
         <EntityCombobox
+          name="targetId"
           aria-label={
             competition?.scoring === "individual" ? "Participant" : teamLabel
           }
@@ -149,6 +151,7 @@ export function PointsEntryForm({
           type="number"
           step="0.01"
           inputMode="decimal"
+          className="h-11 sm:h-9"
           value={points}
           onChange={(event) => setPoints(event.target.value)}
         />
@@ -185,6 +188,7 @@ export function PointsEntryForm({
         <Input
           name="note"
           maxLength={500}
+          className="h-11 sm:h-9"
           value={note}
           onChange={(event) => setNote(event.target.value)}
         />

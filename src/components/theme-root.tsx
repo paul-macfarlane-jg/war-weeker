@@ -1,8 +1,15 @@
 "use client";
 
-import * as React from "react";
+import {
+  type CSSProperties,
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
-const ThemeContainerContext = React.createContext<HTMLElement | null>(null);
+const ThemeContainerContext = createContext<HTMLElement | null>(null);
 
 /**
  * The nearest themed root's DOM node, or null outside of one. Base UI
@@ -12,7 +19,7 @@ const ThemeContainerContext = React.createContext<HTMLElement | null>(null);
  * Appearance Theme applied.
  */
 export function useThemeContainer(): HTMLElement | null {
-  return React.useContext(ThemeContainerContext);
+  return useContext(ThemeContainerContext);
 }
 
 type ThemeRootProps = {
@@ -21,9 +28,9 @@ type ThemeRootProps = {
    * requires list-item semantics (e.g. an `ArchiveCard` inside a `<ul>`).
    */
   as?: "div" | "li";
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   className?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 };
 
 /**
@@ -37,15 +44,15 @@ export function ThemeRoot({
   className,
   children,
 }: ThemeRootProps) {
-  const [container, setContainer] = React.useState<HTMLElement | null>(null);
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const containerRef = useCallback(
+    (node: HTMLElement | null) => setContainer(node),
+    [],
+  );
   const Tag = as;
 
   return (
-    <Tag
-      ref={setContainer as React.Ref<never>}
-      style={style}
-      className={className}
-    >
+    <Tag ref={containerRef} style={style} className={className}>
       <ThemeContainerContext.Provider value={container}>
         {children}
       </ThemeContainerContext.Provider>

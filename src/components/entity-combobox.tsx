@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "cn";
-import * as React from "react";
+import { useMemo } from "react";
 
+import { FormValueInput } from "@/components/form-value-input";
 import {
   Combobox,
   ComboboxChip,
@@ -27,7 +27,7 @@ type CommonProps = {
   items: EntityComboboxItem[];
   name?: string;
   placeholder?: string;
-  /** Shown when no item matches the typed query. */
+  /** Shown when the typed query finds no item. */
   emptyText?: string;
   disabled?: boolean;
   required?: boolean;
@@ -50,7 +50,7 @@ type MultipleProps = CommonProps & {
 
 export type EntityComboboxProps = SingleProps | MultipleProps;
 
-function matchesQuery(item: EntityComboboxItem, query: string) {
+function fitsQuery(item: EntityComboboxItem, query: string) {
   const needle = query.trim().toLowerCase();
   if (!needle) return true;
   return (
@@ -85,13 +85,13 @@ export function EntityCombobox(props: EntityComboboxProps) {
     items,
     name,
     placeholder,
-    emptyText = "No matches.",
+    emptyText = "Nothing found.",
     disabled,
     required,
     id,
     "aria-label": ariaLabel,
   } = props;
-  const itemsById = React.useMemo(
+  const itemsById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
     [items],
   );
@@ -113,13 +113,17 @@ export function EntityCombobox(props: EntityComboboxProps) {
         isItemEqualToValue={isSameItem}
         itemToStringLabel={(item) => item.label}
         itemToStringValue={(item) => item.id}
-        filter={matchesQuery}
+        filter={fitsQuery}
         disabled={disabled}
         required={required}
       >
         <ComboboxChips ref={anchorRef} className="h-auto min-h-11 sm:min-h-9">
           {selected.map((item) => (
-            <ComboboxChip key={item.id} aria-label={item.label}>
+            <ComboboxChip
+              key={item.id}
+              aria-label={item.label}
+              removeLabel={`Remove ${item.label}`}
+            >
               {item.label}
             </ComboboxChip>
           ))}
@@ -140,7 +144,7 @@ export function EntityCombobox(props: EntityComboboxProps) {
               <ComboboxItem
                 key={item.id}
                 value={item}
-                className={cn("min-h-11 sm:min-h-9")}
+                className="min-h-11 sm:min-h-9"
               >
                 <EntityComboboxItemRow item={item} />
               </ComboboxItem>
@@ -149,7 +153,7 @@ export function EntityCombobox(props: EntityComboboxProps) {
         </ComboboxContent>
         {name &&
           selected.map((item) => (
-            <input key={item.id} type="hidden" name={name} value={item.id} />
+            <FormValueInput key={item.id} name={name} value={item.id} />
           ))}
       </Combobox>
     );
@@ -165,7 +169,7 @@ export function EntityCombobox(props: EntityComboboxProps) {
       isItemEqualToValue={isSameItem}
       itemToStringLabel={(item) => item.label}
       itemToStringValue={(item) => item.id}
-      filter={matchesQuery}
+      filter={fitsQuery}
       disabled={disabled}
       required={required}
     >
@@ -183,14 +187,16 @@ export function EntityCombobox(props: EntityComboboxProps) {
             <ComboboxItem
               key={item.id}
               value={item}
-              className={cn("min-h-11 sm:min-h-9")}
+              className="min-h-11 sm:min-h-9"
             >
               <EntityComboboxItemRow item={item} />
             </ComboboxItem>
           )}
         </ComboboxList>
       </ComboboxContent>
-      {name && <input type="hidden" name={name} value={props.value} />}
+      {name && (
+        <FormValueInput name={name} value={props.value} required={required} />
+      )}
     </Combobox>
   );
 }

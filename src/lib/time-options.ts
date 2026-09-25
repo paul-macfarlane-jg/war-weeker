@@ -23,11 +23,11 @@ function toMinutes(time: string): number {
  */
 export function parseTime(input: string): string | null {
   const text = input.toLowerCase().replace(/[\s.]/g, "");
-  const match = TIME_PATTERN.exec(text);
-  if (!match) return null;
-  let hours = Number(match[1]);
-  const minutes = match[2] === undefined ? 0 : Number(match[2]);
-  const meridiem = match[3]?.[0];
+  const parts = TIME_PATTERN.exec(text);
+  if (!parts) return null;
+  let hours = Number(parts[1]);
+  const minutes = parts[2] === undefined ? 0 : Number(parts[2]);
+  const meridiem = parts[3]?.[0];
   if (minutes > 59) return null;
   if (meridiem) {
     if (hours < 1 || hours > 12) return null;

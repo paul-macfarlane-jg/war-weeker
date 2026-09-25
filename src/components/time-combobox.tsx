@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { FormValueInput } from "@/components/form-value-input";
 import {
   Combobox,
   ComboboxContent,
@@ -52,6 +53,7 @@ export function TimeCombobox({
   const options = useMemo(() => timeOptions(start), [start]);
   const [text, setText] = useState(labelFor(value));
   const [shownValue, setShownValue] = useState(value);
+  const [open, setOpen] = useState(false);
   // Keep the typed text in step when the value changes from outside.
   if (shownValue !== value) {
     setShownValue(value);
@@ -89,6 +91,8 @@ export function TimeCombobox({
       itemToStringValue={(option) => option.value}
       isItemEqualToValue={(a, b) => a.value === b.value}
       autoHighlight
+      open={open}
+      onOpenChange={setOpen}
       filter={(option, query) => {
         const q = query.trim().toLowerCase();
         // Showing the chosen time (or nothing) lists every option.
@@ -109,24 +113,16 @@ export function TimeCombobox({
           className="h-11 w-full sm:h-9"
           onBlur={commitTyped}
           onKeyDown={(event) => {
-            if (event.key !== "Enter" || !typed || typed === value) return;
-            // A typed time that isn't in the list (7:32 PM) is still a time.
-            if (!options.some((option) => option.value === typed)) {
-              event.preventDefault();
-              commit(typed);
-            }
+            if (event.key !== "Enter" || !typed) return;
+            // Enter agrees with leaving the field: a typed time ("5", "7:32p")
+            // wins over whichever option is highlighted.
+            event.preventDefault();
+            event.preventBaseUIHandler();
+            commit(typed);
+            setOpen(false);
           }}
         />
-        <input
-          name={name}
-          value={value}
-          onChange={() => {}}
-          required={required}
-          tabIndex={-1}
-          aria-hidden
-          type={required ? "text" : "hidden"}
-          className="pointer-events-none absolute bottom-0 left-0 h-px w-px opacity-0"
-        />
+        <FormValueInput name={name} value={value} required={required} />
       </div>
       <ComboboxContent className="max-w-[min(var(--available-width),calc(100vw-2rem))]">
         <ComboboxEmpty>

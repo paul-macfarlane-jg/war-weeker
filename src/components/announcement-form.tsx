@@ -147,7 +147,7 @@ export function AnnouncementForm({
         )}
       </fieldset>
 
-      <Label className="flex items-center gap-2 text-sm font-medium">
+      <Label className="min-h-11">
         <Switch name="pinned" checked={pinned} onCheckedChange={setPinned} />
         Pinned (shown first in the feed and on the home page)
       </Label>

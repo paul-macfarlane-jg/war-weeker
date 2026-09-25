@@ -9,6 +9,7 @@ import {
   updateAward,
 } from "@/actions/awards";
 import { EntityCombobox } from "@/components/entity-combobox";
+import { FormValueInput } from "@/components/form-value-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -57,6 +58,11 @@ export function AwardForm({
   );
   const [result, setResult] = useState<AwardActionResult | null>(null);
 
+  // Also lets SelectValue show the Team's name rather than its id.
+  const teamItems = [
+    { value: NO_TEAM, label: `No ${teamLabel}` },
+    ...options.teams.map((team) => ({ value: team.id, label: team.name })),
+  ];
   const participantItems = options.participants.map((p) => ({
     id: p.id,
     label: p.name,
@@ -119,14 +125,7 @@ export function AwardForm({
             {teamLabel}
             <Select
               value={teamId === "" ? NO_TEAM : teamId}
-              // Lets SelectValue show the Team's name rather than its id.
-              items={[
-                { value: NO_TEAM, label: `No ${teamLabel}` },
-                ...options.teams.map((team) => ({
-                  value: team.id,
-                  label: team.name,
-                })),
-              ]}
+              items={teamItems}
               onValueChange={(value) =>
                 setTeamId(!value || value === NO_TEAM ? "" : value)
               }
@@ -135,14 +134,19 @@ export function AwardForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_TEAM}>No {teamLabel}</SelectItem>
-                {options.teams.map((team) => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
+                {teamItems.map((item) => (
+                  <SelectItem
+                    key={item.value}
+                    value={item.value}
+                    className="min-h-11 sm:min-h-8"
+                  >
+                    {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {/* "" posts as no Team. */}
+            <FormValueInput name="teamId" value={teamId} />
           </label>
         )}
 
@@ -152,6 +156,7 @@ export function AwardForm({
           </span>
           <EntityCombobox
             multiple
+            name="participantIds"
             items={participantItems}
             value={participantIds}
             onValueChange={setParticipantIds}

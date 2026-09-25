@@ -19,6 +19,10 @@ describe("parseTime", () => {
     ["12pm", "12:00"],
     ["7:32p", "19:32"],
     ["9:15 a.m.", "09:15"],
+    // What Enter commits in the TimeCombobox, ahead of the highlighted option.
+    ["5", "05:00"],
+    ["1", "01:00"],
+    ["12", "12:00"],
   ])("reads %j as %j", (input, expected) => {
     expect(parseTime(input)).toBe(expected);
   });

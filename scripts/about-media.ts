@@ -447,15 +447,24 @@ async function still(
   );
 }
 
-/** Picks a Competition in the Points Entry form the way React sees it. */
-const selectCompetition = (name: string) => `(() => {
-  const select = document.querySelector('select[name="competitionId"]');
-  const option = Array.from(select.options).find((o) => o.text.includes(${JSON.stringify(name)}));
-  const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
-  setter.call(select, option.value);
-  select.dispatchEvent(new Event("change", { bubbles: true }));
-  return option.text;
-})()`;
+/**
+ * Picks a Competition in the Points Entry form's combobox the way a person
+ * does: focus it, type the name, and choose the option.
+ */
+async function selectCompetition(page: Page, name: string): Promise<string> {
+  await page.evaluate(
+    `document.querySelector('input[aria-label="Competition"]').focus()`,
+  );
+  await page.send("Input.insertText", { text: name });
+  await sleep(500);
+  const picked = await page.evaluate<string | null>(`(() => {
+    const option = Array.from(document.querySelectorAll('[role="option"]')).find((o) => o.innerText.includes(${JSON.stringify(name)}));
+    option?.click();
+    return option ? option.innerText : null;
+  })()`);
+  if (!picked) throw new Error(`no Competition option for ${name}`);
+  return picked;
+}
 
 const scrollToText = (text: string) => `(() => {
   const el = Array.from(document.querySelectorAll("section, h2")).find((e) => e.innerText.toLowerCase().includes(${JSON.stringify(text)}.toLowerCase()));
@@ -682,9 +691,7 @@ async function main() {
     const slugs = ABOUT_FEATURES.map((f) => f.slug);
     await still(slugs[0], cookie, "/admin/setup");
     await still(slugs[1], cookie, "/admin/points", async (page) => {
-      const picked = await page.evaluate<string>(
-        selectCompetition("Settlers of Catan"),
-      );
+      const picked = await selectCompetition(page, "Settlers of Catan");
       await sleep(500);
       const presets = await page.evaluate<number>(
         `document.querySelectorAll('button').length && Array.from(document.querySelectorAll('button')).filter((b) => /^1st/.test(b.innerText)).length`,

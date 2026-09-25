@@ -5,11 +5,7 @@ import { CalendarIcon } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { type DateRange, getDefaultClassNames } from "react-day-picker";
 
-import {
-  formatDateLabel,
-  formatDateValue,
-  parseDateValue,
-} from "@/components/date-picker";
+import { FormValueInput } from "@/components/form-value-input";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,7 +13,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { dayOutsideRangeError } from "@/lib/setup";
+import {
+  formatDateLabel,
+  formatDateValue,
+  parseDateValue,
+} from "@/lib/date-value";
+import { type PendingRange, nextRangeSelection } from "@/lib/day-range";
 
 // Tailwind's `sm` breakpoint: two months side by side from here up.
 const WIDE_QUERY = "(min-width: 40rem)";
@@ -70,22 +71,26 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const wide = useWide();
   const [open, setOpen] = useState(false);
-  // A half-picked or refused range stays on screen until the next pick;
+  // A half-picked or refused range stays on screen until the next tap;
   // only an accepted range reaches `onValueChange`.
-  const [pending, setPending] = useState<DateRange | null>(null);
+  const [pending, setPending] = useState<PendingRange | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const from = parseDateValue(value.start);
   const to = parseDateValue(value.end);
-  const selected: DateRange | undefined =
-    pending ?? (from ? { from, to } : undefined);
+  const selected: DateRange | undefined = pending
+    ? {
+        from: parseDateValue(pending.from),
+        to: pending.to ? parseDateValue(pending.to) : undefined,
+      }
+    : from
+      ? { from, to }
+      : undefined;
 
   const outsideDates = new Set<string>();
-  if (error && pending?.from && pending.to) {
-    const start = formatDateValue(pending.from);
-    const end = formatDateValue(pending.to);
+  if (error && pending?.to) {
     for (const day of days) {
-      if (day < start || day > end) outsideDates.add(day);
+      if (day < pending.from || day > pending.to) outsideDates.add(day);
     }
   }
   const toDates = (dates: string[]) =>
@@ -99,26 +104,17 @@ export function DateRangePicker({
     }
   }
 
-  function select(range: DateRange | undefined) {
-    setError(null);
-    if (!range?.from || !range.to) {
-      // One end picked so far: hold it until the other end is picked.
-      setPending(range ?? null);
-      return;
+  // Taps are handled here rather than by react-day-picker's range
+  // selection, which would finish a range (or move an end of the saved one)
+  // on the first tap.
+  function tap(date: Date) {
+    const next = nextRangeSelection(pending, formatDateValue(date), days);
+    setPending(next.pending);
+    setError(next.error ?? null);
+    if (next.commit) {
+      onValueChange(next.commit);
+      setOpen(false);
     }
-    const next = {
-      start: formatDateValue(range.from),
-      end: formatDateValue(range.to),
-    };
-    const refusal = dayOutsideRangeError(days, next.start, next.end);
-    if (refusal) {
-      setPending(range);
-      setError(refusal);
-      return;
-    }
-    setPending(null);
-    onValueChange(next);
-    setOpen(false);
   }
 
   return (
@@ -153,7 +149,9 @@ export function DateRangePicker({
             numberOfMonths={wide ? 2 : 1}
             selected={selected}
             defaultMonth={from}
-            onSelect={select}
+            // A no-op `onSelect` keeps `selected` controlled; `tap` owns it.
+            onSelect={() => {}}
+            onDayClick={tap}
             modifiers={{
               hasDay: toDates(days.filter((day) => !outsideDates.has(day))),
               dayOutside: toDates([...outsideDates]),
@@ -180,8 +178,8 @@ export function DateRangePicker({
           )}
         </PopoverContent>
       </Popover>
-      <input type="hidden" name={startName} value={value.start} />
-      <input type="hidden" name={endName} value={value.end} />
+      <FormValueInput name={startName} value={value.start} />
+      <FormValueInput name={endName} value={value.end} />
     </span>
   );
 }
