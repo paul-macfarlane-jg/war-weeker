@@ -35,7 +35,9 @@ export function PinAnnouncementButton({
           if (!result.ok) {
             toast.error(result.error);
           } else {
-            toast.success(pinned ? "Unpinned" : "Pinned");
+            toast.success(
+              pinned ? "Announcement unpinned" : "Announcement pinned",
+            );
           }
           router.refresh();
         });

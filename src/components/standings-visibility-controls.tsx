@@ -31,7 +31,12 @@ export function StandingsVisibilityControls({ hidden }: { hidden: boolean }) {
     <div className="flex flex-col items-start gap-2">
       {hidden ? (
         <>
-          <Button size="lg" disabled={pending} onClick={() => setOpen(true)}>
+          <Button
+            size="lg"
+            className="min-h-11 sm:min-h-9"
+            disabled={pending}
+            onClick={() => setOpen(true)}
+          >
             {pending ? "Revealing…" : "Reveal"}
           </Button>
           <ConfirmDialog
@@ -40,6 +45,7 @@ export function StandingsVisibilityControls({ hidden }: { hidden: boolean }) {
             title="Reveal the Standings?"
             description="Every open home and leaderboard page plays the Reveal on its next refresh."
             confirmLabel="Reveal"
+            destructive={false}
             pending={pending}
             onConfirm={() => run(revealStandings, "Standings revealed")}
           />
@@ -48,6 +54,7 @@ export function StandingsVisibilityControls({ hidden }: { hidden: boolean }) {
         <>
           <Button
             size="lg"
+            className="min-h-11 sm:min-h-9"
             variant="outline"
             disabled={pending}
             onClick={() => setOpen(true)}
