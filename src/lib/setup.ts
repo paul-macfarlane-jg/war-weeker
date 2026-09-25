@@ -398,7 +398,9 @@ export function parseCompetitionInput(
     },
   );
   if (!parsed.ok) return parsed;
-  const { group, ...value } = parsed.value;
+  // The Format is set through the Bracket actions, never a setup save.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { group, format, ...value } = parsed.value;
   return {
     ok: true,
     value: {

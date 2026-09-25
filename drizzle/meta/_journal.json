@@ -50,6 +50,13 @@
       "when": 1790315456994,
       "tag": "0006_war_week_one_live",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790328875434,
+      "tag": "0007_brackets",
+      "breakpoints": true
     }
   ]
 }

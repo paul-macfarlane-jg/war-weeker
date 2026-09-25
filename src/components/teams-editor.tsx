@@ -55,6 +55,7 @@ function TeamRow({
         [team.participantCount, "Participant", "Participants"],
         [team.pointsEntryCount, "Points Entry", "Points Entries"],
         [team.awardCount, "Award", "Awards"],
+        [team.entrantCount, "Bracket Entrant", "Bracket Entrants"],
       ])
     : "";
 
@@ -179,6 +180,7 @@ function ParticipantRow({
     ? usageSummary([
         [participant.pointsEntryCount, "Points Entry", "Points Entries"],
         [participant.awardCount, "Award", "Awards"],
+        [participant.entrantCount, "Bracket Entrant", "Bracket Entrants"],
       ])
     : "";
 
@@ -287,7 +289,9 @@ function ParticipantRow({
         </FieldGroup>
       </form>
       {participant &&
-        (participant.pointsEntryCount > 0 || participant.awardCount > 0) && (
+        (participant.pointsEntryCount > 0 ||
+          participant.awardCount > 0 ||
+          participant.entrantCount > 0) && (
           <p className="text-foreground/60 mt-1 text-xs">{usage}</p>
         )}
       <SetupRowError error={error} />

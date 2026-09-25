@@ -10,6 +10,7 @@ import {
   awardParticipant,
   competition,
   day,
+  entrant,
   participant,
   pointsEntry,
   scheduleItem,
@@ -48,6 +49,7 @@ export type SetupTeam = Pick<Team, "id" | "name" | "color" | "logoUrl"> & {
   participantCount: number;
   pointsEntryCount: number;
   awardCount: number;
+  entrantCount: number;
 };
 
 /** A War Week's Teams by name. */
@@ -70,6 +72,7 @@ export async function getSetupTeams(
         eq(pointsEntry.teamId, team.id),
       ),
       awardCount: dbOrTx.$count(award, eq(award.teamId, team.id)),
+      entrantCount: dbOrTx.$count(entrant, eq(entrant.teamId, team.id)),
     })
     .from(team)
     .where(eq(team.warWeekId, warWeek.id))
@@ -80,7 +83,7 @@ export async function getSetupTeams(
 export type SetupParticipant = Pick<
   Participant,
   "id" | "displayName" | "companyTag" | "email" | "teamId" | "isLeader"
-> & { pointsEntryCount: number; awardCount: number };
+> & { pointsEntryCount: number; awardCount: number; entrantCount: number };
 
 /** A War Week's Participants by display name. */
 export async function getSetupParticipants(
@@ -102,6 +105,10 @@ export async function getSetupParticipants(
       awardCount: dbOrTx.$count(
         awardParticipant,
         eq(awardParticipant.participantId, participant.id),
+      ),
+      entrantCount: dbOrTx.$count(
+        entrant,
+        eq(entrant.participantId, participant.id),
       ),
     })
     .from(participant)

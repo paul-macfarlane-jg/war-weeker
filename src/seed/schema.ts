@@ -113,6 +113,8 @@ export const competitionSeedSchema = z
     scoring: z.enum(["team", "individual"]),
     countsTowardTeam: z.boolean().default(false),
     group: z.string().min(1).max(120).nullish(),
+    /** How the Competition is run; a Bracket's Entrants aren't seeded yet. */
+    format: z.enum(["points", "single-elimination"]).default("points"),
   })
   .refine(
     (c) =>

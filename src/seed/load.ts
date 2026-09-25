@@ -256,6 +256,7 @@ async function syncCompetitions(
             scoring: c.scoring,
             countsTowardTeam: c.countsTowardTeam,
             competitionGroup: c.group ?? null,
+            format: c.format,
           })),
         )
         .onConflictDoUpdate({
@@ -267,6 +268,7 @@ async function syncCompetitions(
             scoring: sql`excluded.scoring`,
             countsTowardTeam: sql`excluded.counts_toward_team`,
             competitionGroup: sql`excluded.competition_group`,
+            format: sql`excluded.format`,
             updatedAt: new Date(),
           },
         })

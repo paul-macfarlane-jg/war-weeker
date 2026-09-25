@@ -36,6 +36,13 @@ War Weeker). **War Week** alone always means the event, never the app.
 | **Announcement**              | An organizer post (rich text plus video links).                                                                                   |
 | **FAQ Item**                  | A question and answer pair for a War Week.                                                                                        |
 | **Archive**                   | The past War Weeks shown at `/history`.                                                                                           |
+| **Format**                    | How a Competition is run: `points` (Points Entries only) or `single-elimination` (a Bracket).                                     |
+| **Bracket**                   | The Rounds and Heats of a non-`points` Competition.                                                                               |
+| **Round**                     | One step of a Bracket, holding Heats that can be played at the same time. Round 1 is the first.                                   |
+| **Heat**                      | One game between Entrants in a Bracket. Covers 1v1 and multi-entrant games.                                                       |
+| **Entrant**                   | A Team or Participant entered in a Bracket.                                                                                       |
+| **Seed Position**             | An Entrant's starting rank in a Bracket. Say "seed position" or "seeding", never bare "seed" (that means seed files).             |
+| **Heat Result**               | The finishing order of a Heat's Entrants, with an optional score for each.                                                        |
 
 **Reveal** is retired: Standings are never hidden any more, and the
 countdown it played is now the **Finale**.
@@ -199,6 +206,32 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - An edit keeps the entry's entered-by email and entered-at time; the admin
   ledger marks it as edited.
 - `/admin/points` shows the current Standings next to the ledger.
+
+## Bracket rules
+
+- A Competition's **Format** is `points` or `single-elimination`. Only a
+  single-elimination Competition has Entrants and a Bracket. A team
+  Competition's Entrants are Teams, an individual one's Participants of the
+  same War Week.
+- **Generate** seeds the Entrants randomly and builds the Bracket. When the
+  count isn't a power of two, the top Seed Positions get byes and advance
+  straight away; a bye is never a played Heat.
+- Regenerating, or replacing the Entrants, before any Heat Result is free.
+  After one, it needs a confirmation and clears every Heat Result.
+- A knockout Heat Result needs a clear finishing order. A forfeiting
+  Entrant loses. Editing a decided Heat sends every later Heat its winner
+  reached back to unplayed.
+- **Finalize** turns final placings (1st, 2nd, tied 3rd for both semifinal
+  losers, later places tied by the Round lost in) into Points Entries
+  through the Competition's Placement Points, tied places each getting that
+  place's points. They're marked "From bracket", can't be edited or deleted
+  in the ledger, and are replaced wholesale when the Bracket is finalized
+  again. Un-finalizing deletes them; hand-entered Points Entries on the same
+  Competition are never touched. A finalized Bracket can't change until it's
+  un-finalized.
+- Deleting a Team or Participant that is an Entrant is refused with the
+  count, and so is changing a Competition's scoring or Format while it has
+  Entrants.
 
 ## Finale rules
 

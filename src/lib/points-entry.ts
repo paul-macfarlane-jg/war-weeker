@@ -131,6 +131,7 @@ export type AdminLedgerRow = Pick<
   | "enteredAt"
   | "createdAt"
   | "updatedAt"
+  | "generatedByBracket"
 > & {
   competition: string;
   teamName: string | null;
@@ -139,7 +140,13 @@ export type AdminLedgerRow = Pick<
 
 export type AdminLedgerEntry = Pick<
   AdminLedgerRow,
-  "id" | "competition" | "points" | "note" | "enteredByEmail" | "enteredAt"
+  | "id"
+  | "competition"
+  | "points"
+  | "note"
+  | "enteredByEmail"
+  | "enteredAt"
+  | "generatedByBracket"
 > & {
   target: string;
   /** When the entry was last edited, or null if it never was. */
@@ -166,6 +173,7 @@ export function buildAdminLedger(rows: AdminLedgerRow[]): AdminLedgerEntry[] {
       note: row.note,
       enteredByEmail: row.enteredByEmail,
       enteredAt: row.enteredAt,
+      generatedByBracket: row.generatedByBracket,
       editedAt:
         row.updatedAt.getTime() - row.createdAt.getTime() > 1000
           ? row.updatedAt

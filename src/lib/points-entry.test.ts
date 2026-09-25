@@ -127,6 +127,7 @@ describe("buildAdminLedger", () => {
     enteredAt: saved,
     createdAt: saved,
     updatedAt: saved,
+    generatedByBracket: false,
     ...overrides,
   });
 

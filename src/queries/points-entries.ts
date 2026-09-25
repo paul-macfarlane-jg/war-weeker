@@ -102,6 +102,7 @@ export async function getAdminLedger(
       enteredAt: pointsEntry.enteredAt,
       createdAt: pointsEntry.createdAt,
       updatedAt: pointsEntry.updatedAt,
+      generatedByBracket: pointsEntry.generatedByBracket,
     })
     .from(pointsEntry)
     .innerJoin(competition, eq(competition.id, pointsEntry.competitionId))
