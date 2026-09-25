@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   type SetupScheduleFaqActionResult,
@@ -9,16 +10,17 @@ import {
   deleteScheduleItem,
   moveFaqItem,
 } from "@/actions/setup-schedule-faq";
+import { ConfirmActionButton } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 
-/** Runs an action, alerting its refusal, then refreshes the page. */
+/** Runs an action, toasting its refusal, then refreshes the page. */
 function useRefreshingAction() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   function run(action: () => Promise<SetupScheduleFaqActionResult>) {
     startTransition(async () => {
       const result = await action();
-      if (!result.ok) window.alert(result.error);
+      if (!result.ok) toast.error(result.error);
       router.refresh();
     });
   }
@@ -35,21 +37,18 @@ export function DeleteSetupItemButton({
   name: string;
   kind: "schedule-item" | "faq-item";
 }) {
-  const { pending, run } = useRefreshingAction();
   return (
-    <Button
-      variant="destructive"
-      size="xs"
-      disabled={pending}
-      onClick={() => {
-        if (!window.confirm(`Delete "${name}"?`)) return;
-        run(() =>
-          kind === "schedule-item" ? deleteScheduleItem(id) : deleteFaqItem(id),
-        );
-      }}
+    <ConfirmActionButton
+      title={`Delete "${name}"?`}
+      action={() =>
+        kind === "schedule-item" ? deleteScheduleItem(id) : deleteFaqItem(id)
+      }
+      successMessage={
+        kind === "schedule-item" ? "Schedule Item deleted" : "FAQ Item deleted"
+      }
     >
-      {pending ? "Deleting…" : "Delete"}
-    </Button>
+      Delete
+    </ConfirmActionButton>
   );
 }
 

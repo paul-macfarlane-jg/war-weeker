@@ -2,12 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   deleteAnnouncement,
   pinAnnouncement,
   unpinAnnouncement,
 } from "@/actions/announcements";
+import { ConfirmActionButton } from "@/components/confirm-dialog";
 import { Button } from "@/components/ui/button";
 
 export function PinAnnouncementButton({
@@ -30,7 +32,11 @@ export function PinAnnouncementButton({
           const result = pinned
             ? await unpinAnnouncement(id)
             : await pinAnnouncement(id);
-          if (!result.ok) window.alert(result.error);
+          if (!result.ok) {
+            toast.error(result.error);
+          } else {
+            toast.success(pinned ? "Unpinned" : "Pinned");
+          }
           router.refresh();
         });
       }}
@@ -47,24 +53,13 @@ export function DeleteAnnouncementButton({
   id: string;
   title: string;
 }) {
-  const router = useRouter();
-  const [pending, startTransition] = useTransition();
-
   return (
-    <Button
-      variant="destructive"
-      size="xs"
-      disabled={pending}
-      onClick={() => {
-        if (!window.confirm(`Delete "${title}"?`)) return;
-        startTransition(async () => {
-          const result = await deleteAnnouncement(id);
-          if (!result.ok) window.alert(result.error);
-          router.refresh();
-        });
-      }}
+    <ConfirmActionButton
+      title={`Delete "${title}"?`}
+      action={() => deleteAnnouncement(id)}
+      successMessage="Announcement deleted"
     >
-      {pending ? "Deleting…" : "Delete"}
-    </Button>
+      Delete
+    </ConfirmActionButton>
   );
 }
