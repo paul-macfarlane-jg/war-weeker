@@ -145,3 +145,117 @@ Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg pnpm db:migr
 Isolation check: D2a and D2b ran in parallel in separate worktrees as predicted; their diffs touched disjoint files, so no merge conflict occurred.
 
 PR: https://github.com/paul-macfarlane/jg-war-week/pull/63 (into `staging`).
+
+---
+
+# Execution record — custom-inputs (Phase B)
+
+Contract: [spec.md](./spec.md), Phase B (form structure and feedback).
+Overnight run 2026-09-25 with Paul asleep; open decisions decided by the
+orchestrator and listed under [SCOPE CHANGE].
+
+## [EXECUTION PLAN]
+
+Branch `feat/custom-inputs-phase-b` from `staging` @ `d5aa7e6`, worked in
+`.claude/worktrees/custom-inputs-b/war-weeker`; B1–B3 in parallel detached
+worktrees `b1`–`b3` (disjoint files), cherry-picked onto the branch.
+
+Resolved decisions:
+
+- **Foundation (B0, orchestrator).** shadcn `field`, `alert-dialog`,
+  `sonner` (+ `separator`) via the CLI. The Toaster drops `next-themes`
+  (no light/dark toggle; the Appearance Theme's CSS variables color it) and
+  mounts inside `AdminShell`'s `ThemeRoot`. The AlertDialog portal uses
+  `useThemeContainer` like Select/Popover. `src/components/confirm-dialog.tsx`
+  owns the one confirm pattern: `ConfirmDialog` (controlled) and
+  `ConfirmActionButton` (button → dialog → action → toast → refresh).
+- **Errors** show in a `FieldError` directly under each form's button row
+  and as a toast, so the message is always in the same place.
+- **No Slack toast:** the app never posts to Slack (cut in ticket 28).
+- **Refusal counts:** no delete action returns counts today; the dialog
+  description shows the row's usage summary where it exists and the toast
+  shows the server's message verbatim.
+
+| ID | Slice | Files | Model |
+|---|---|---|---|
+| B0 | shadcn pieces, `ConfirmDialog`, Toaster | `ui/field,alert-dialog,sonner,separator`, `confirm-dialog.tsx`, `admin-shell.tsx` | orchestrator |
+| B1 | delete buttons + Standings visibility → dialog + toasts | `delete-*-button.tsx`, `setup-schedule-faq-buttons.tsx`, `announcement-admin-buttons.tsx`, `standings-visibility-controls.tsx` | sonnet |
+| B2 | Field layout + toasts | Announcement, Award, Points Entry, FAQ, Schedule Item forms | sonnet |
+| B3 | Field layout + dialogs + toasts | settings form, Competitions/Teams/Days editors, `setup-row.tsx`, chips, placement rows | opus |
+| B4 | evidence script, screenshots, round-trips, overflow sweep | `scripts/custom-inputs-b-evidence.ts`, `test-results/custom-inputs-b-*/` | sonnet |
+
+Structure: B0 → (B1 ∥ B2 ∥ B3) → B4 → gate.
+
+### Verification map
+
+| Criterion | Command / action | Evidence | Earliest |
+|---|---|---|---|
+| B: every destructive action in an AlertDialog; refusals show the server's text | `grep window.confirm/alert src` empty; round-trips (cancel keeps, confirm deletes) | `test-results/custom-inputs-b-forms/round-trips.txt` | after B4 |
+| B: save/fail toasts | round-trips + screenshots with a toast visible | same dir | after B4 |
+| B: Field layout on every form | grep `FieldLabel`; screenshots | same dir | after B4 |
+| screenshots 375/1280, XI + IX, dialog open | evidence script | `test-results/custom-inputs-b-forms/` | after B4 |
+| overflow 375/768/812/1024/1280 | evidence script | `test-results/custom-inputs-b-overflow/overflow.txt` | after B4 |
+| `pnpm gate` | on a private DB | `test-results/custom-inputs-b-gate/gate.txt` | before PR |
+
+## [PROGRESS]
+
+- 2026-09-25 05:20Z: branch and worktrees created; B0 committed (`41c9db9`, `296e158`); B1–B3 dispatched in parallel.
+- 05:45Z: B1 (`1db343c`), B2 (`367d9dc`), B3 (`5b19e2b`) accepted and integrated; B4 evidence `cadc944`. Orchestrator `6e67bc2`: `SMOKE_PORT` override so parallel worktrees can run smoke side by side.
+- 05:55Z: review fixes `9b1f388`; evidence and gate rerun on that head.
+
+## [SCOPE CHANGE]
+
+- No "Slack post failed" toast: the app never posts to Slack (ticket 28 cut it).
+- Refusal counts: no delete action returns counts; dialogs show the row's usage summary and the refusal toast shows the server's message verbatim.
+- `scripts/smoke.ts` gained a `SMOKE_PORT` override (default 3100); no check changed.
+
+## [AI CODE REVIEW]
+
+Two fresh-context reviews (opus), both axes on `d5aa7e6..6e67bc2`; adjudicated by the orchestrator. No blocking findings.
+
+**Technical implementation and spec conformity**
+
+| Severity | Finding | Paths | Disposition |
+|---|---|---|---|
+| non-blocking | Delete triggers (`xs`), form submit/Cancel (`lg`), video-link and Hide/Reveal buttons under 44px on phones | `confirm-dialog.tsx`, five forms, `standings-visibility-controls.tsx` | resolved `9b1f388` |
+| non-blocking | Over-max Points warning and video-link hint became red `role="alert"` errors | `points-entry-form.tsx`, `announcement-form.tsx` | resolved `9b1f388` (amber descriptions) |
+| non-blocking | Confirm button colour keyed off the label text | `confirm-dialog.tsx` | resolved `9b1f388` (`destructive` prop) |
+| non-blocking | Focus falls to `body` after a setup-row delete; its dialog's `pending` never shows | `setup-row.tsx` | accepted |
+| non-blocking | `FieldLabel`s beside the rich-text editor label nothing; the editor's own link/image panels still use raw labels | three forms, `rich-text-editor.tsx` | accepted |
+| non-blocking | Participants picker's `aria-label` hides the "(n chosen)" label (pre-existing) | `award-form.tsx` | accepted |
+
+**Coding standards**
+
+| Severity | Finding | Paths | Disposition |
+|---|---|---|---|
+| non-blocking | Maintainer's guide/CLAUDE.md don't describe Field, ConfirmDialog, toasts; portal list stale | docs | resolved `9b1f388` |
+| non-blocking | Days hand-roll the usage text | `days-editor.tsx` | resolved `9b1f388` (`usageSummary`) |
+| non-blocking | Pin/Unpin toasts had no noun | `announcement-admin-buttons.tsx` | resolved `9b1f388` |
+| non-blocking | Standings controls re-implement `ConfirmActionButton`; `SuggestionCombobox` has no `id`; mixed id styles in the settings form; `ActionResult` restates `MutationResult`; "added" vs "saved" toast wording; unused `cn-toast` class from the generated Toaster | several | accepted (small; next touch) |
+
+## [CLOSEOUT]
+
+| ID | What | Worker | Commit |
+|---|---|---|---|
+| B0 | shadcn field/alert-dialog/sonner/separator; `ConfirmDialog`; Toaster; themed AlertDialog portal | orchestrator | `41c9db9`, `296e158` |
+| B1 | delete buttons + Standings visibility → AlertDialog + toasts | sonnet | `1db343c` |
+| B2 | Announcement, Award, Points Entry, FAQ, Schedule forms → Field + toasts | sonnet | `367d9dc` |
+| B3 | settings form, Days/Competitions/Teams editors, setup rows → Field, dialogs, toasts | opus | `5b19e2b` |
+| B4 | evidence script, screenshots, round-trips, overflow | sonnet | `cadc944` (+ rerun) |
+| R | smoke port; review fixes | orchestrator | `6e67bc2`, `9b1f388` |
+
+Verdicts (local run surface, private Postgres, production build):
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| B: every destructive action opens an AlertDialog | PASS | `test-results/custom-inputs-b-forms/round-trips.txt` (Cancel keeps the row, Delete removes it; `window.confirm/alert` grep empty); `10-*`, `11-*` screenshots |
+| B: refused deletes show the server's text | PASS | round-trips (duplicate Team refusal toast); `13-*` screenshot shows toast + FieldError |
+| B: save/fail toasts | PASS | round-trips; `12-*` (save toast), `13-*` (fail toast). Slack toast: approved scope change |
+| Story 10: Field layout on every form | PASS | `01-*`…`09-*` screenshots, XI + IX at 375/1280 |
+| Screenshots 375/1280, XI + dark IX, dialog open | PASS | 48 PNGs in `test-results/custom-inputs-b-forms/` |
+| Zero horizontal overflow 375/768/812/1024/1280 | PASS | `test-results/custom-inputs-b-overflow/overflow.txt` (146/146 at 0px, incl. a dialog open at 375) |
+| `pnpm gate` | PASS | `test-results/custom-inputs-b-gate/gate.txt` (typecheck, lint 0 errors, 614 tests, build, smoke 148 ok) |
+
+Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3150 pnpm db:migrate && pnpm gate`; evidence: `pnpm db:migrate && pnpm seed:all && pnpm build && pnpm tsx scripts/custom-inputs-b-evidence.ts` on a private DB.
+
+Isolation check: B1, B2, B3 ran in parallel worktrees on disjoint files as predicted; all three cherry-picked cleanly.
