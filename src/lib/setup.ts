@@ -506,9 +506,22 @@ export function settingsGuardError(
     const teams = ctx.teamCount === 1 ? "1 Team" : `${ctx.teamCount} Teams`;
     return `This War Week has ${teams}. Delete ${ctx.teamCount === 1 ? "it" : "them"} before switching to free-for-all.`;
   }
-  const outside = [...ctx.dayDates]
+  return dayOutsideRangeError(ctx.dayDates, values.startDate, values.endDate);
+}
+
+/**
+ * Refuses War Week dates that would leave an existing Day outside them,
+ * naming the earliest such Day. Shared by the settings save and the date
+ * range picker, so both show the same text.
+ */
+export function dayOutsideRangeError(
+  dayDates: string[],
+  startDate: string,
+  endDate: string,
+): string | null {
+  const outside = [...dayDates]
     .sort()
-    .find((date) => date < values.startDate || date > values.endDate);
+    .find((date) => date < startDate || date > endDate);
   if (outside) {
     return `The Day on ${outside} falls outside the new dates. Move or delete it first.`;
   }
