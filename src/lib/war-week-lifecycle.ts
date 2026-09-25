@@ -1,0 +1,170 @@
+import { z } from "zod";
+
+import type { WarWeek } from "@/db/schema";
+import {
+  type Parsed,
+  optional,
+  parseWith,
+  splitLines,
+  trimmed,
+} from "@/lib/setup";
+import type { Standings } from "@/lib/standings";
+import { warWeekSettingsSeedShape as seed } from "@/seed/schema";
+
+type Status = WarWeek["status"];
+
+/**
+ * Why a War Week can't move from `from` to `to`, or null when it can. The
+ * only moves are Start (`upcoming → live`), End (`live → complete`) and
+ * Reopen (`complete → live`); there's no way back to `upcoming`.
+ * `liveEdition` is another War Week that is `live` now, if any: at most one
+ * War Week is live, so going live waits for it to end.
+ */
+export function transitionError(
+  from: Status,
+  to: Status,
+  { liveEdition }: { liveEdition: string | null },
+): string | null {
+  if (from === to) return `This War Week is already ${to}.`;
+  if (to === "upcoming") return "A War Week can't go back to upcoming.";
+  if (to === "complete") {
+    return from === "live" ? null : "Start this War Week before ending it.";
+  }
+  // to === "live", from upcoming (Start) or complete (Reopen).
+  return liveEdition ? `End ${liveEdition.toUpperCase()} first.` : null;
+}
+
+const NUMERALS: [number, string][] = [
+  [1000, "m"],
+  [900, "cm"],
+  [500, "d"],
+  [400, "cd"],
+  [100, "c"],
+  [90, "xc"],
+  [50, "l"],
+  [40, "xl"],
+  [10, "x"],
+  [9, "ix"],
+  [5, "v"],
+  [4, "iv"],
+  [1, "i"],
+];
+
+/** A positive whole number as a lowercase Roman numeral (12 → "xii"). */
+export function toRoman(n: number): string {
+  let rest = n;
+  let roman = "";
+  for (const [value, numeral] of NUMERALS) {
+    while (rest >= value) {
+      roman += numeral;
+      rest -= value;
+    }
+  }
+  return roman;
+}
+
+/**
+ * The next edition after every existing War Week: the highest edition
+ * number + 1 as a Roman numeral, and the latest year + 1. With no War Week,
+ * edition I in `fallbackYear`.
+ */
+export function nextEditionDefaults(
+  warWeeks: Pick<WarWeek, "editionNumber" | "year">[],
+  fallbackYear = new Date().getFullYear(),
+): { edition: string; editionNumber: number; year: number } {
+  if (warWeeks.length === 0) {
+    return { edition: "i", editionNumber: 1, year: fallbackYear };
+  }
+  const editionNumber = Math.max(...warWeeks.map((w) => w.editionNumber)) + 1;
+  const year = Math.max(...warWeeks.map((w) => w.year)) + 1;
+  return { edition: toRoman(editionNumber), editionNumber, year };
+}
+
+/**
+ * The Winner to prefill on End: first place on the main leaderboard (Team
+ * Standings, or individual Standings in free-for-all). Tied first places
+ * are joined with " & ". Blank when nobody has points.
+ */
+export function defaultWinner(standings: Standings): string {
+  const rows =
+    standings.main === "team" ? standings.team : standings.individual;
+  return rows
+    .filter((row) => row.rank === 1)
+    .map((row) => row.name)
+    .join(" & ");
+}
+
+const closingSchema = z.object({
+  winner: optional(seed.winner),
+  highlights: z.preprocess(splitLines, seed.highlights),
+});
+
+/** What End War Week records, as the dialog holds it. */
+export type ClosingInput = { winner: string; highlights: string };
+export type ClosingValues = Pick<WarWeek, "winner" | "highlights">;
+
+/** Validates the End War Week dialog. Never throws; returns the first error. */
+export function parseClosingInput(input: ClosingInput): Parsed<ClosingValues> {
+  return parseWith(closingSchema, input);
+}
+
+const nextWarWeekSchema = z
+  .object({
+    edition: z.preprocess(
+      (value) =>
+        typeof value === "string" ? value.trim().toLowerCase() : value,
+      z
+        .string()
+        .min(1)
+        .max(8)
+        .regex(/^[ivxlcdm]+$/, "must be a Roman numeral like XII"),
+    ),
+    editionNumber: z.coerce.number().int().min(1),
+    year: z.coerce.number().int().min(2000).max(2999),
+    startDate: trimmed(seed.startDate),
+    endDate: trimmed(seed.endDate),
+    storyTheme: trimmed(seed.storyTheme),
+    copyOrganizers: z.boolean().default(true),
+    copySettings: z.boolean().default(true),
+    copyCompetitions: z.boolean().default(false),
+    copyFaq: z.boolean().default(false),
+  })
+  .refine((s) => s.startDate <= s.endDate, {
+    error: "Start date must not be after the end date.",
+    path: ["startDate"],
+  });
+
+/** The Create next War Week form, as it holds its fields. */
+export type NextWarWeekInput = {
+  edition: string;
+  editionNumber: string | number;
+  year: string | number;
+  startDate: string;
+  endDate: string;
+  storyTheme: string;
+  /** Default on; the creating Organizer is always included anyway. */
+  copyOrganizers?: boolean;
+  /** Default on: mode, labels, links and the Appearance Theme. */
+  copySettings?: boolean;
+  /** Default off: Competitions with their Placement Points and scoring. */
+  copyCompetitions?: boolean;
+  /** Default off. */
+  copyFaq?: boolean;
+};
+export type NextWarWeekValues = z.infer<typeof nextWarWeekSchema>;
+
+/** Validates Create next War Week. Never throws; returns the first error. */
+export function parseNextWarWeekInput(
+  input: NextWarWeekInput,
+): Parsed<NextWarWeekValues> {
+  return parseWith(
+    nextWarWeekSchema,
+    input,
+    (issue) => (issue.code === "custom" ? issue.message : null),
+    {
+      edition: "Edition",
+      editionNumber: "Edition number",
+      year: "Year",
+    },
+  );
+}

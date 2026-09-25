@@ -1,21 +1,29 @@
 import { notFound, redirect } from "next/navigation";
 
-import { getAdminAccess } from "@/auth/organizer";
+import { getAdminEditions, getAdminWarWeek } from "@/auth/organizer";
+import { getSessionEmail } from "@/auth/server";
+import { canAdministerWarWeek } from "@/lib/access";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 /**
- * The `/admin` gate for the current War Week. Every admin page calls this
- * first: anonymous users go to sign-in and come back to `returnTo`; the
- * caller renders the refusal for `not-organizer`.
+ * The `/admin` gate. Every admin page calls this first: anonymous users go
+ * to sign-in and come back to `returnTo`; the caller renders the refusal
+ * for a non-Organizer. The War Week is the one picked in the edition
+ * switcher (the `admin_edition` cookie) when the email may still
+ * administer it, otherwise the current War Week.
  */
 export async function loadAdminPage(returnTo: string) {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) notFound();
+  const current = await getCurrentWarWeek();
+  if (!current) notFound();
 
-  const { access, email } = await getAdminAccess(warWeek);
-  if (access === "anonymous" || !email) {
+  const email = await getSessionEmail();
+  if (!email) {
     redirect(`/sign-in?callbackURL=${encodeURIComponent(returnTo)}`);
   }
 
-  return { warWeek, email, isOrganizer: access === "organizer" };
+  const warWeek = (await getAdminWarWeek(email, current)) ?? current;
+  const isOrganizer = canAdministerWarWeek(email, warWeek, current);
+  const editions = isOrganizer ? await getAdminEditions(email, current) : [];
+
+  return { warWeek, email, isOrganizer, editions };
 }

@@ -119,8 +119,19 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   `organizerEmails` (case-insensitive). `isOrganizer` in `src/lib/access.ts`
   is the one check; admin pages use `getAdminAccess` and server actions use
   `requireOrganizer` (both in `src/auth/organizer.ts`).
-- `/admin` manages the current War Week. Anonymous visitors are sent to
-  sign-in; signed-in non-Organizers see "Organizers only".
+- `/admin` manages the current War Week by default. Its header's edition
+  switcher (the `admin_edition` cookie) picks another edition the email may
+  administer, and a banner says so ("Editing the Archive: War Week X").
+  Anonymous visitors are sent to sign-in; signed-in non-Organizers see
+  "Organizers only".
+- `canAdministerWarWeek` in `src/lib/access.ts` is the write rule: the email
+  is on the target War Week's `organizerEmails`, or the target is `complete`
+  and the email is on the current War Week's `organizerEmails` (so past
+  results can be corrected). An Organizer of only a past edition can't
+  change the current one. `requireOrganizer` applies it; every action loads
+  the War Week from the row it changes or the id in the request (or, for a
+  create with no row, the edition selected in `/admin`) and re-checks it on
+  the server.
 - Every page and API route needs a JG sign-in. Anonymous visitors to a
   page go to `/sign-in` and come back afterwards; API routes answer 401.
   Only `/sign-in`, `/api/auth/*`, `/about`, `/privacy` and `/terms` are
@@ -137,6 +148,28 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 - Standings are always visible to every signed-in user. `/<edition>/finale`
   is readable by any signed-in JG user; only Organizers see the admin link
   to it (`/admin/standings`).
+
+## War Week lifecycle rules
+
+- The current War Week is picked from status, never the clock: the `live`
+  one, else the next `upcoming`, else the latest `complete`.
+- Status changes only through the lifecycle actions in `/admin/setup`, each
+  behind a confirm, never through the settings form:
+  - **Start**: `upcoming → live`
+  - **End**: `live → complete`, recording the **Winner** (prefilled from
+    first place in the main Standings; a tie reads "Red & Blue") and
+    highlights. Both show in the Archive and stay editable in the settings.
+  - **Reopen**: `complete → live`, for corrections in the live view.
+  There's no way back to `upcoming`.
+- At most one War Week is `live`. Start or Reopen while another is live is
+  refused ("End XI first"); the `war_week_one_live` partial unique index
+  refuses it in the database too.
+- **Create next War Week** (`/admin/setup/next`) makes an `upcoming` edition
+  prefilled with the next Roman numeral, edition number and year. It can
+  copy Organizers (on; the creator is always one), settings with the
+  Appearance Theme (on), Competitions with new ids (off) and the FAQ (off).
+  Teams, roster, Days, Schedule, Points Entries, Awards and Announcements
+  are never copied. It doesn't change what's current until it starts.
 
 ## Points Entry rules
 
@@ -196,6 +229,10 @@ same rows with the same values (only `updated_at` moves).
     existing Points Entries; the target-kind rule is enforced in zod (seed
     files and organizer actions), not the database.
 - **Organizer-owned data** is seed-initialized but never clobbered:
+  - `status`, `winner` and `highlights` are applied only
+    when a War Week is first inserted; the lifecycle actions and settings
+    own them afterwards. A `live` seed for a new War Week while another is
+    live is refused with a clear error.
   - Points Entries, Awards (with their recipients) and Announcements in a
     seed carry a `key`. The loader inserts a keyed record only when no record
     with that key exists, and never updates or deletes one. Records organizers

@@ -2487,6 +2487,132 @@ async function assertAwardAdminPages(sessions: {
  * and one Day Theme edit that the War Week's own pages reflect. Restores XI
  * after.
  */
+/**
+ * Creates XII from XI, ends XI with a Winner and starts XII through the
+ * lifecycle actions, checks the site follows, then puts XI back (`live`,
+ * no Winner) and deletes XII by SQL so the smoke can run again.
+ */
+async function assertWarWeekLifecycle(sessions: {
+  organizer: SmokeSession;
+  notOrganizer: SmokeSession;
+}) {
+  const check =
+    "lifecycle: create XII, end XI with a Winner, start XII, then restore";
+  const restore = async () => {
+    await runQuery("delete from war_week where edition = 'xii'");
+    await runQuery(
+      "update war_week set status = 'live', winner = null, highlights = '{}' where edition = 'xi'",
+    );
+  };
+  try {
+    const ids = serverActionIds();
+    const missing = [
+      "createNextWarWeek",
+      "endWarWeek",
+      "startWarWeek",
+      "reopenWarWeek",
+    ].filter((name) => !ids[name]);
+    if (missing.length > 0) {
+      fail(check, `missing action ids: ${missing.join(", ")}`);
+      return;
+    }
+    await restore();
+    const editionId = async (edition: string) =>
+      (
+        await runQuery<{ id: string }>(
+          "select id from war_week where edition = $1",
+          [edition],
+        )
+      )[0]?.id;
+    const xiId = await editionId("xi");
+    const xId = await editionId("x");
+    const problems: string[] = [];
+    const expectRefused = async (
+      label: string,
+      name: string,
+      args: unknown[],
+    ) => {
+      const result = await callAction(ids[name], args, sessions.notOrganizer);
+      if (result.ok || !/not an Organizer/.test(result.error)) {
+        problems.push(`${label}: ${JSON.stringify(result)}`);
+      }
+    };
+    const expectOk = async (label: string, name: string, args: unknown[]) => {
+      const result = await callAction(ids[name], args, sessions.organizer);
+      if (!result.ok) problems.push(`${label}: ${JSON.stringify(result)}`);
+    };
+
+    await expectRefused("non-Organizer ends XI", "endWarWeek", [
+      xiId,
+      { winner: "Nope", highlights: "" },
+    ]);
+    await expectRefused(
+      "non-Organizer reopens X (forged id)",
+      "reopenWarWeek",
+      [xId],
+    );
+    await expectOk("create XII", "createNextWarWeek", [
+      xiId,
+      {
+        edition: "XII",
+        editionNumber: "12",
+        year: "2027",
+        startDate: "2027-02-21",
+        endDate: "2027-02-26",
+        storyTheme: "Smoke XII",
+        copyOrganizers: true,
+        copySettings: true,
+      },
+    ]);
+    const xiiId = await editionId("xii");
+    if (!xiiId) problems.push("XII was not created");
+    const early = await callAction(
+      ids.startWarWeek,
+      [xiiId],
+      sessions.organizer,
+    );
+    if (early.ok || early.error !== "End XI first.") {
+      problems.push(`start XII while XI is live: ${JSON.stringify(early)}`);
+    }
+    await expectOk("end XI", "endWarWeek", [
+      xiId,
+      { winner: "Smoke Winner", highlights: "" },
+    ]);
+    await expectRefused("non-Organizer starts XII", "startWarWeek", [xiiId]);
+    await expectOk("start XII", "startWarWeek", [xiiId]);
+    await expectRefused("non-Organizer ends XII", "endWarWeek", [
+      xiiId,
+      { winner: "Nope", highlights: "" },
+    ]);
+
+    const root = await signedInFetch(`${BASE_URL}/`, { redirect: "manual" });
+    if (!root.headers.get("location")?.endsWith("/xii")) {
+      problems.push(`/ goes to ${root.headers.get("location")}`);
+    }
+    const history = await (await signedInFetch(`${BASE_URL}/history`)).text();
+    if (!history.includes('href="/xi"') || !history.includes("Smoke Winner")) {
+      problems.push("/history lacks XI with Smoke Winner");
+    }
+    const archiveAdmin = await (
+      await fetch(`${BASE_URL}/admin/setup`, {
+        headers: { cookie: `${sessions.organizer.cookie}; admin_edition=xi` },
+      })
+    ).text();
+    if (!archiveAdmin.includes("Editing the Archive: War Week XI")) {
+      problems.push("the switcher can't edit XI");
+    }
+
+    if (problems.length === 0) ok(check);
+    else fail(check, problems.join("; "));
+  } catch (error) {
+    fail(check, String(error));
+  } finally {
+    await restore().catch((error) =>
+      fail("restore XI after the lifecycle check", String(error)),
+    );
+  }
+}
+
 async function assertSetup(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;
@@ -2545,17 +2671,16 @@ async function assertSetup(sessions: {
   }
 
   const [xi] = await runQuery<Record<string, string | string[] | null>>(
-    `select story_theme, start_date::text, end_date::text, status, mode,
+    `select story_theme, start_date::text, end_date::text, mode,
        team_label, leader_title, slack_channel_url, wiki_url, organizer_emails,
        primary_color, primary_foreground_color, accent_color, background_color,
-       foreground_color, logo_url, banner_url, font_preset
+       foreground_color, logo_url, banner_url, font_preset, winner, highlights
      from war_week where edition = 'xi'`,
   );
   const input = {
     storyTheme: xi.story_theme,
     startDate: xi.start_date,
     endDate: xi.end_date,
-    status: xi.status,
     mode: xi.mode,
     teamLabel: xi.team_label,
     leaderTitle: xi.leader_title,
@@ -2570,6 +2695,8 @@ async function assertSetup(sessions: {
     logoUrl: xi.logo_url ?? "",
     bannerUrl: xi.banner_url ?? "",
     fontPreset: xi.font_preset,
+    winner: xi.winner ?? "",
+    highlights: (xi.highlights as string[]).join("\n"),
   };
   const [busyDay] = await runQuery<{ id: string; day_theme: string }>(
     `select d.id, d.day_theme from day d join war_week w on w.id = d.war_week_id
@@ -3714,6 +3841,8 @@ async function main() {
       await assertSetup(sessions);
       await assertSetupTeamsAndCompetitions(sessions);
       await assertSetupScheduleFaq(sessions);
+      // Last: it changes which War Week is current, then restores XI.
+      await assertWarWeekLifecycle(sessions);
     }
   } finally {
     await killServer(server);

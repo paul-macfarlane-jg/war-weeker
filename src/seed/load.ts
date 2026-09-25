@@ -1,4 +1,4 @@
-import { and, eq, notInArray, sql } from "drizzle-orm";
+import { and, eq, ne, notInArray, sql } from "drizzle-orm";
 
 import { DBOrTx, DBTx, db } from "@/db";
 import {
@@ -21,7 +21,9 @@ import { WarWeekSeed } from "@/seed/schema";
  * Loads a validated War Week seed in one transaction. See CONTEXT.md, "Seed
  * idempotence rules":
  *
- * - `war_week` is upserted by `edition`.
+ * - `war_week` is upserted by `edition`; `status`, `winner` and
+ *   `highlights` are set only on first insert. A `live` seed that would
+ *   make a second live War Week is refused.
  * - Setup data (Days, Schedule Items, Teams, Participants, Competitions, FAQ
  *   Items) is upserted by natural key and anything absent from the seed is
  *   deleted, so setup always matches the seed after a load.
@@ -88,7 +90,6 @@ async function upsertWarWeek(tx: DBTx, seed: WarWeekSeed): Promise<WarWeek> {
     startDate: seed.startDate,
     endDate: seed.endDate,
     storyTheme: seed.storyTheme,
-    status: seed.status,
     mode: seed.mode,
     teamLabel: seed.teamLabel,
     leaderTitle: seed.leaderTitle,
@@ -103,17 +104,46 @@ async function upsertWarWeek(tx: DBTx, seed: WarWeekSeed): Promise<WarWeek> {
     fontPreset: seed.fontPreset,
     wikiUrl: seed.wikiUrl ?? null,
     organizerEmails: seed.organizerEmails,
-    winner: seed.winner ?? null,
-    highlights: seed.highlights,
     updatedAt: new Date(),
   };
 
+  if (seed.status === "live") await refuseSecondLive(tx, seed.edition);
+
+  // Seed-initialized only: the lifecycle actions own these once it exists.
   const [row] = await tx
     .insert(warWeek)
-    .values(values)
+    .values({
+      ...values,
+      status: seed.status,
+      winner: seed.winner ?? null,
+      highlights: seed.highlights,
+    })
     .onConflictDoUpdate({ target: warWeek.edition, set: values })
     .returning();
   return row;
+}
+
+/**
+ * A `live` seed for a War Week that doesn't exist yet would make a second
+ * live War Week (the `war_week_one_live` index refuses it too): say which
+ * one to end instead of a bare constraint error.
+ */
+async function refuseSecondLive(tx: DBTx, edition: string) {
+  const [existing] = await tx
+    .select({ id: warWeek.id })
+    .from(warWeek)
+    .where(eq(warWeek.edition, edition));
+  if (existing) return;
+  const [live] = await tx
+    .select({ edition: warWeek.edition })
+    .from(warWeek)
+    .where(and(eq(warWeek.status, "live"), ne(warWeek.edition, edition)))
+    .limit(1);
+  if (live) {
+    throw new Error(
+      `Seed "${edition}" is live, but War Week ${live.edition.toUpperCase()} is already live. End it first or give the seed another status.`,
+    );
+  }
 }
 
 async function syncTeams(

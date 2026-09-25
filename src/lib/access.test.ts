@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   adminAccess,
+  canAdministerWarWeek,
   canUseMcp,
   isJahnelGroupEmail,
   isOrganizer,
@@ -66,6 +67,54 @@ describe("isOrganizer", () => {
     expect(
       isOrganizer("pmacfarlane@jahnelgroup.com", { organizerEmails: [] }),
     ).toBe(false);
+  });
+});
+
+describe("canAdministerWarWeek", () => {
+  const organizer = "pmacfarlane@jahnelgroup.com";
+  const pastOnly = "past@jahnelgroup.com";
+  const current = { organizerEmails: [organizer], status: "live" as const };
+  const complete = { organizerEmails: [pastOnly], status: "complete" as const };
+  const upcoming = { organizerEmails: [pastOnly], status: "upcoming" as const };
+
+  it("lets an Organizer of the target change it", () => {
+    expect(canAdministerWarWeek(organizer, current, current)).toBe(true);
+    expect(canAdministerWarWeek(pastOnly, complete, current)).toBe(true);
+    expect(canAdministerWarWeek(pastOnly, upcoming, current)).toBe(true);
+  });
+
+  it("refuses a non-Organizer on every edition, whatever id they send", () => {
+    for (const target of [current, complete, upcoming]) {
+      expect(
+        canAdministerWarWeek("someone@jahnelgroup.com", target, current),
+      ).toBe(false);
+      expect(canAdministerWarWeek(null, target, current)).toBe(false);
+    }
+  });
+
+  it("refuses an Organizer of only a past edition on the current one", () => {
+    expect(canAdministerWarWeek(pastOnly, current, current)).toBe(false);
+  });
+
+  it("lets a current Organizer change a complete edition, not an upcoming one", () => {
+    expect(canAdministerWarWeek(organizer, complete, current)).toBe(true);
+    expect(canAdministerWarWeek(organizer, upcoming, current)).toBe(false);
+  });
+
+  it("refuses a non-JG email even on an allowlist", () => {
+    const outsider = "outsider@gmail.com";
+    expect(
+      canAdministerWarWeek(
+        outsider,
+        { organizerEmails: [outsider], status: "complete" },
+        { organizerEmails: [outsider] },
+      ),
+    ).toBe(false);
+  });
+
+  it("uses only the target's allowlist when there's no current War Week", () => {
+    expect(canAdministerWarWeek(pastOnly, complete, undefined)).toBe(true);
+    expect(canAdministerWarWeek(organizer, complete, undefined)).toBe(false);
   });
 });
 

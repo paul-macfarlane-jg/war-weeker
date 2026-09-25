@@ -32,14 +32,36 @@ export function isOrganizer(
   );
 }
 
+/**
+ * Who may change a War Week (`target`): an Organizer of that War Week, or,
+ * when it's `complete`, an Organizer of the current War Week, so past
+ * results can be corrected. Every admin page and Organizer action goes
+ * through this (via `requireOrganizer` / `getAdminAccess`).
+ */
+export function canAdministerWarWeek(
+  email: string | null | undefined,
+  target: Pick<WarWeek, "organizerEmails"> & { status?: WarWeek["status"] },
+  current: Pick<WarWeek, "organizerEmails"> | undefined,
+): boolean {
+  if (isOrganizer(email, target)) return true;
+  return (
+    target.status === "complete" &&
+    current !== undefined &&
+    isOrganizer(email, current)
+  );
+}
+
 export type AdminAccess = "anonymous" | "not-organizer" | "organizer";
 
 export function adminAccess(
   email: string | null | undefined,
-  warWeek: Pick<WarWeek, "organizerEmails">,
+  warWeek: Pick<WarWeek, "organizerEmails"> & { status?: WarWeek["status"] },
+  current?: Pick<WarWeek, "organizerEmails">,
 ): AdminAccess {
   if (!email) return "anonymous";
-  return isOrganizer(email, warWeek) ? "organizer" : "not-organizer";
+  return canAdministerWarWeek(email, warWeek, current)
+    ? "organizer"
+    : "not-organizer";
 }
 
 const PUBLIC_PREFIXES = ["/sign-in", "/api/auth"];

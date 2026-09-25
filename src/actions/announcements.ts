@@ -2,14 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireOrganizer } from "@/auth/organizer";
+import { requireAdminWarWeek, requireOrganizer } from "@/auth/organizer";
 import {
   type AnnouncementInput,
   parseAnnouncementInput,
 } from "@/lib/announcements";
 import * as mutations from "@/mutations/announcements";
 import { getAnnouncementWarWeek } from "@/queries/announcements";
-import { getCurrentWarWeek } from "@/queries/war-weeks";
 
 export type AnnouncementActionResult =
   { ok: true } | { ok: false; error: string };
@@ -38,8 +37,10 @@ function revalidateWarWeek(edition: string) {
 export async function createAnnouncement(
   input: AnnouncementInput,
 ): Promise<AnnouncementActionResult> {
-  const warWeek = await getCurrentWarWeek();
-  if (!warWeek) return { ok: false, error: "There's no current War Week." };
+  // No row to derive it from: the War Week selected in `/admin`.
+  const selected = await requireAdminWarWeek();
+  if (!selected.ok) return selected;
+  const { warWeek } = selected;
   const organizer = await organizerContext(warWeek);
   if (!organizer.ok) return organizer;
 

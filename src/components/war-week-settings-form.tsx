@@ -12,6 +12,7 @@ import { OrganizerEmailChips } from "@/components/organizer-email-chips";
 import { Button } from "@/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -19,6 +20,7 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import type { WarWeek } from "@/db/schema";
 import type { WarWeekSettingsInput } from "@/lib/setup";
 import {
@@ -42,12 +44,6 @@ const COLOR_FIELDS: { field: ThemeColorField; label: string }[] = [
   { field: "foregroundColor", label: "Text" },
 ];
 
-const STATUS_OPTIONS: SelectOption[] = [
-  { value: "upcoming", label: "Upcoming" },
-  { value: "live", label: "Live" },
-  { value: "complete", label: "Complete" },
-];
-
 const MODE_OPTIONS: SelectOption[] = [
   { value: "teams", label: "Teams" },
   { value: "free-for-all", label: "Free-for-all" },
@@ -60,7 +56,8 @@ const FONT_OPTIONS: SelectOption[] = [
 ];
 
 /**
- * Edit the current War Week's settings and Appearance Theme. The theme
+ * Edit a War Week's settings, Appearance Theme and closing (Winner and
+ * highlights). Status isn't here: Start, End and Reopen change it. The theme
  * preview and contrast warnings update as you type; the server action does
  * the validation and guards, and its error is what's shown.
  */
@@ -159,16 +156,6 @@ export function WarWeekSettingsForm({
                 setValues((v) => ({ ...v, startDate: start, endDate: end }));
                 setError(null);
               }}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="settings-status">Status</FieldLabel>
-            <OptionSelect
-              id="settings-status"
-              name="status"
-              options={STATUS_OPTIONS}
-              value={values.status}
-              onValueChange={(status) => setValue("status", status)}
             />
           </Field>
           <Field>
@@ -282,6 +269,40 @@ export function WarWeekSettingsForm({
             ))}
           </ul>
         )}
+      </FieldSet>
+
+      <FieldSet>
+        <FieldLegend className="mb-2 font-semibold">Closing</FieldLegend>
+        <FieldGroup className="grid gap-4">
+          <Field>
+            <FieldLabel htmlFor="settings-winner">Winner</FieldLabel>
+            <Input
+              id="settings-winner"
+              name="winner"
+              className="h-11 sm:h-9"
+              maxLength={200}
+              placeholder="Set when the War Week ends"
+              value={values.winner}
+              onChange={set("winner")}
+            />
+            <FieldDescription>
+              Shown in the Archive. A tie can be &ldquo;Red &amp; Blue&rdquo;.
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="settings-highlights">Highlights</FieldLabel>
+            <Textarea
+              id="settings-highlights"
+              name="highlights"
+              rows={4}
+              value={values.highlights}
+              onChange={(event) => setValue("highlights", event.target.value)}
+            />
+            <FieldDescription>
+              One short line each, shown in the Archive.
+            </FieldDescription>
+          </Field>
+        </FieldGroup>
       </FieldSet>
 
       <div className="flex flex-col gap-2">

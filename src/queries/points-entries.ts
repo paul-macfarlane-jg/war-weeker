@@ -137,6 +137,7 @@ export async function getPointsEntryForEdit(
 const organizerWarWeekColumns = {
   id: warWeekTable.id,
   edition: warWeekTable.edition,
+  status: warWeekTable.status,
   organizerEmails: warWeekTable.organizerEmails,
 };
 
