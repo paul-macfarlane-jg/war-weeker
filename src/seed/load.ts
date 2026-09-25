@@ -268,7 +268,8 @@ async function syncCompetitions(
             scoring: sql`excluded.scoring`,
             countsTowardTeam: sql`excluded.counts_toward_team`,
             competitionGroup: sql`excluded.competition_group`,
-            format: sql`excluded.format`,
+            // `format` is set on insert only: a reload must never turn an
+            // Organizer's Bracket back into `points`.
             updatedAt: new Date(),
           },
         })
