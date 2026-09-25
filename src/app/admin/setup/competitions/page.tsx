@@ -13,7 +13,7 @@ import { loadAdminPage } from "../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Competitions · War Weeker" };
+export const metadata: Metadata = { title: "Competitions · JG War Week" };
 
 export default async function SetupCompetitionsPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage(

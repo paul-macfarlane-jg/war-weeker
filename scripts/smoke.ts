@@ -409,7 +409,7 @@ async function assertInstallable() {
       appleTouchIcon: home.includes('href="/icons/apple-touch-icon.png"'),
       favicon: home.includes('rel="icon" href="/favicon.ico'),
       install:
-        install.status === 200 && installBody.includes("Install War Weeker"),
+        install.status === 200 && installBody.includes("Install JG War Week"),
       installFooter: installBody.includes("Jahnel Group"),
     };
     if (Object.values(checks).every(Boolean)) {
@@ -433,7 +433,7 @@ async function assertLlmsTxt() {
       contentType: (res.headers.get("content-type") ?? "").startsWith(
         "text/plain",
       ),
-      title: body.startsWith("# War Weeker\n"),
+      title: body.startsWith("# JG War Week\n"),
       tools: Object.keys(MCP_TOOLS).every((name) =>
         body.includes(`\`${name}\``),
       ),
@@ -945,7 +945,7 @@ async function assertSignInPage() {
     const res = await fetch(`${BASE_URL}/sign-in?callbackURL=%2Fadmin`);
     const body = await res.text();
     const checks = {
-      heading: body.includes("Sign in to War Weeker"),
+      heading: body.includes("Sign in to JG War Week"),
       domain: body.includes("Use your @jahnelgroup.com Google account."),
       notConfigured: body.includes("configured on this server"),
       about: body.includes('href="/about"'),

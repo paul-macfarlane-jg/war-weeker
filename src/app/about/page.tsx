@@ -16,9 +16,9 @@ import { warWeekThemeStyle } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "About · War Weeker",
+  title: "About · JG War Week",
   description:
-    "War Weeker is where Jahnel Group runs War Week: setup, schedule, Teams, Competitions, points, the Reveal, and every War Week since 2016.",
+    "The JG War Week app is where Jahnel Group runs War Week: setup, schedule, Teams, Competitions, points, the Reveal, and every War Week since 2016.",
 };
 
 /**
@@ -43,7 +43,7 @@ export default function AboutPage() {
       />
 
       <header className="relative mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-        <span className="text-sm font-bold tracking-wide">War Weeker</span>
+        <span className="text-sm font-bold tracking-wide">JG War Week</span>
         <Link
           href="/sign-in"
           className="text-foreground/70 hover:text-foreground text-sm underline-offset-4 hover:underline"
@@ -62,10 +62,10 @@ export default function AboutPage() {
               Run War Week in one place, and keep every year of it.
             </h1>
             <p className="text-foreground/75 max-w-xl text-lg leading-relaxed sm:text-xl">
-              War Weeker is where Jahnel Group runs War Week: the Story Theme,
-              the schedule, the Teams, the Competitions, the points and the
-              Reveal, on every phone in the building. Organizers set it up with
-              no code, and every War Week since 2016 is still here.
+              The JG War Week app is where Jahnel Group runs War Week: the Story
+              Theme, the schedule, the Teams, the Competitions, the points and
+              the Reveal, on every phone in the building. Organizers set it up
+              with no code, and every War Week since 2016 is still here.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <OpenCurrentEdition />
@@ -100,11 +100,11 @@ export default function AboutPage() {
             </Problem>
           </div>
           <p className="text-foreground/75 max-w-3xl text-lg leading-relaxed">
-            War Weeker puts all of it in one place. Organizers set up an edition
-            with no code, from the theme to the FAQ. Participants get a phone
-            app. The history is back. And it is Jahnel Group&apos;s to change:
-            the source is on GitHub, and the maintainer&apos;s guide walks
-            through the first change.
+            The JG War Week app puts all of it in one place. Organizers set up
+            an edition with no code, from the theme to the FAQ. Participants get
+            a phone app. The history is back. And it is Jahnel Group&apos;s to
+            change: the source is on GitHub, and the maintainer&apos;s guide
+            walks through the first change.
           </p>
         </section>
 
@@ -119,8 +119,8 @@ export default function AboutPage() {
           </div>
           <AboutFeatureGrid />
           <p className="text-foreground/75 max-w-3xl leading-relaxed">
-            Sign in and War Weeker finds you on the roster, so your Team is
-            highlighted wherever it appears. Once you&apos;re signed in,{" "}
+            Sign in and the JG War Week app finds you on the roster, so your
+            Team is highlighted wherever it appears. Once you&apos;re signed in,{" "}
             <strong>More → Install app</strong> puts it on your home screen, and
             every War Week keeps its own colors and logo.
           </p>

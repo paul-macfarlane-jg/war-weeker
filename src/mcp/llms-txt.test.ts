@@ -28,7 +28,7 @@ describe("llmsTxt", () => {
 
   it("follows the llmstxt.org shape: H1, summary blockquote, sections", () => {
     const lines = text.split("\n");
-    expect(lines[0]).toBe("# War Weeker");
+    expect(lines[0]).toBe("# JG War Week");
     expect(lines.find((line) => line.startsWith("> "))).toBeDefined();
     for (const section of ["Pages", "MCP", "Access", "Source"]) {
       expect(text).toContain(`\n## ${section}\n`);
@@ -50,6 +50,6 @@ describe("llmsTxt", () => {
   });
 
   it("links the source repo from the footer", () => {
-    expect(text).toContain("https://github.com/paul-macfarlane/war-weeker");
+    expect(text).toContain("https://github.com/paul-macfarlane/jg-war-week");
   });
 });

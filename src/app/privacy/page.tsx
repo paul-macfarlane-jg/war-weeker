@@ -6,12 +6,12 @@ import { ABOUT_THEME } from "@/lib/about";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "Privacy · War Weeker",
-  description: "What War Weeker collects, why, and who can see it.",
+  title: "Privacy · JG War Week",
+  description: "What JG War Week collects, why, and who can see it.",
 };
 
 /**
- * The public Privacy page: what War Weeker collects and why, in plain
+ * The public Privacy page: what JG War Week collects and why, in plain
  * language. Static on purpose, like `/about`: copy only, no database or
  * session reads (`PUBLIC_PATHS` in `src/lib/access.ts`).
  */
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
     >
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Link href="/about" className="text-sm font-bold tracking-wide">
-          War Weeker
+          JG War Week
         </Link>
         <Link
           href="/sign-in"
@@ -44,9 +44,9 @@ export default function PrivacyPage() {
         </div>
 
         <p className="text-foreground/80 leading-relaxed">
-          War Weeker is an internal Jahnel Group tool for running and following
-          War Week. This page explains what it collects, why, and who can see
-          it.
+          The JG War Week app is an internal Jahnel Group tool for running and
+          following War Week. This page explains what it collects, why, and who
+          can see it.
         </p>
 
         <section className="flex flex-col gap-3">
@@ -91,17 +91,18 @@ export default function PrivacyPage() {
           <h2 className="text-xl font-semibold tracking-tight">Why</h2>
           <p className="text-foreground/80 leading-relaxed">
             We collect this to run War Week and keep its history. Ask Claude,
-            War Weeker&apos;s read-only MCP connector, never returns an email
-            address.
+            the JG War Week app&apos;s read-only MCP connector, never returns an
+            email address.
           </p>
         </section>
 
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-semibold tracking-tight">Sharing</h2>
           <p className="text-foreground/80 leading-relaxed">
-            Nothing is sold or shared. War Weeker is hosted on Vercel with its
-            database on Neon (Postgres). There is no analytics, no advertising
-            and no tracking cookies — only the sign-in session cookie.
+            Nothing is sold or shared. The JG War Week app is hosted on Vercel
+            with its database on Neon (Postgres). There is no analytics, no
+            advertising and no tracking cookies — only the sign-in session
+            cookie.
           </p>
         </section>
 

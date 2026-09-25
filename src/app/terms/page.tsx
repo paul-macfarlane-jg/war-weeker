@@ -6,12 +6,12 @@ import { ABOUT_THEME } from "@/lib/about";
 import { warWeekThemeStyle } from "@/lib/theme";
 
 export const metadata: Metadata = {
-  title: "Terms · War Weeker",
-  description: "The terms for using War Weeker.",
+  title: "Terms · JG War Week",
+  description: "The terms for using JG War Week.",
 };
 
 /**
- * The public Terms page: plain-language terms for using War Weeker. Static
+ * The public Terms page: plain-language terms for using JG War Week. Static
  * on purpose, like `/about`: copy only, no database or session reads
  * (`PUBLIC_PATHS` in `src/lib/access.ts`).
  */
@@ -23,7 +23,7 @@ export default function TermsPage() {
     >
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
         <Link href="/about" className="text-sm font-bold tracking-wide">
-          War Weeker
+          JG War Week
         </Link>
         <Link
           href="/sign-in"
@@ -48,8 +48,8 @@ export default function TermsPage() {
             An internal tool
           </h2>
           <p className="text-foreground/80 leading-relaxed">
-            War Weeker is an internal Jahnel Group tool for Jahnel Group
-            employees only. Signing in requires an @jahnelgroup.com Google
+            The JG War Week app is an internal Jahnel Group tool for Jahnel
+            Group employees only. Signing in requires an @jahnelgroup.com Google
             account.
           </p>
         </section>
@@ -59,7 +59,7 @@ export default function TermsPage() {
             Provided as is
           </h2>
           <p className="text-foreground/80 leading-relaxed">
-            War Weeker is provided as is, with no warranty of any kind.
+            The JG War Week app is provided as is, with no warranty of any kind.
           </p>
         </section>
 

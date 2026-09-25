@@ -14,7 +14,7 @@ describe("SiteFooter", () => {
     expect(html).toContain('target="_blank"');
     expect(html).toContain('rel="noopener noreferrer"');
     expect(html).toContain(">GitHub<");
-    expect(REPO_URL).toBe("https://github.com/paul-macfarlane/war-weeker");
+    expect(REPO_URL).toBe("https://github.com/paul-macfarlane/jg-war-week");
   });
 
   it("links to the About page", () => {

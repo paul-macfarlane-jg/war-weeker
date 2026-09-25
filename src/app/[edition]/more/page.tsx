@@ -40,7 +40,7 @@ export default async function MorePage({
     { label: "FAQ", href: `/${warWeek.edition}/faq`, icon: CircleHelp },
     { label: "War Week history", href: "/history", icon: History },
     { label: "Install app", href: "/install", icon: Download },
-    { label: "About War Weeker", href: "/about", icon: Info },
+    { label: "About JG War Week", href: "/about", icon: Info },
     ...(account.isOrganizer
       ? [{ label: "Admin", href: "/admin", icon: Shield }]
       : []),

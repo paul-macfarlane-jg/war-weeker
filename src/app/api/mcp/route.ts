@@ -195,7 +195,7 @@ const handler = createMcpHandler(
       },
     );
   },
-  { serverInfo: { name: "war-weeker", version: "0.1.0" } },
+  { serverInfo: { name: "jg-war-week", version: "0.1.0" } },
 );
 
 export { handler as GET, handler as POST };

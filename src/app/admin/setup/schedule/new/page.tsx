@@ -10,7 +10,7 @@ import { loadAdminPage } from "../../../gate";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "New Schedule Item · War Weeker" };
+export const metadata: Metadata = { title: "New Schedule Item · JG War Week" };
 
 export default async function NewScheduleItemPage() {
   const { warWeek, email, isOrganizer } = await loadAdminPage(
