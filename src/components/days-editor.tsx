@@ -9,11 +9,10 @@ import {
   deleteDay,
   updateDay,
 } from "@/actions/setup";
+import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { SetupDay } from "@/queries/setup";
-
-const fieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
 
 /**
  * One Day's date and Day Theme, saved on its own. With no `day` it's the
@@ -64,24 +63,22 @@ function DayRow({
       >
         <label className="flex flex-col gap-1 text-sm font-medium">
           Date
-          <input
-            type="date"
+          <DatePicker
             name="date"
             required
             min={startDate}
             max={endDate}
-            className={fieldClass}
             value={date}
-            onChange={(event) => setDate(event.target.value)}
+            onValueChange={setDate}
           />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
           Day Theme
-          <input
+          <Input
             name="dayTheme"
             required
             maxLength={120}
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={dayTheme}
             onChange={(event) => setDayTheme(event.target.value)}
           />

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { InstallInstructions } from "@/components/install-instructions";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeRoot } from "@/components/theme-root";
 import { warWeekThemeStyle } from "@/lib/theme";
 import { getCurrentWarWeek } from "@/queries/war-weeks";
 
@@ -19,7 +20,7 @@ export default async function InstallPage() {
   const warWeek = await getCurrentWarWeek();
 
   return (
-    <div
+    <ThemeRoot
       style={warWeek ? warWeekThemeStyle(warWeek) : undefined}
       className="bg-background text-foreground flex min-h-dvh flex-col font-sans"
     >
@@ -35,6 +36,6 @@ export default async function InstallPage() {
         <InstallInstructions />
       </main>
       <SiteFooter className="mt-auto" />
-    </div>
+    </ThemeRoot>
   );
 }

@@ -6,9 +6,6 @@ import type { SetupActionResult } from "@/actions/setup";
 import { Button } from "@/components/ui/button";
 import type { UsageCount } from "@/lib/setup";
 
-export const setupFieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
 /**
  * Runs one setup row's server action, keeps its result, and refreshes the
  * page on success. `onSaved` runs after a successful save (the add row

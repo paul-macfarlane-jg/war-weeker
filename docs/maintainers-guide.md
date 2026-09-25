@@ -170,6 +170,41 @@ The chain is schema → `pnpm db:generate` → migration in `drizzle/` →
 `pnpm db:migrate` locally → seed format and seed files → UI. Never hand-edit
 a migration.
 
+### Add or change a form control
+
+Convert a field:
+
+```text
+/implement Convert the <field> on the <form> to shadcn's <Select / Switch /
+…>, or our <EntityCombobox / DatePicker / DateRangePicker / TimeCombobox /
+ColorField>, keeping the same state and the same submitted name and value.
+```
+
+Add a new control:
+
+```text
+/implement Add a <what it picks> control to src/components/ for <form>,
+built from shadcn primitives. It posts <value format> under its name, is at
+least 44px tall on phones, and its popup stays inside the War Week's theme.
+```
+
+Notes:
+
+- All UI uses shadcn components (base-nova / Base UI, `components.json`) —
+  never a plain `<select>`, `<input type="checkbox">`, `<input type="date">`,
+  `<input type="time">`, or `<input type="color">`. Add a missing primitive
+  with `pnpm dlx shadcn@latest add <name>`; don't hand-roll a control shadcn
+  already has.
+- The app's own wrappers — `EntityCombobox`, `DatePicker`,
+  `DateRangePicker`, `TimeCombobox`, and `ColorField` — live in
+  `src/components/`. Reach for one of those before building a new control.
+  Only `EntityCombobox` does search and chips.
+- Popups portal into the themed root through `ThemeRoot`, which is wired
+  into `ui/popover`, `ui/select`, and `ui/combobox`, so they keep the War
+  Week's Appearance Theme.
+- Don't put a popup inside a themed root that has `overflow-hidden`: it
+  would be clipped.
+
 ### Add a page
 
 ```text

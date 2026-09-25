@@ -10,31 +10,34 @@ import {
   updateParticipant,
   updateTeam,
 } from "@/actions/setup";
+import { ColorField, type ColorSwatch } from "@/components/color-field";
+import { OptionSelect } from "@/components/option-select";
 import {
   SetupRowButtons,
   SetupRowError,
-  setupFieldClass as fieldClass,
   usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
 import { SuggestionCombobox } from "@/components/suggestion-combobox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { normalizeHex } from "@/lib/color";
 import type { ParticipantInput, TeamInput } from "@/lib/setup";
 import type { SetupParticipant, SetupTeam } from "@/queries/setup";
 
 const EMPTY_TEAM: TeamInput = { name: "", color: "#888888", logoUrl: "" };
 
-/** The color picker needs #rrggbb; expand #rgb and fall back to grey. */
-function pickerValue(hex: string): string {
-  const value = hex.trim();
-  if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
-  if (/^#[0-9a-f]{3}$/i.test(value)) {
-    return `#${[...value.slice(1)].map((d) => d + d).join("")}`.toLowerCase();
-  }
-  return "#888888";
-}
-
 /** One Team's name, color and logo URL. With no `team` it's the add row. */
-function TeamRow({ team, teamLabel }: { team?: SetupTeam; teamLabel: string }) {
+function TeamRow({
+  team,
+  teamLabel,
+  swatches,
+}: {
+  team?: SetupTeam;
+  teamLabel: string;
+  swatches: ColorSwatch[];
+}) {
   const initial: TeamInput = team
     ? { name: team.name, color: team.color, logoUrl: team.logoUrl ?? "" }
     : EMPTY_TEAM;
@@ -60,42 +63,31 @@ function TeamRow({ team, teamLabel }: { team?: SetupTeam; teamLabel: string }) {
       >
         <label className="flex min-w-0 flex-1 flex-col gap-1 text-sm font-medium">
           Name
-          <input
+          <Input
             name="name"
             required
             maxLength={80}
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.name}
             onChange={set("name")}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Color
-          <span className="flex items-center gap-2">
-            <input
-              type="color"
-              aria-label="Color picker"
-              className="border-border h-9 w-10 rounded-md border"
-              value={pickerValue(values.color)}
-              onChange={set("color")}
-            />
-            <input
-              name="color"
-              required
-              maxLength={32}
-              className={`${fieldClass} w-24 font-mono`}
-              value={values.color}
-              onChange={set("color")}
-            />
-          </span>
+          <ColorField
+            name="color"
+            value={values.color}
+            swatches={swatches}
+            onValueChange={(color) => setValues((v) => ({ ...v, color }))}
+          />
         </label>
         <label className="flex flex-1 flex-col gap-1 text-sm font-medium">
           Logo URL
-          <input
+          <Input
             name="logoUrl"
             maxLength={500}
             placeholder="Optional"
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.logoUrl}
             onChange={set("logoUrl")}
           />
@@ -168,8 +160,12 @@ function ParticipantRow({
   );
   const set =
     (field: Exclude<keyof ParticipantInput, "isLeader">) =>
-    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    (event: React.ChangeEvent<HTMLInputElement>) =>
       setValues((v) => ({ ...v, [field]: event.target.value }));
+  const teamOptions = [
+    { value: "", label: `No ${teamLabel}` },
+    ...teams.map((team) => ({ value: team.id, label: team.name })),
+  ];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -189,11 +185,11 @@ function ParticipantRow({
       >
         <label className="flex flex-col gap-1 text-sm font-medium">
           Display name
-          <input
+          <Input
             name="displayName"
             required
             maxLength={120}
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.displayName}
             onChange={set("displayName")}
           />
@@ -213,12 +209,12 @@ function ParticipantRow({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Email
-          <input
+          <Input
             name="email"
             type="email"
             maxLength={254}
             placeholder="Optional"
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.email}
             onChange={set("email")}
           />
@@ -227,31 +223,23 @@ function ParticipantRow({
           <>
             <label className="flex flex-col gap-1 text-sm font-medium">
               {teamLabel}
-              <select
+              <OptionSelect
                 name="teamId"
-                className={fieldClass}
+                options={teamOptions}
                 value={values.teamId}
-                onChange={set("teamId")}
-              >
-                <option value="">No {teamLabel}</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
+                onValueChange={(teamId) => setValues((v) => ({ ...v, teamId }))}
+              />
             </label>
-            <label className="flex h-9 items-center gap-2 text-sm font-medium">
-              <input
-                type="checkbox"
+            <Label className="min-h-11 sm:min-h-9">
+              <Switch
                 name="isLeader"
                 checked={values.isLeader}
-                onChange={(event) =>
-                  setValues((v) => ({ ...v, isLeader: event.target.checked }))
+                onCheckedChange={(isLeader) =>
+                  setValues((v) => ({ ...v, isLeader }))
                 }
               />
               {leaderTitle}
-            </label>
+            </Label>
           </>
         ) : (
           <span className="hidden sm:col-span-2 sm:block" />
@@ -286,10 +274,21 @@ function ParticipantRow({
 export function TeamsEditor({
   teams,
   teamLabel,
+  themeSwatches,
 }: {
   teams: SetupTeam[];
   teamLabel: string;
+  /** The Appearance Theme's colors, offered as Team color swatches. */
+  themeSwatches: ColorSwatch[];
 }) {
+  // Each row offers the theme colors plus the other Teams' colors.
+  const swatchesFor = (teamId?: string) => [
+    ...themeSwatches,
+    ...teams.flatMap((other) => {
+      const color = normalizeHex(other.color);
+      return other.id !== teamId && color ? [{ color, label: other.name }] : [];
+    }),
+  ];
   return (
     <div className="flex flex-col gap-1">
       {teams.length === 0 ? (
@@ -302,12 +301,13 @@ export function TeamsEditor({
               key={`${team.id}-${team.name}-${team.color}-${team.logoUrl}`}
               team={team}
               teamLabel={teamLabel}
+              swatches={swatchesFor(team.id)}
             />
           ))}
         </ul>
       )}
       <ul>
-        <TeamRow teamLabel={teamLabel} />
+        <TeamRow teamLabel={teamLabel} swatches={swatchesFor()} />
       </ul>
     </div>
   );

@@ -1,6 +1,7 @@
 import { ArrowLeft, ExternalLink, Trophy } from "lucide-react";
 import Link from "next/link";
 
+import { ThemeRoot } from "@/components/theme-root";
 import { Button } from "@/components/ui/button";
 import { WarWeekHero } from "@/components/war-week-hero";
 import type { WarWeek } from "@/db/schema";
@@ -148,7 +149,8 @@ export function ArchiveCard({ warWeek }: { warWeek: WarWeek }) {
   const editionLabel = warWeek.edition.toUpperCase();
 
   return (
-    <li
+    <ThemeRoot
+      as="li"
       style={warWeekThemeStyle(warWeek)}
       className="bg-background text-foreground border-border border-t-primary flex flex-col overflow-hidden rounded-lg border border-t-8 font-sans"
     >
@@ -187,6 +189,6 @@ export function ArchiveCard({ warWeek }: { warWeek: WarWeek }) {
           <ExternalLink aria-hidden className="size-3" />
         </a>
       ) : null}
-    </li>
+    </ThemeRoot>
   );
 }

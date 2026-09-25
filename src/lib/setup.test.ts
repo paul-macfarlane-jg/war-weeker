@@ -7,6 +7,7 @@ import {
   competitionGuardError,
   dayDeleteGuardError,
   dayGuardError,
+  dayOutsideRangeError,
   inUseError,
   parseCompetitionInput,
   parseDayInput,
@@ -123,6 +124,26 @@ describe("parseWarWeekSettingsInput", () => {
     expect(result.ok && result.value.organizerEmails).toEqual([
       "a@jahnelgroup.com",
     ]);
+  });
+});
+
+describe("dayOutsideRangeError", () => {
+  const dayDates = ["2026-02-27", "2026-02-22", "2026-02-24"];
+
+  it("allows dates that keep every Day inside", () => {
+    expect(
+      dayOutsideRangeError(dayDates, "2026-02-22", "2026-02-27"),
+    ).toBeNull();
+    expect(dayOutsideRangeError([], "2026-03-01", "2026-03-02")).toBeNull();
+  });
+
+  it("names the earliest Day the new dates would leave outside", () => {
+    expect(dayOutsideRangeError(dayDates, "2026-02-25", "2026-02-26")).toBe(
+      "The Day on 2026-02-22 falls outside the new dates. Move or delete it first.",
+    );
+    expect(dayOutsideRangeError(dayDates, "2026-02-22", "2026-02-26")).toBe(
+      "The Day on 2026-02-27 falls outside the new dates. Move or delete it first.",
+    );
   });
 });
 

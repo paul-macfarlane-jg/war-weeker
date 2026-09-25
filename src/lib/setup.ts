@@ -2,6 +2,7 @@ import { type ZodType, z } from "zod";
 
 import type { Competition, Participant, Team, WarWeek } from "@/db/schema";
 import { isJahnelGroupEmail } from "@/lib/access";
+import { dayOutsideRangeError } from "@/lib/day-range";
 import {
   competitionSeedSchema,
   daySeedSchema,
@@ -9,6 +10,8 @@ import {
   warWeekSettingsSeedShape as seed,
   teamSeedSchema,
 } from "@/seed/schema";
+
+export { dayOutsideRangeError } from "@/lib/day-range";
 
 /** The War Week settings form's raw fields, all as the inputs hold them. */
 export type WarWeekSettingsInput = {
@@ -514,13 +517,7 @@ export function settingsGuardError(
     const teams = ctx.teamCount === 1 ? "1 Team" : `${ctx.teamCount} Teams`;
     return `This War Week has ${teams}. Delete ${ctx.teamCount === 1 ? "it" : "them"} before switching to free-for-all.`;
   }
-  const outside = [...ctx.dayDates]
-    .sort()
-    .find((date) => date < values.startDate || date > values.endDate);
-  if (outside) {
-    return `The Day on ${outside} falls outside the new dates. Move or delete it first.`;
-  }
-  return null;
+  return dayOutsideRangeError(ctx.dayDates, values.startDate, values.endDate);
 }
 
 /** Refuses a Day outside the War Week's dates or on a date already taken. */

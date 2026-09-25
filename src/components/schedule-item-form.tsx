@@ -8,24 +8,28 @@ import {
   createScheduleItem,
   updateScheduleItem,
 } from "@/actions/setup-schedule-faq";
+import { EntityCombobox } from "@/components/entity-combobox";
+import { OptionSelect } from "@/components/option-select";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { TimeCombobox } from "@/components/time-combobox";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { ScheduleItem } from "@/db/schema";
 import type { Content } from "@/lib/rich-text/content";
 import { formatDayHeading } from "@/lib/schedule";
 import type { ScheduleItemInput } from "@/lib/setup-schedule-faq";
 
-const fieldClass =
-  "border-border bg-background h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
 const CATEGORIES = [
-  ["competition", "Competition"],
-  ["education", "Education"],
-  ["social", "Social"],
-  ["meal", "Meal"],
-  ["work", "Work"],
-  ["other", "Other"],
-] as const satisfies ReadonlyArray<readonly [ScheduleItem["category"], string]>;
+  { value: "competition", label: "Competition" },
+  { value: "education", label: "Education" },
+  { value: "social", label: "Social" },
+  { value: "meal", label: "Meal" },
+  { value: "work", label: "Work" },
+  { value: "other", label: "Other" },
+] as const satisfies ReadonlyArray<{
+  value: ScheduleItem["category"];
+  label: string;
+}>;
 
 const EMPTY: ScheduleItemInput = {
   dayId: "",
@@ -79,11 +83,31 @@ export function ScheduleItemForm({
     return {
       name: key,
       value: fields[key],
-      onChange: (
-        event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-      ) => set(key, event.target.value),
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+        set(key, event.target.value),
     };
   }
+
+  /** Name, value and change wiring for a custom control. */
+  function control(key: Exclude<keyof ScheduleItemInput, "description">) {
+    return {
+      name: key,
+      value: fields[key],
+      onValueChange: (value: string) => set(key, value),
+    };
+  }
+
+  const dayOptions = days.map((day) => ({
+    value: day.id,
+    label: `${formatDayHeading(day.date)} · ${day.dayTheme}`,
+  }));
+  const competitionItems = [
+    { id: "", label: "No Competition" },
+    ...competitions.map((competition) => ({
+      id: competition.id,
+      label: competition.name,
+    })),
+  ];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,35 +131,24 @@ export function ScheduleItemForm({
       <div className="grid gap-4 sm:grid-cols-3">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Day
-          <select required className={fieldClass} {...text("dayId")}>
-            {days.map((day) => (
-              <option key={day.id} value={day.id}>
-                {formatDayHeading(day.date)} · {day.dayTheme}
-              </option>
-            ))}
-          </select>
+          <OptionSelect required options={dayOptions} {...control("dayId")} />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Start time (ET)
-          <input
-            type="time"
-            required
-            className={fieldClass}
-            {...text("startTime")}
-          />
+          <TimeCombobox required {...control("startTime")} />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           End time (ET, optional)
-          <input type="time" className={fieldClass} {...text("endTime")} />
+          <TimeCombobox start={fields.startTime} {...control("endTime")} />
         </label>
       </div>
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         Title
-        <input
+        <Input
           required
           maxLength={200}
-          className={fieldClass}
+          className="h-11 sm:h-9"
           {...text("title")}
         />
       </label>
@@ -143,42 +156,41 @@ export function ScheduleItemForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Category
-          <select required className={fieldClass} {...text("category")}>
-            {CATEGORIES.map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+          <OptionSelect
+            required
+            options={CATEGORIES}
+            {...control("category")}
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Competition (optional)
-          <select className={fieldClass} {...text("competitionId")}>
-            <option value="">None</option>
-            {competitions.map((competition) => (
-              <option key={competition.id} value={competition.id}>
-                {competition.name}
-              </option>
-            ))}
-          </select>
+          <EntityCombobox
+            items={competitionItems}
+            placeholder="No Competition"
+            {...control("competitionId")}
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Host (optional)
-          <input maxLength={200} className={fieldClass} {...text("host")} />
+          <Input maxLength={200} className="h-11 sm:h-9" {...text("host")} />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Location (optional)
-          <input maxLength={200} className={fieldClass} {...text("location")} />
+          <Input
+            maxLength={200}
+            className="h-11 sm:h-9"
+            {...text("location")}
+          />
         </label>
       </div>
 
       <label className="flex flex-col gap-1 text-sm font-medium">
         Virtual link (optional)
-        <input
+        <Input
           type="url"
           maxLength={500}
           placeholder="https://"
-          className={fieldClass}
+          className="h-11 sm:h-9"
           {...text("virtualLink")}
         />
       </label>
