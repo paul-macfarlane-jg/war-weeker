@@ -62,7 +62,12 @@ export default async function EditionLayout({
         {children}
       </YouProvider>
       <SiteFooter />
-      <BottomTabBar edition={warWeek.edition} />
+      <BottomTabBar
+        edition={warWeek.edition}
+        mode={warWeek.mode}
+        teamLabel={warWeek.teamLabel}
+        account={account}
+      />
     </ThemeRoot>
   );
 }

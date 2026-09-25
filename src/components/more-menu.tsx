@@ -1,34 +1,47 @@
+"use client";
+
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 
 import { SignOutButton } from "@/components/auth-buttons";
-import { moreLinks } from "@/lib/more-links";
+import type { NavAccount } from "@/components/primary-nav";
+import { type MoreLinksInput, moreLinks } from "@/lib/more-links";
 
-import { getNavAccount, getWarWeekForEdition } from "../war-week";
-
-export default async function MorePage({
-  params,
-}: PageProps<"/[edition]/more">) {
-  const { edition } = await params;
-  const warWeek = await getWarWeekForEdition(edition);
-  if (!warWeek) notFound();
-  const account = await getNavAccount();
-
+/**
+ * The More Sheet's content on a phone: the same links as `/[edition]/more`,
+ * plus the signed-in account row. Tapping a link calls `onNavigate` so the
+ * caller can close the Sheet.
+ */
+export function MoreMenu({
+  edition,
+  mode,
+  teamLabel,
+  account,
+  onNavigate,
+}: {
+  edition: string;
+  mode: MoreLinksInput["mode"];
+  teamLabel: string;
+  account: NavAccount;
+  onNavigate?: () => void;
+}) {
   const links = moreLinks({
-    edition: warWeek.edition,
-    mode: warWeek.mode,
-    teamLabel: warWeek.teamLabel,
+    edition,
+    mode,
+    teamLabel,
     isOrganizer: account.isOrganizer,
   });
 
   return (
-    <main className="mx-auto flex max-w-md flex-col gap-4 px-4 py-6 md:max-w-3xl">
-      <h1 className="text-2xl font-bold">More</h1>
+    <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <ul className="border-border flex flex-col rounded-lg border">
         {links.map(({ label, href, icon: Icon }) => (
           <li key={href} className="border-border border-b last:border-b-0">
-            <Link href={href} className="flex items-center gap-3 px-4 py-3">
+            <Link
+              href={href}
+              onClick={onNavigate}
+              className="flex min-h-11 items-center gap-3 px-4 py-3"
+            >
               <Icon aria-hidden className="text-primary size-5" />
               <span className="flex-1 font-medium">{label}</span>
               <ChevronRight aria-hidden className="text-foreground/40 size-4" />
@@ -42,6 +55,6 @@ export default async function MorePage({
         </span>
         <SignOutButton />
       </div>
-    </main>
+    </div>
   );
 }

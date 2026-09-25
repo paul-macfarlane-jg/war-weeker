@@ -1,4 +1,6 @@
 import { Avatar } from "@/components/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { YouTag } from "@/components/you";
 import type { RosterParticipant, RosterTeam } from "@/lib/roster";
 import { YOU_ROW_CLASS } from "@/lib/you";
@@ -21,11 +23,11 @@ export function RosterList({
   }
 
   return (
-    <ul className="flex flex-col">
+    <ul className="flex flex-col divide-y">
       {participants.map((p) => (
         <li
           key={p.id}
-          className={`border-border flex flex-wrap items-center gap-2 border-b px-2 py-2 last:border-b-0 ${YOU_ROW_CLASS}`}
+          className={`flex flex-wrap items-center gap-2 px-2 py-2 ${YOU_ROW_CLASS}`}
         >
           <Avatar
             name={p.displayName}
@@ -36,15 +38,11 @@ export function RosterList({
             {p.displayName}
           </span>
           <YouTag participantId={p.id} />
-          {p.isLeader ? (
-            <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-              {leaderTitle}
-            </span>
-          ) : null}
+          {p.isLeader ? <Badge>{leaderTitle}</Badge> : null}
           {p.companyTag ? (
-            <span className="border-border text-foreground/70 rounded-full border px-2 py-0.5 text-xs">
+            <Badge variant="outline" className="text-foreground/70 font-normal">
               {p.companyTag}
-            </span>
+            </Badge>
           ) : null}
         </li>
       ))}
@@ -64,11 +62,12 @@ export function TeamRoster({
   primaryColor: string;
 }) {
   return (
-    <section
-      className="border-border flex flex-col gap-3 rounded-lg border border-t-4 px-4 py-3"
+    <Card
+      size="sm"
+      className="border-t-4"
       style={{ borderTopColor: team.color }}
     >
-      <div className="flex items-center gap-3">
+      <CardHeader className="flex items-center gap-3">
         {team.logoUrl ? (
           <img
             src={team.logoUrl}
@@ -91,13 +90,15 @@ export function TeamRoster({
         <span className="text-foreground/60 text-sm tabular-nums">
           {team.participants.length}
         </span>
-      </div>
-      <RosterList
-        participants={team.participants}
-        leaderTitle={leaderTitle}
-        teamColor={team.color}
-        primaryColor={primaryColor}
-      />
-    </section>
+      </CardHeader>
+      <CardContent>
+        <RosterList
+          participants={team.participants}
+          leaderTitle={leaderTitle}
+          teamColor={team.color}
+          primaryColor={primaryColor}
+        />
+      </CardContent>
+    </Card>
   );
 }

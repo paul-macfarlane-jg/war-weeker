@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { RosterList, TeamRoster } from "@/components/roster";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { YouPicker } from "@/components/you";
 import { rosterHeading, rosterParticipants } from "@/lib/roster";
 import { getRoster } from "@/queries/roster";
@@ -27,12 +28,16 @@ export default async function TeamsPage({
           Free-for-all: everyone competes on their own.
         </p>
         {picker}
-        <RosterList
-          participants={roster.participants}
-          leaderTitle={leaderTitle}
-          teamColor={null}
-          primaryColor={primaryColor}
-        />
+        <Card size="sm">
+          <CardContent>
+            <RosterList
+              participants={roster.participants}
+              leaderTitle={leaderTitle}
+              teamColor={null}
+              primaryColor={primaryColor}
+            />
+          </CardContent>
+        </Card>
       </main>
     );
   }
@@ -54,15 +59,19 @@ export default async function TeamsPage({
         />
       ))}
       {roster.unassigned.length > 0 ? (
-        <section className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold">Not on a {teamLabel} yet</h2>
-          <RosterList
-            participants={roster.unassigned}
-            leaderTitle={leaderTitle}
-            teamColor={null}
-            primaryColor={primaryColor}
-          />
-        </section>
+        <Card size="sm">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">Not on a {teamLabel} yet</h2>
+          </CardHeader>
+          <CardContent>
+            <RosterList
+              participants={roster.unassigned}
+              leaderTitle={leaderTitle}
+              teamColor={null}
+              primaryColor={primaryColor}
+            />
+          </CardContent>
+        </Card>
       ) : null}
     </main>
   );

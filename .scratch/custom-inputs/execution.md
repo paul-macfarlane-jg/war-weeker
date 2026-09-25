@@ -196,7 +196,6 @@ Structure: B0 → (B1 ∥ B2 ∥ B3) → B4 → gate.
 | screenshots 375/1280, XI + IX, dialog open | evidence script | `test-results/custom-inputs-b-forms/` | after B4 |
 | overflow 375/768/812/1024/1280 | evidence script | `test-results/custom-inputs-b-overflow/overflow.txt` | after B4 |
 | `pnpm gate` | on a private DB | `test-results/custom-inputs-b-gate/gate.txt` | before PR |
-
 ## [PROGRESS]
 
 - 2026-09-25 05:20Z: branch and worktrees created; B0 committed (`41c9db9`, `296e158`); B1–B3 dispatched in parallel.
@@ -259,3 +258,98 @@ Verdicts (local run surface, private Postgres, production build):
 Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3150 pnpm db:migrate && pnpm gate`; evidence: `pnpm db:migrate && pnpm seed:all && pnpm build && pnpm tsx scripts/custom-inputs-b-evidence.ts` on a private DB.
 
 Isolation check: B1, B2, B3 ran in parallel worktrees on disjoint files as predicted; all three cherry-picked cleanly.
+
+# Execution record — custom-inputs (Phase C)
+
+Contract: [spec.md](./spec.md), Phase C (participant-page building blocks).
+Presentation only. Overnight run 2026-09-25; decisions by the orchestrator.
+
+## [EXECUTION PLAN]
+
+Branch `feat/custom-inputs-phase-c`, stacked on `feat/custom-inputs-phase-b`
+(merge B first). Worked in `.claude/worktrees/custom-inputs-c/war-weeker`;
+C1 and C2 in parallel detached worktrees (disjoint files), cherry-picked.
+
+Resolved decisions:
+
+- **C0 (orchestrator):** shadcn `card`, `tabs`, `badge` (already present),
+  `avatar`, `sheet`, `skeleton`; the Sheet portals into `ThemeRoot`.
+- **Cards** keep list semantics (`<li>` wrapping a `Card`); the Reveal's
+  animated classes stay on the `<li>`. Every smoke-checked string, href,
+  anchor and inline theme style is unchanged.
+- **Tabs** only on `/[edition]/competitions` with 2+ Competition Groups,
+  `keepMounted` so the HTML still holds every group.
+- **More on phones:** the bottom-bar "More" tab is a `SheetTrigger`; the
+  Sheet lists `moreLinks()` (shared with the `/more` page, which stays as the
+  desktop route and deep link).
+- **Skeletons:** `loading.tsx` per edition route, `/history` and `/admin`,
+  built from `page-skeleton.tsx`.
+
+| ID | Slice | Model | Commit |
+|---|---|---|---|
+| C0 | shadcn pieces | orchestrator | `f57a534` |
+| C1 | Standings, Competitions, Announcements, Awards, roster, Archive, hero, Now/Next on Card/Badge/Avatar/Tabs | opus | `1121713` |
+| C2 | More Sheet + `moreLinks` (tested) + Skeleton loading states | sonnet | `33fb8bf` |
+| C3 | evidence script, screenshots, checks, overflow sweep | sonnet | — |
+
+### Verification map
+
+| Criterion | Command / action | Evidence | Earliest |
+|---|---|---|---|
+| C: surfaces on shadcn | `[data-slot=card]` on every participant page; screenshots | `test-results/custom-inputs-c-pages/` | after C3 |
+| C: More is a Sheet on phones | evidence check (dialog opens at 375, links, closes on navigate) | `checks.txt` | after C3 |
+| C: skeletons | `loading.tsx` inventory + skeleton shot when capturable | `checks.txt` | after C3 |
+| screenshots 375/1280 XI + IX | evidence script | `custom-inputs-c-pages/` | after C3 |
+| overflow sweep | evidence script | `custom-inputs-c-overflow/overflow.txt` | after C3 |
+| `pnpm gate` | private DB | `custom-inputs-c-gate/gate.txt` | before PR |
+
+## [PROGRESS]
+
+- 2026-09-25 06:00Z: branch created on the Phase B head; C0 committed; C1 ∥ C2 dispatched.
+- 06:40Z: C1 and C2 accepted and integrated; C3 dispatched.
+- ~07:00–09:30Z: network drop; C3's evidence run hung and was stopped (retry 1). Smoke on the Phase C head failed 5 checks (found by the brackets UI worker): `/more` called `moreLinks()` from a `"use client"` module, and `competitions/loading.tsx` turned a bad Competition id's 404 into a streamed 200. Fixed in `39b9621`; tracked `node_modules` symlink removed (`538d5b4`); Phase B merged in (`a1a6f14`).
+- 09:45Z: review fixes `8c5fbae`; the orchestrator finished C3 (two script bugs: it clicked the hidden desktop nav, and read team rows while XI's Standings were hidden) and reran evidence and gate on that head.
+
+## [SCOPE CHANGE]
+
+- Skeletons are scoped with route groups (`[edition]/(home)`, `competitions/(list)`); no admin skeleton. A loading boundary above a page that calls `notFound()` streams its 404 as a 200.
+- Live skeleton capture wasn't scripted (streaming timing); the evidence lists each `loading.tsx` and that it uses `page-skeleton`.
+
+## [AI CODE REVIEW]
+
+One fresh-context review (opus), both axes on the Phase C diff; adjudicated by the orchestrator.
+
+| Axis | Severity | Finding | Paths | Disposition |
+|---|---|---|---|---|
+| technical | blocking | `admin/loading.tsx` wraps every admin page, so a bad id's `notFound()` streams as 200 | `src/app/admin/loading.tsx` | resolved `8c5fbae` (removed) |
+| technical | blocking | `/more` crashed calling a client-module function; competition 404 → 200 (smoke) | `more/page.tsx`, `competitions/loading.tsx` | resolved `39b9621` |
+| technical | non-blocking | Group tabs ~26px, Sheet close ~28px, no safe-area padding in the Sheet | `competitions/(list)/page.tsx`, `ui/sheet.tsx`, `more-menu.tsx` | resolved `8c5fbae` |
+| technical | non-blocking | Skeleton gap-4 vs pages' gap-6 | `page-skeleton.tsx` | resolved `8c5fbae` |
+| technical | non-blocking | Home skeleton padding differs slightly; shadcn Avatar adds an accent outline; long badges clip rather than wrap; unnamed `<section>`s became Cards | several | accepted |
+| standards | non-blocking | `src/lib/more-links.ts` imports lucide icons (lib is meant to be pure) | `src/lib/more-links.ts` | accepted: needed server-side; small |
+| standards | non-blocking | unused re-export | `more-menu.tsx` | resolved `8c5fbae` |
+
+## [CLOSEOUT]
+
+| ID | What | Worker | Commit |
+|---|---|---|---|
+| C0 | shadcn card/tabs/avatar/sheet/skeleton; Sheet portal | orchestrator | `f57a534` |
+| C1 | participant surfaces on Card/Badge/Avatar/Tabs | opus | `1121713` |
+| C2 | More Sheet, `moreLinks`, skeletons | sonnet | `33fb8bf` |
+| C3 | evidence script | sonnet (hung) → orchestrator | this commit |
+| R | smoke fixes, review fixes | orchestrator | `39b9621`, `538d5b4`, `8c5fbae` |
+
+Verdicts (local run surface, private Postgres, production build):
+
+| Criterion | Verdict | Evidence |
+|---|---|---|
+| C: listed participant surfaces use shadcn components | PASS | `test-results/custom-inputs-c-pages/checks.txt` (`[data-slot=card]` on every participant page); screenshots |
+| C: More menu is a Sheet on phones | PASS | `checks.txt` (opens at 375 with every link; tapping navigates and closes); `09-more-sheet-xi-375.png` |
+| C: skeletons while loading | PASS (static) | `checks.txt` inventory of `loading.tsx` files using `page-skeleton`; no live capture (scope change) |
+| Screenshots: Teams, Standings, More + other participant pages, 375/1280, XI + dark IX | PASS | `test-results/custom-inputs-c-pages/*.png` |
+| Zero horizontal overflow 375/768/812/1024/1280 | PASS | `test-results/custom-inputs-c-overflow/overflow.txt` (all 0px, incl. the Sheet open) |
+| `pnpm gate` | PASS | `test-results/custom-inputs-c-gate/gate.txt` (lint 0 errors, 618 tests, build, smoke 148 ok) |
+
+Verified run command: `DATABASE_URL=<private db> DATABASE_DRIVER=pg SMOKE_PORT=3152 pnpm db:migrate && pnpm gate`; evidence: `pnpm db:migrate && pnpm seed:all && pnpm build && pnpm tsx scripts/custom-inputs-c-evidence.ts`.
+
+Isolation check: C1 and C2 ran in parallel on disjoint files and cherry-picked cleanly.

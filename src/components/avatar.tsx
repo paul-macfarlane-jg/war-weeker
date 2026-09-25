@@ -1,3 +1,4 @@
+import { AvatarFallback, Avatar as AvatarRoot } from "@/components/ui/avatar";
 import { avatarColors, initials } from "@/lib/avatar";
 
 /**
@@ -16,12 +17,13 @@ export function Avatar({
 }) {
   const { fill, text } = avatarColors({ teamColor, primaryColor });
   return (
-    <span
-      aria-hidden
-      className="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold"
-      style={{ backgroundColor: fill, color: text }}
-    >
-      {initials(name)}
-    </span>
+    <AvatarRoot aria-hidden className="size-8">
+      <AvatarFallback
+        className="text-xs font-semibold"
+        style={{ backgroundColor: fill, color: text }}
+      >
+        {initials(name)}
+      </AvatarFallback>
+    </AvatarRoot>
   );
 }
