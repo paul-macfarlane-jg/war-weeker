@@ -188,13 +188,19 @@ export function AwardForm({
       </FieldGroup>
 
       <div className="flex items-center gap-3">
-        <Button type="submit" size="lg" disabled={pending}>
+        <Button
+          type="submit"
+          size="lg"
+          className="min-h-11 sm:min-h-9"
+          disabled={pending}
+        >
           {pending ? "Saving…" : awardId ? "Save changes" : "Give Award"}
         </Button>
         <Button
           type="button"
           variant="outline"
           size="lg"
+          className="min-h-11 sm:min-h-9"
           onClick={() => router.push("/admin/awards")}
         >
           Cancel

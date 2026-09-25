@@ -7,6 +7,7 @@ import { DatePicker } from "@/components/date-picker";
 import {
   SetupRowButtons,
   SetupRowError,
+  usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -39,11 +40,9 @@ function DayRow({
         },
   );
   const label = day ? `Day ${day.date}` : "New Day";
-  const usage = !day
-    ? ""
-    : day.scheduleItemCount === 1
-      ? "1 Schedule Item"
-      : `${day.scheduleItemCount} Schedule Items`;
+  const usage = day
+    ? usageSummary([[day.scheduleItemCount, "Schedule Item", "Schedule Items"]])
+    : "";
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();

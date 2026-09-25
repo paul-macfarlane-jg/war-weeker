@@ -1,9 +1,0 @@
-/admin @375: 0
-/admin/standings @375: 0
-/admin/points @375: 0
-/admin @768: 0
-/admin/standings @768: 0
-/admin/points @768: 0
-/admin @1280: 0
-/admin/standings @1280: 0
-/admin/points @1280: 0

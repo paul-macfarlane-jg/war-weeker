@@ -1,0 +1,22 @@
+ok More Sheet: [role="dialog"] visible at 375 and links to every expected destination
+ok More Sheet: tapping a link navigates to /xi/competitions and closes the Sheet
+ok Top nav at 1280 still links to /xi/more
+ok /xi/leaderboard HTML still matches the smoke regex for team "Blue"
+ok [data-slot="card"] count > 0 on /xi
+ok [data-slot="card"] count > 0 on /xi/leaderboard
+ok [data-slot="card"] count > 0 on /xi/competitions
+ok [data-slot="card"] count > 0 on /xi/competitions/8ec74839-fb78-46e6-9c15-0adffebe48cd
+ok [data-slot="card"] count > 0 on /xi/news
+ok [data-slot="card"] count > 0 on /xi/awards
+ok [data-slot="card"] count > 0 on /xi/teams
+ok [data-slot="card"] count > 0 on /history
+ok 9 loading.tsx files found, each importing page-skeleton (live skeleton capture skipped: streaming render timing is unreliable to script within scope; this static inventory substitutes)
+ok src/app/[edition]/(home)/loading.tsx imports page-skeleton
+ok src/app/[edition]/awards/loading.tsx imports page-skeleton
+ok src/app/[edition]/competitions/(list)/loading.tsx imports page-skeleton
+ok src/app/[edition]/faq/loading.tsx imports page-skeleton
+ok src/app/[edition]/leaderboard/loading.tsx imports page-skeleton
+ok src/app/[edition]/news/loading.tsx imports page-skeleton
+ok src/app/[edition]/schedule/loading.tsx imports page-skeleton
+ok src/app/[edition]/teams/loading.tsx imports page-skeleton
+ok src/app/history/loading.tsx imports page-skeleton

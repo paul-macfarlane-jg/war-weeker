@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SignOutButton } from "@/components/auth-buttons";
-import { moreLinks } from "@/components/more-menu";
+import { moreLinks } from "@/lib/more-links";
 
 import { getNavAccount, getWarWeekForEdition } from "../war-week";
 

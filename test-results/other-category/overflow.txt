@@ -1,6 +1,0 @@
-/xi/schedule @375: 0
-/xi/schedule @1280: 0
-/xi/schedule @768: 0
-/admin/setup/schedule @375: 0
-/admin/setup/schedule @768: 0
-/admin/setup/schedule @1280: 0

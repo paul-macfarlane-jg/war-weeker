@@ -1,5 +1,6 @@
 "use client";
 
+import { cn } from "cn";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -20,8 +21,8 @@ import { Button } from "@/components/ui/button";
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
 /**
- * The one confirm for destructive actions. `title` names what will be
- * deleted (or removed, reset…); `description` carries what the caller
+ * The one confirm for destructive or hard-to-undo actions. `title` names
+ * what will be deleted (or removed, reset…); `description` carries what the caller
  * knows about it, such as the counts the server reported. Replaces
  * `window.confirm`, so the dialog is themed and reads its text.
  */
@@ -31,6 +32,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel = "Delete",
+  destructive = true,
   pending = false,
   onConfirm,
   children,
@@ -40,6 +42,8 @@ export function ConfirmDialog({
   title: string;
   description?: ReactNode;
   confirmLabel?: string;
+  /** Red confirm button; false for actions that remove nothing. */
+  destructive?: boolean;
   pending?: boolean;
   onConfirm: () => void;
   /** Fields the confirm needs, e.g. End War Week's Winner. */
@@ -60,7 +64,7 @@ export function ConfirmDialog({
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
-            variant={confirmLabel === "Delete" ? "destructive" : "default"}
+            variant={destructive ? "destructive" : "default"}
             className="min-h-11 sm:min-h-9"
             disabled={pending}
             onClick={onConfirm}
@@ -122,7 +126,8 @@ export function ConfirmActionButton({
         type="button"
         variant={variant}
         size={size}
-        className={className}
+        // At least 44px on phones, whatever the size.
+        className={cn("min-h-11 min-w-11 sm:min-h-0 sm:min-w-0", className)}
         disabled={pending}
         onClick={() => setOpen(true)}
       >
