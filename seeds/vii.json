@@ -10,7 +10,6 @@
   "teamLabel": "Team",
   "leaderTitle": "Captain",
   "slackChannelUrl": "https://jahnelgroup.slack.com",
-  "standingsHidden": false,
   "primary": "#b91c1c",
   "primaryForeground": "#ffffff",
   "accent": "#d4a017",

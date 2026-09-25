@@ -5,8 +5,8 @@
  *
  * Needs a production build, the seeded local Postgres (run `pnpm smoke`
  * first), and Google Chrome. Starts its own server on port 3201, lends
- * XI's Anthony Conway a throwaway email for account linking, reveals XI's
- * Standings, and restores both afterwards:
+ * XI's Anthony Conway a throwaway email for account linking, and restores
+ * it afterwards:
  *   pnpm tsx scripts/you-evidence.ts
  */
 import { loadEnvConfig } from "@next/env";
@@ -162,16 +162,10 @@ async function setCookie(page: Page, cookie: string) {
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
-  const [{ standings_hidden: wasHidden }] = await query<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
   const [{ email: originalEmail }] = await query<{ email: string | null }>(
     `select p.email from participant p join war_week w on w.id = p.war_week_id
      where w.edition = 'xi' and p.display_name = $1`,
     [LINKED_PARTICIPANT],
-  );
-  await query(
-    `update war_week set standings_hidden = false where edition = 'xi'`,
   );
   await setParticipantEmail(LINKED_EMAIL);
   const linkedCookie = await createSession(LINKED_EMAIL);
@@ -278,20 +272,6 @@ async function main() {
     );
     await shoot(page, "phone-awards-linked.png");
 
-    // Hidden Standings: no highlight, no names.
-    await query(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
-    );
-    await visit(page, "/xi/leaderboard");
-    check(
-      'hidden: no "You" on /xi/leaderboard',
-      (await youRows(page)).length === 0,
-    );
-    await shoot(page, "phone-leaderboard-hidden.png", false);
-    await query(
-      `update war_week set standings_hidden = false where edition = 'xi'`,
-    );
-
     // No match: pick yourself, reload, still you, then clear.
     await setCookie(page, unlinkedCookie);
     await visit(page, "/xi/teams");
@@ -373,10 +353,6 @@ async function main() {
       [LINKED_EMAIL, UNLINKED_EMAIL],
     ]);
     await setParticipantEmail(originalEmail);
-    await query(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    );
     rmSync(dir, { recursive: true, force: true, maxRetries: 10 });
   }
   process.exit(failures > 0 ? 1 : 0);

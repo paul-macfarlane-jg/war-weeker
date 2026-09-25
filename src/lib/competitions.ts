@@ -112,24 +112,14 @@ export type LedgerEntry = {
   note: string | null;
 };
 
-export type CompetitionLedger =
-  { hidden: true } | { hidden: false; entries: LedgerEntry[] };
+export type CompetitionLedger = { entries: LedgerEntry[] };
 
-/**
- * The Points Entries behind one Competition, oldest first.
- *
- * While standings are hidden the ledger is hidden too: its entries would let
- * anyone add up the totals the Reveal is meant to keep secret.
- */
+/** The Points Entries behind one Competition, oldest first. */
 export function buildCompetitionLedger({
-  standingsHidden,
   rows,
 }: {
-  standingsHidden: boolean;
   rows: LedgerRow[];
 }): CompetitionLedger {
-  if (standingsHidden) return { hidden: true };
-
   const entries = [...rows]
     .sort((a, b) => a.enteredAt.getTime() - b.enteredAt.getTime())
     .map(({ id, points, note, team, participant }) => ({
@@ -149,5 +139,5 @@ export function buildCompetitionLedger({
       note,
     }));
 
-  return { hidden: false, entries };
+  return { entries };
 }

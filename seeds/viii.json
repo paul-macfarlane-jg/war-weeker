@@ -10,7 +10,6 @@
   "teamLabel": "House",
   "leaderTitle": "Head of House",
   "slackChannelUrl": "https://jahnelgroup.slack.com",
-  "standingsHidden": false,
   "primary": "#740001",
   "primaryForeground": "#fff8e7",
   "accent": "#d3a625",

@@ -62,7 +62,6 @@ export const warWeek = pgTable("war_week", {
   teamLabel: varchar("team_label", { length: 40 }).notNull(),
   leaderTitle: varchar("leader_title", { length: 40 }).notNull(),
   slackChannelUrl: varchar("slack_channel_url", { length: 500 }).notNull(),
-  standingsHidden: boolean("standings_hidden").notNull().default(false),
   primaryColor: varchar("primary_color", { length: 32 }).notNull(),
   primaryForegroundColor: varchar("primary_foreground_color", {
     length: 32,

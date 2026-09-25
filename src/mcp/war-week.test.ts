@@ -19,7 +19,6 @@ function warWeekFixture(overrides: Partial<WarWeek>): WarWeek {
     slackChannelUrl:
       overrides.slackChannelUrl ??
       "https://jahnelgroup.slack.com/archives/war-week-xi",
-    standingsHidden: overrides.standingsHidden ?? true,
     primaryColor: overrides.primaryColor ?? "#00ff41",
     primaryForegroundColor: overrides.primaryForegroundColor ?? "#000000",
     accentColor: overrides.accentColor ?? "#00ff41",
@@ -55,7 +54,6 @@ describe("toCurrentWarWeekResult", () => {
       teamLabel: "Team",
       leaderTitle: "Captain",
       slackChannelUrl: "https://jahnelgroup.slack.com/archives/war-week-xi",
-      standingsHidden: true,
     });
   });
 

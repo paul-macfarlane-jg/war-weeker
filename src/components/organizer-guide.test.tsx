@@ -15,7 +15,7 @@ describe("OrganizerGuide", () => {
     "What a Participant email does",
     "Discretionary points",
     "Placement Points",
-    "Hiding Standings and the Reveal",
+    "The Finale",
     "Announcements and Slack",
     "The seed warning",
   ];

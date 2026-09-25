@@ -5,7 +5,7 @@ import { AnnouncementCard } from "@/components/announcement-card";
 import { ArchiveDetailView } from "@/components/archive";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { NowNextSection } from "@/components/now-next";
-import { HomeStandings } from "@/components/reveal-standings";
+import { HomeStandings } from "@/components/standings";
 import { Button } from "@/components/ui/button";
 import { WarWeekHero } from "@/components/war-week-hero";
 import { isArchived } from "@/lib/archive";

@@ -18,7 +18,6 @@ function warWeekFixture(overrides: Partial<WarWeek>): WarWeek {
     leaderTitle: overrides.leaderTitle ?? "Captain",
     slackChannelUrl:
       overrides.slackChannelUrl ?? "https://example.slack.com/archives/x",
-    standingsHidden: overrides.standingsHidden ?? false,
     primaryColor: overrides.primaryColor ?? "#000000",
     primaryForegroundColor: overrides.primaryForegroundColor ?? "#ffffff",
     accentColor: overrides.accentColor ?? "#000000",

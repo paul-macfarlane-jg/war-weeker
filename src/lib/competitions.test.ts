@@ -129,15 +129,8 @@ describe("buildCompetitionLedger", () => {
     },
   ];
 
-  it("returns hidden and no entries while standings are hidden", () => {
-    expect(buildCompetitionLedger({ standingsHidden: true, rows })).toEqual({
-      hidden: true,
-    });
-  });
-
   it("lists entries in the order they were entered, naming each target", () => {
-    expect(buildCompetitionLedger({ standingsHidden: false, rows })).toEqual({
-      hidden: false,
+    expect(buildCompetitionLedger({ rows })).toEqual({
       entries: [
         {
           id: "e1",
@@ -162,9 +155,7 @@ describe("buildCompetitionLedger", () => {
   });
 
   it("returns no entries for a Competition nobody has scored yet", () => {
-    expect(
-      buildCompetitionLedger({ standingsHidden: false, rows: [] }),
-    ).toEqual({ hidden: false, entries: [] });
+    expect(buildCompetitionLedger({ rows: [] })).toEqual({ entries: [] });
   });
 });
 

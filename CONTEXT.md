@@ -31,11 +31,14 @@ War Weeker). **War Week** alone always means the event, never the app.
 | **Placement Points**          | A Competition's optional preset points for 1st, 2nd, 3rd… (up to 5 places, highest first), offered as buttons on Points Entry.  |
 | **Counts Toward Team**        | Whether an individual competition's points also go to the participant's team.                                                     |
 | **Standings**                 | The main leaderboard, computed from Points Entries.                                                                               |
-| **Reveal**                    | The organizer action that un-hides the standings, with an animation.                                                              |
+| **Finale**                    | The closing-ceremony screen at `/<edition>/finale`: press Start and the Standings count in from last place to first.             |
 | **Award**                     | A named honor given to participants or a team. It doesn't affect points.                                                          |
 | **Announcement**              | An organizer post (rich text plus video links).                                                                                   |
 | **FAQ Item**                  | A question and answer pair for a War Week.                                                                                        |
 | **Archive**                   | The past War Weeks shown at `/history`.                                                                                           |
+
+**Reveal** is retired: Standings are never hidden any more, and the
+countdown it played is now the **Finale**.
 
 ## Banned terms
 
@@ -75,9 +78,8 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
 
 ## Competition and roster display rules
 
-- While standings are hidden, a Competition page shows its description, max
-  points and scoring but not its Points Entries ("Points hidden 🔒"). Summing
-  the entries would reveal the totals the Reveal keeps secret.
+- A Competition page shows its description, max points, scoring and every
+  Points Entry.
 - The Competitions list orders Competition Groups, and Competitions within
   each, by name. Competitions with no group come last, under "Other
   Competitions" (no heading when nothing is grouped).
@@ -91,14 +93,14 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   Theme's primary color when there's no Team. It appears on the Teams page,
   the individual leaderboard and Award winners.
 - **You** is highlighted with a "You" tag and an accent ring on the Teams
-  roster, the individual leaderboard (home, `/leaderboard`, the Reveal) and
+  roster, the individual leaderboard (home, `/leaderboard`, the Finale) and
   Award recipients. Account linking wins: when the session email matches a
   Participant, that Participant is You and the picker isn't shown. Otherwise
   the Teams page offers "Which one is you?", stored per War Week in
   `localStorage` under `ww:you:<edition>` (a Participant id; an id not in the
   War Week is ignored) with "Not me / clear" to undo. Participant emails
-  never reach the client, only the matched id. Hidden Standings show no
-  highlight because they show no rows. Past editions use their own roster.
+  never reach the client, only the matched id. Past editions use their own
+  roster.
 
 ## Slack rules
 
@@ -130,8 +132,11 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   `MCP_TOKEN` is unset or blank), and anyone while `MCP_PUBLIC=true` (off by
   default; for a claude.ai connector demo). `canUseMcp` in
   `src/lib/access.ts` is the one check. Every MCP tool is read-only and
-  returns only what a signed-in Participant sees: never hidden Standings, an
-  email or the Organizer allowlist.
+  returns only what a signed-in Participant sees: never an email or the
+  Organizer allowlist. `get_leaderboard` always returns the Standings.
+- Standings are always visible to every signed-in user. `/<edition>/finale`
+  is readable by any signed-in JG user; only Organizers see the admin link
+  to it (`/admin/standings`).
 
 ## Points Entry rules
 
@@ -145,30 +150,25 @@ Now/next is computed on the ET clock, whatever the viewer's timezone.
   doesn't touch the note.
 - An edit keeps the entry's entered-by email and entered-at time; the admin
   ledger marks it as edited.
-- `/admin/points` shows the real Standings even while they're hidden.
+- `/admin/points` shows the current Standings next to the ledger.
 
-## Reveal rules
+## Finale rules
 
-- Organizers hide or reveal the current War Week's Standings in
-  `/admin/standings`, through the `hideStandings` and `revealStandings` server
-  actions. The actions take no War Week id.
-- While hidden, the home and leaderboard pages show "Standings hidden 🔒",
-  Competition pages hide their Points Entries, and MCP `get_leaderboard`
-  returns the hidden result. No totals reach the client, not even in the RSC
-  payload.
-- An open home or leaderboard page refreshes about every 10 s. When a page
-  that showed hidden Standings gets revealed ones, it plays the Reveal once:
+- The Finale is the closing-ceremony screen at `/<edition>/finale`, for the
+  projector. Organizers open it from `/admin/standings` ("Open Finale").
+- It opens on a big Start button. Start, `Space`, or a click anywhere on the
+  stage plays the countdown for the main leaderboard (team Standings in
+  `teams` mode, individual Standings in free-for-all):
   - Rows appear from last place up to first, and tied rows appear together.
   - Totals count up from 0.
-  - Every list ends together, so each first place lands at the finale.
-  - The whole Reveal is under 8 s.
-- A page that first loads after the Reveal shows the Standings with no
-  animation. So does one with `prefers-reduced-motion`.
-- Refreshes pause while a tab isn't visible. A locked phone plays the Reveal
-  when it's unlocked, or, if the browser reloaded the tab, just shows the
-  Standings.
-- Hiding again returns every page and MCP to hidden. The next Reveal plays
-  again.
+  - Every list ends together, so each first place lands at the end.
+  - The whole Finale is under 8 s.
+- Replay plays it again. With `prefers-reduced-motion`, Start shows the
+  final state at once.
+- The Finale never reorders or recomputes Standings: it plays the same
+  `getStandings` rows the leaderboard shows.
+- The home and leaderboard pages keep refreshing about every 10 s while the
+  tab is visible, and always show the plain Standings.
 
 ## Seed idempotence rules
 
@@ -196,7 +196,6 @@ same rows with the same values (only `updated_at` moves).
     existing Points Entries; the target-kind rule is enforced in zod (seed
     files and organizer actions), not the database.
 - **Organizer-owned data** is seed-initialized but never clobbered:
-  - `standings_hidden` is applied only when a War Week is first inserted.
   - Points Entries, Awards (with their recipients) and Announcements in a
     seed carry a `key`. The loader inserts a keyed record only when no record
     with that key exists, and never updates or deletes one. Records organizers
@@ -221,6 +220,5 @@ Team may have more than one Leader.
 
 **Reset exception.** `pnpm seed:load --reset` (and the Seed workflow's reset
 option) deletes each seeded War Week, with all its setup and organizer-owned
-data, before loading, so the War Week matches its seed exactly and
-`standings_hidden` is applied again. It exists to reset demo data; never use
+data, before loading, so the War Week matches its seed exactly. It exists to reset demo data; never use
 it on a War Week organizers are running.

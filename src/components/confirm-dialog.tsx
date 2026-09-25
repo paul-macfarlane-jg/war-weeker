@@ -21,7 +21,7 @@ export type ActionResult = { ok: true } | { ok: false; error: string };
 
 /**
  * The one confirm for destructive actions. `title` names what will be
- * deleted (or hidden, revealed…); `description` carries what the caller
+ * deleted (or removed, reset…); `description` carries what the caller
  * knows about it, such as the counts the server reported. Replaces
  * `window.confirm`, so the dialog is themed and reads its text.
  */

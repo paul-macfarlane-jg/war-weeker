@@ -1,7 +1,7 @@
 /**
  * Writes the About page's media (ticket 28) from the seeded demo, never by
- * hand: `public/about/reveal.mp4` and `reveal-poster.png` (War Week XI's
- * leaderboard on a phone, hidden, then Revealed) and one still per feature
+ * hand: `public/about/finale.mp4` and `finale-poster.png` (War Week XI's
+ * Finale on a phone: the Start screen, then the countdown) and one still per feature
  * card at `public/about/<slug>.png`. Afterwards it screenshots `/about` as an
  * anonymous visitor at 390px, desktop and with reduced motion into
  * `test-results/28-splash/`, with a log.
@@ -32,7 +32,7 @@ import path from "node:path";
 import { Client } from "pg";
 
 import { ABOUT_FEATURES, ABOUT_THEME } from "@/lib/about";
-import { REVEAL_MAX_MS } from "@/lib/reveal";
+import { FINALE_MAX_MS } from "@/lib/finale";
 import type { LeaderboardResult } from "@/mcp/leaderboard";
 
 loadEnvConfig(process.cwd());
@@ -49,7 +49,7 @@ const AUTH_SECRET = `about-media-secret-${randomUUID()}`;
 const DEMO_EMAIL = "about-demo@jahnelgroup.com";
 const STILL = { width: 1280, height: 720 };
 const PHONE = { width: 390, height: 844 };
-/** Around the Reveal: this much of the hidden state before, and after. */
+/** Around the Finale: this much of the Start screen before, and after. */
 const LEAD_IN_MS = 2_500;
 const HOLD_MS = 3_500;
 /** A time inside XI's week for the Now / Next still (ET). */
@@ -298,11 +298,11 @@ async function assertNoRealEmail(page: Page, what: string) {
 }
 
 // ---------------------------------------------------------------------------
-// The Reveal recording
+// The Finale recording
 
 type Frame = { at: number; data: string };
 
-async function recordReveal(cookie: string, ffmpeg: string) {
+async function recordFinale(cookie: string, ffmpeg: string) {
   const page = await Page.open();
   // The screencast sends CSS-pixel frames whatever the device scale, so
   // the page is laid out at 390px inside a doubled viewport, zoomed 2x.
@@ -312,13 +312,10 @@ async function recordReveal(cookie: string, ffmpeg: string) {
     1,
   );
   await page.cookie(cookie);
-  await query(
-    `update war_week set standings_hidden = true where edition = 'xi'`,
-  );
-  await page.goto("/xi/leaderboard", 3_000);
+  await page.goto("/xi/finale", 3_000);
   await page.evaluate(`(document.documentElement.style.zoom = "2")`);
   await sleep(500);
-  await assertNoRealEmail(page, "reveal");
+  await assertNoRealEmail(page, "finale");
 
   const frames: Frame[] = [];
   page.on("Page.screencastFrame", (params) => {
@@ -335,37 +332,37 @@ async function recordReveal(cookie: string, ffmpeg: string) {
   });
   await sleep(LEAD_IN_MS);
 
-  const flippedAt = Date.now();
-  await query(
-    `update war_week set standings_hidden = false where edition = 'xi'`,
+  const pressedAt = Date.now();
+  await page.evaluate(
+    `Array.from(document.querySelectorAll("button")).find((b) => b.innerText.trim() === "Start")?.click()`,
   );
   let startedAt: number | null = null;
-  while (Date.now() - flippedAt < 20_000 && startedAt === null) {
+  while (Date.now() - pressedAt < 20_000 && startedAt === null) {
     const value = await page.evaluate<string | null>(
-      `document.querySelector("[data-reveal-started-at]")?.dataset.revealStartedAt ?? null`,
+      `document.querySelector("[data-finale-started-at]")?.dataset.finaleStartedAt ?? null`,
     );
     if (value) startedAt = Number(value);
     else await sleep(100);
   }
-  if (startedAt === null) throw new Error("the Reveal never started");
-  note(`reveal: animation started ${startedAt - flippedAt} ms after the flip`);
-  await sleep(REVEAL_MAX_MS + HOLD_MS);
+  if (startedAt === null) throw new Error("the Finale never started");
+  note(`finale: countdown started ${startedAt - pressedAt} ms after Start`);
+  await sleep(FINALE_MAX_MS + HOLD_MS);
   await page.send("Page.stopScreencast");
   await page.close();
 
-  // Keep the lead-in before the Reveal and the hold after it; a frame only
+  // Keep the lead-in before the Finale and the hold after it; a frame only
   // arrives when something changes, so each one lasts until the next.
   const from = startedAt - LEAD_IN_MS;
-  const to = startedAt + REVEAL_MAX_MS + HOLD_MS;
+  const to = startedAt + FINALE_MAX_MS + HOLD_MS;
   const before = frames.filter((f) => f.at <= from).at(-1);
   const kept = [
     ...(before ? [{ ...before, at: from }] : []),
     ...frames.filter((f) => f.at > from && f.at <= to),
   ];
   if (kept.length < 10) {
-    throw new Error(`only ${kept.length} frames recorded around the Reveal`);
+    throw new Error(`only ${kept.length} frames recorded around the Finale`);
   }
-  note(`reveal: ${frames.length} frames captured, ${kept.length} kept`);
+  note(`finale: ${frames.length} frames captured, ${kept.length} kept`);
 
   const dir = mkdtempSync(path.join(os.tmpdir(), "about-frames-"));
   try {
@@ -385,7 +382,7 @@ async function recordReveal(cookie: string, ffmpeg: string) {
     writeFileSync(listFile, list.join("\n") + "\n");
     copyFileSync(
       path.join(dir, "0000.png"),
-      path.join(MEDIA, "reveal-poster.png"),
+      path.join(MEDIA, "finale-poster.png"),
     );
 
     const result = spawnSync(
@@ -413,7 +410,7 @@ async function recordReveal(cookie: string, ffmpeg: string) {
         "-movflags",
         "+faststart",
         "-an",
-        path.join(MEDIA, "reveal.mp4"),
+        path.join(MEDIA, "finale.mp4"),
       ],
       { stdio: ["ignore", "inherit", "pipe"] },
     );
@@ -539,17 +536,15 @@ const escapeHtml = (s: string) =>
  * from the real tool result, with the tool call shown underneath.
  */
 function chatCardUrl(result: LeaderboardResult): string {
-  const answer = result.hidden
-    ? `<p>${escapeHtml(result.message)}</p>`
-    : `<p>${escapeHtml(result.teamLabel)} Standings for War Week XI right now:</p><ol>${result.standings
-        .slice(0, 5)
-        .map(
-          (row) =>
-            `<li><span class="dot" style="background:${"color" in row ? escapeHtml(row.color) : "#888"}"></span><b>${escapeHtml(row.name)}</b><span class="pts">${row.total} pts</span></li>`,
-        )
-        .join(
-          "",
-        )}</ol><p>${escapeHtml(result.standings[0]?.name ?? "")} lead${result.standings.length > 1 ? `, ${result.standings[0].total - result.standings[1].total} points ahead of ${escapeHtml(result.standings[1].name)}` : ""}.</p>`;
+  const answer = `<p>${escapeHtml(result.teamLabel)} Standings for War Week XI right now:</p><ol>${result.standings
+    .slice(0, 5)
+    .map(
+      (row) =>
+        `<li><span class="dot" style="background:${"color" in row ? escapeHtml(row.color) : "#888"}"></span><b>${escapeHtml(row.name)}</b><span class="pts">${row.total} pts</span></li>`,
+    )
+    .join(
+      "",
+    )}</ol><p>${escapeHtml(result.standings[0]?.name ?? "")} lead${result.standings.length > 1 ? `, ${result.standings[0].total - result.standings[1].total} points ahead of ${escapeHtml(result.standings[1].name)}` : ""}.</p>`;
   const t = ABOUT_THEME;
   return `data:text/html;charset=utf-8,${encodeURIComponent(`<!doctype html><html><head><meta charset="utf-8"><style>
   html,body{margin:0;height:100%;background:${t.backgroundColor};color:${t.foregroundColor};font:16px/1.5 ui-monospace,"JetBrains Mono",Menlo,monospace}
@@ -592,7 +587,7 @@ async function evidence() {
   await desktop.viewport({ width: 1440, height: 900 }, false, 1);
   await desktop.goto("/about", 3_000);
   const video = await desktop.evaluate<Record<string, unknown>>(
-    `(() => { const v = document.querySelector("video"); return { readyState: v.readyState, paused: v.paused, muted: v.muted, loop: v.loop, poster: v.poster.endsWith("/about/reveal-poster.png"), videoWidth: v.videoWidth, videoHeight: v.videoHeight, duration: v.duration }; })()`,
+    `(() => { const v = document.querySelector("video"); return { readyState: v.readyState, paused: v.paused, muted: v.muted, loop: v.loop, poster: v.poster.endsWith("/about/finale-poster.png"), videoWidth: v.videoWidth, videoHeight: v.videoHeight, duration: v.duration }; })()`,
   );
   note(`evidence: desktop hero video ${JSON.stringify(video)}`);
   await desktop.screenshot(path.join(EVIDENCE, "about-desktop.png"), true);
@@ -602,7 +597,7 @@ async function evidence() {
   });
   await sleep(500);
   const reduced = await desktop.evaluate<Record<string, unknown>>(
-    `(() => { const v = document.querySelector("video"); const img = document.querySelector('img[src="/about/reveal-poster.png"]'); return { videoHidden: getComputedStyle(v).display === "none", posterShown: getComputedStyle(img).display !== "none" }; })()`,
+    `(() => { const v = document.querySelector("video"); const img = document.querySelector('img[src="/about/finale-poster.png"]'); return { videoHidden: getComputedStyle(v).display === "none", posterShown: getComputedStyle(img).display !== "none" }; })()`,
   );
   note(`evidence: reduced motion ${JSON.stringify(reduced)}`);
   await desktop.screenshot(
@@ -686,7 +681,7 @@ async function main() {
     }
     await waitForChrome();
 
-    await recordReveal(cookie, "ffmpeg");
+    await recordFinale(cookie, "ffmpeg");
 
     const slugs = ABOUT_FEATURES.map((f) => f.slug);
     await still(slugs[0], cookie, "/admin/setup");
@@ -714,14 +709,14 @@ async function main() {
     await still(slugs[3], cookie, "/xi/news", () => sleep(2_000));
     await still(slugs[4], cookie, "/history");
     const result = await askMcp(cookie);
-    note(`ask-claude: get_leaderboard hidden=${result.hidden}`);
+    note(`ask-claude: get_leaderboard rows=${result.standings.length}`);
     await still(slugs[5], null, chatCardUrl(result));
 
     await evidence();
 
     for (const name of [
-      "reveal.mp4",
-      "reveal-poster.png",
+      "finale.mp4",
+      "finale-poster.png",
       ...slugs.map((s) => `${s}.png`),
     ]) {
       note(
@@ -737,9 +732,6 @@ async function main() {
     }
     await sleep(1_000);
     rmSync(chrome.dir, { recursive: true, force: true, maxRetries: 3 });
-    await query(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
-    );
     await query(
       `update war_week set organizer_emails = array_remove(organizer_emails, $1) where edition = 'xi'`,
       [DEMO_EMAIL],

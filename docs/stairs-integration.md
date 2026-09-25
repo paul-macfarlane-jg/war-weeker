@@ -25,7 +25,7 @@ climbs per email. The JG War Week app would then:
    a War Week; see `CONTEXT.md`).
 3. Write the result as ordinary Points Entries in the HQ Attendance
    Competition, with `entered_by_email` naming the integration, so the
-   Standings function, the ledger and the Reveal treat them like any other
+   Standings function, the ledger and the Finale treat them like any other
    entry.
 
 ## Blocker

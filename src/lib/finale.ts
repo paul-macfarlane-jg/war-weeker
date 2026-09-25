@@ -1,26 +1,18 @@
 /**
- * Timing for the Reveal animation: when an open page sees Standings go from
- * hidden to revealed, rows appear from last place up to first while their
+ * Timing for the Finale countdown (the closing-ceremony screen at
+ * `/<edition>/finale`): rows appear from last place up to first while their
  * totals count up. Pure functions of elapsed time; the component owns the
- * clock.
+ * clock. Timing only: the rows and their order come from Standings as is.
  */
 
-/** The whole Reveal finishes within this, well inside one 10 s poll. */
-export const REVEAL_MAX_MS = 8_000;
+/** The whole Finale finishes within this. */
+export const FINALE_MAX_MS = 8_000;
 /** How long one row's total takes to count up. */
 const COUNT_UP_MS = 1_500;
 /** The longest gap between one rank appearing and the next. */
 const MAX_STEP_MS = 1_200;
 
-export type RowReveal = { shown: boolean; progress: number };
-
-/** True only when a page that saw hidden Standings now gets revealed ones. */
-export function isRevealTransition(
-  previousHidden: boolean,
-  hidden: boolean,
-): boolean {
-  return previousHidden && !hidden;
-}
+export type RowFinale = { shown: boolean; progress: number };
 
 /** The distinct ranks in a list, from last place to first. */
 function stepRanks(ranks: number[]): number[] {
@@ -29,14 +21,14 @@ function stepRanks(ranks: number[]): number[] {
 
 function stepMs(stepCount: number): number {
   if (stepCount <= 1) return 0;
-  return Math.min(MAX_STEP_MS, (REVEAL_MAX_MS - COUNT_UP_MS) / (stepCount - 1));
+  return Math.min(MAX_STEP_MS, (FINALE_MAX_MS - COUNT_UP_MS) / (stepCount - 1));
 }
 
 /**
- * How long the Reveal runs when these lists (each a list's ranks, in
+ * How long the Finale runs when these lists (each a list's ranks, in
  * order) animate on one clock: the longest of them.
  */
-export function revealDurationMs(lists: number[][]): number {
+export function finaleDurationMs(lists: number[][]): number {
   return Math.max(0, ...lists.map(listDurationMs));
 }
 
@@ -46,17 +38,17 @@ function listDurationMs(ranks: number[]): number {
 }
 
 /**
- * Each row's state `elapsedMs` into the Reveal. Rows sharing a rank appear
+ * Each row's state `elapsedMs` into the Finale. Rows sharing a rank appear
  * together, one step per distinct rank, starting with the last-ranked.
- * `progress` runs 0 → 1 over the row's count-up. Given the whole Reveal's
+ * `progress` runs 0 → 1 over the row's count-up. Given the whole Finale's
  * `durationMs`, a shorter list starts later so that it ends with the
- * others: every list's first place lands at the finale.
+ * others: every list's first place lands at the end.
  */
-export function revealRows(
+export function finaleRows(
   ranks: number[],
   elapsedMs: number,
   durationMs = listDurationMs(ranks),
-): RowReveal[] {
+): RowFinale[] {
   const order = stepRanks(ranks);
   const gap = stepMs(order.length);
   const delayMs = Math.max(0, durationMs - listDurationMs(ranks));

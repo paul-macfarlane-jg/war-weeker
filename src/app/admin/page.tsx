@@ -19,8 +19,7 @@ export default async function AdminPage() {
         <h1 className="text-2xl font-bold">Organizer overview</h1>
         <p className="text-foreground/70">
           You&apos;re signed in as an Organizer for War Week{" "}
-          {warWeek.edition.toUpperCase()} ({warWeek.status}). Standings are{" "}
-          {warWeek.standingsHidden ? "hidden from" : "visible to"} Participants.
+          {warWeek.edition.toUpperCase()} ({warWeek.status}).
         </p>
         <p className="text-foreground/70">
           <Link
@@ -34,7 +33,7 @@ export default async function AdminPage() {
             href="/admin/standings"
             className="text-primary underline underline-offset-4"
           >
-            hide or reveal them
+            open the Finale
           </Link>
           ,{" "}
           <Link

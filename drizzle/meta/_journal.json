@@ -36,6 +36,13 @@
       "when": 1790301178159,
       "tag": "0004_schedule_item_other_category",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790314497869,
+      "tag": "0005_drop_standings_hidden",
+      "breakpoints": true
     }
   ]
 }

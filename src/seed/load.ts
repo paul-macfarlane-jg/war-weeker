@@ -21,8 +21,7 @@ import { WarWeekSeed } from "@/seed/schema";
  * Loads a validated War Week seed in one transaction. See CONTEXT.md, "Seed
  * idempotence rules":
  *
- * - `war_week` is upserted by `edition`; `standings_hidden` is set only on
- *   first insert.
+ * - `war_week` is upserted by `edition`.
  * - Setup data (Days, Schedule Items, Teams, Participants, Competitions, FAQ
  *   Items) is upserted by natural key and anything absent from the seed is
  *   deleted, so setup always matches the seed after a load.
@@ -111,7 +110,7 @@ async function upsertWarWeek(tx: DBTx, seed: WarWeekSeed): Promise<WarWeek> {
 
   const [row] = await tx
     .insert(warWeek)
-    .values({ ...values, standingsHidden: seed.standingsHidden })
+    .values(values)
     .onConflictDoUpdate({ target: warWeek.edition, set: values })
     .returning();
   return row;

@@ -27,8 +27,7 @@ pnpm dev                      # http://localhost:3000
 `seeds/<edition>.json` holds one War Week each: `i.json` (2016) through
 `x.json` (2025) are the history, extracted from `old-wikis/` and fixed by
 hand; `xi.json` is War Week XI with its real schedule, Teams, roster and
-Competitions plus fictional mid-week demo data (close race, standings
-hidden). Edit a file and reload it; setup data follows the seed, while keyed
+Competitions plus fictional mid-week demo data (a close race). Edit a file and reload it; setup data follows the seed, while keyed
 Points Entries, Awards and Announcements are only inserted once (see
 `CONTEXT.md`, "Seed idempotence rules"). Organizers can also edit War Week
 settings, the Appearance Theme, Days, Teams, the roster, Competitions,
@@ -80,7 +79,7 @@ HTTP at `/api/mcp` (production: `https://jg-war-week.vercel.app/api/mcp`).
 Its tools are `get_current_war_week`, `get_leaderboard`, `get_schedule`,
 `get_announcements`, `get_awards`, `get_faq`, `list_history` and
 `get_history`. Every tool is read-only and returns only what a signed-in
-Participant sees: hidden Standings stay hidden, and no tool returns an email
+Participant sees, and no tool returns an email
 or the Organizer allowlist (Announcement authors come back as the handle
 before the `@`).
 
@@ -106,8 +105,7 @@ claude mcp add --transport http jg-war-week https://jg-war-week.vercel.app/api/m
 **claude.ai / Claude Desktop custom connector.** Those connectors support
 only OAuth or no auth, so for a demo set `MCP_PUBLIC=true`, redeploy, and add
 `https://jg-war-week.vercel.app/api/mcp` as a custom connector with no auth.
-While it's on, anyone with the URL can read the current War Week, Standings
-(only once revealed), schedule, Announcements, Awards, FAQ and history.
+While it's on, anyone with the URL can read the current War Week, Standings, schedule, Announcements, Awards, FAQ and history.
 Unset it after the demo. MCP OAuth is post-hackathon.
 
 ## Organizer sign-in

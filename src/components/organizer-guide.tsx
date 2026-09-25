@@ -114,20 +114,19 @@ export function OrganizerGuide({
       </section>
 
       <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">
-          Hiding Standings and the Reveal
-        </h2>
+        <h2 className="text-lg font-semibold">The Finale</h2>
         <p className="text-foreground/70">
+          Standings are always visible to Participants and Claude. At closing
+          ceremonies, open the{" "}
           <Link
             href="/admin/standings"
             className="text-primary underline underline-offset-4"
           >
-            Standings visibility
+            Finale
           </Link>{" "}
-          controls whether Standings are visible to Participants. While hidden,
-          Participants and Claude (through MCP) can&apos;t see them, but
-          Organizers still see them here in admin. Revealing them turns any open
-          Standings page into the Reveal animation on its next refresh.
+          on the projector and press Start: the Standings count in from last
+          place to first. Replay runs it again. The Finale never changes the
+          Standings, it only plays them.
         </p>
       </section>
 

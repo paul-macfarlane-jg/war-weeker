@@ -48,7 +48,7 @@ ${pages}
 
 ## MCP
 
-A read-only Model Context Protocol server over Streamable HTTP at ${origin}/api/mcp. Every tool returns only what a signed-in participant sees: hidden Standings stay hidden, and no tool returns an email.
+A read-only Model Context Protocol server over Streamable HTTP at ${origin}/api/mcp. Every tool returns only what a signed-in participant sees, and no tool returns an email.
 
 ${tools}
 

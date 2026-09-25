@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import type { Standings } from "@/lib/standings";
-import { HIDDEN_MESSAGE, toLeaderboardResult } from "@/mcp/leaderboard";
+import { toLeaderboardResult } from "@/mcp/leaderboard";
 
-const visible: Standings = {
-  hidden: false,
+const standings: Standings = {
   main: "team",
   team: [
     { id: "t1", name: "Blue", color: "#00f", total: 12.5, rank: 1 },
@@ -22,19 +21,18 @@ const visible: Standings = {
 };
 
 describe("toLeaderboardResult", () => {
-  it("returns the explicit hidden result, with no numbers, while hidden", () => {
+  it("always returns Standings: there is no hidden result", () => {
     for (const kind of ["team", "individual"] as const) {
-      const result = toLeaderboardResult({ hidden: true }, kind, "House");
+      const result = toLeaderboardResult(standings, kind, "House");
 
-      expect(result).toEqual({ hidden: true, message: HIDDEN_MESSAGE });
-      expect(JSON.stringify(result)).not.toMatch(/\d/);
+      expect(result).not.toHaveProperty("hidden");
+      expect(result).not.toHaveProperty("message");
+      expect(result.standings.length).toBeGreaterThan(0);
     }
-    expect(HIDDEN_MESSAGE).toContain("hidden until closing ceremonies");
   });
 
   it("returns team standings under the Team Label", () => {
-    expect(toLeaderboardResult(visible, "team", "House")).toEqual({
-      hidden: false,
+    expect(toLeaderboardResult(standings, "team", "House")).toEqual({
       kind: "team",
       isMainLeaderboard: true,
       teamLabel: "House",
@@ -46,8 +44,7 @@ describe("toLeaderboardResult", () => {
   });
 
   it("returns individual standings with each Participant's Team name", () => {
-    expect(toLeaderboardResult(visible, "individual", "House")).toEqual({
-      hidden: false,
+    expect(toLeaderboardResult(standings, "individual", "House")).toEqual({
       kind: "individual",
       isMainLeaderboard: false,
       teamLabel: "House",

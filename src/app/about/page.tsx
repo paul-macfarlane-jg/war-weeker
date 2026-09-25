@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AboutFeatureGrid } from "@/components/about-feature-grid";
-import { AboutRevealDemo } from "@/components/about-reveal-demo";
+import { AboutFinaleDemo } from "@/components/about-finale-demo";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeRoot } from "@/components/theme-root";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,13 +19,13 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "About · JG War Week",
   description:
-    "The JG War Week app is where Jahnel Group runs War Week: setup, schedule, Teams, Competitions, points, the Reveal, and every War Week since 2016.",
+    "The JG War Week app is where Jahnel Group runs War Week: setup, schedule, Teams, Competitions, points, the Finale, and every War Week since 2016.",
 };
 
 /**
  * The public About page (ticket 28): what War Week is, the problem, the
  * features and the history, for Jason first, then Organizers, then
- * Participants. Static on purpose: copy, stills and the Reveal recording
+ * Participants. Static on purpose: copy, stills and the Finale recording
  * only. It reads nothing from the database or the session, wears War Week
  * XI's theme from `ABOUT_THEME`, and is one of the pages an anonymous
  * visitor can open (`PUBLIC_PATHS` in `src/lib/access.ts`).
@@ -65,7 +65,7 @@ export default function AboutPage() {
             <p className="text-foreground/75 max-w-xl text-lg leading-relaxed sm:text-xl">
               The JG War Week app is where Jahnel Group runs War Week: the Story
               Theme, the schedule, the Teams, the Competitions, the points and
-              the Reveal, on every phone in the building. Organizers set it up
+              the Finale, on every phone in the building. Organizers set it up
               with no code, and every War Week since 2016 is still here.
             </p>
             <div className="flex flex-wrap items-center gap-3">
@@ -78,7 +78,7 @@ export default function AboutPage() {
               </a>
             </div>
           </div>
-          <AboutRevealDemo />
+          <AboutFinaleDemo />
         </section>
 
         <section className="flex flex-col gap-6">

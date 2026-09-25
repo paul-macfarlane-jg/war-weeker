@@ -25,7 +25,7 @@ export const MAINTAINERS_GUIDE_URL = `${REPO_URL}/blob/main/docs/maintainers-gui
 /**
  * The six feature cards, in order. Each `slug` names a still at
  * `public/about/<slug>.png`, written by `scripts/about-media.ts`; the
- * Reveal is the video hero, not a card.
+ * Finale is the video hero, not a card.
  */
 export const ABOUT_FEATURES = [
   {
@@ -61,7 +61,7 @@ export const ABOUT_FEATURES = [
   {
     slug: "ask-claude",
     title: "Ask Claude",
-    text: "Add the JG War Week app to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, and it never spoils hidden Standings.",
+    text: "Add the JG War Week app to Claude as an MCP connector and ask who's winning, what's on this afternoon, or who won War Week VIII. Read-only, with the same Standings everyone sees.",
     alt: "A chat with Claude asking who's winning War Week XI, answered from the JG War Week app's MCP connector.",
   },
 ] as const;

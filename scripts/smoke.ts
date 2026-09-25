@@ -225,17 +225,17 @@ async function assertRootRedirect() {
 }
 
 async function assertXiHome() {
-  const check = "GET /xi renders War Week XI with Standings hidden";
+  const check = "GET /xi renders War Week XI with the Team Standings";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi`);
     const body = await res.text();
-    const hidden = body.includes("Standings hidden");
-    if (res.status === 200 && body.includes("War Week XI") && hidden) {
+    const standings = xiTeamsShown(body);
+    if (res.status === 200 && body.includes("War Week XI") && standings) {
       ok(check);
     } else {
       fail(
         check,
-        `status=${res.status} bodyIncludes=${body.includes("War Week XI")} hidden=${hidden}`,
+        `status=${res.status} bodyIncludes=${body.includes("War Week XI")} standings=${standings}`,
       );
     }
   } catch (error) {
@@ -243,17 +243,24 @@ async function assertXiHome() {
   }
 }
 
+/** Whether a page shows both XI Teams in a Standings list, with totals. */
+function xiTeamsShown(body: string): boolean {
+  return (
+    teamTotalIn(body, "Red") !== null && teamTotalIn(body, "Blue") !== null
+  );
+}
+
 async function assertLeaderboard() {
   const check =
-    "GET /xi/leaderboard responds and shows Standings hidden for the demo seed";
+    "GET /xi/leaderboard responds and shows the Team Standings for the demo seed";
   try {
     const res = await signedInFetch(`${BASE_URL}/xi/leaderboard`);
     const body = await res.text();
-    const hidden = body.includes("Standings hidden");
-    if (res.status === 200 && hidden) {
+    const standings = xiTeamsShown(body);
+    if (res.status === 200 && standings) {
       ok(check);
     } else {
-      fail(check, `status=${res.status} hidden=${hidden}`);
+      fail(check, `status=${res.status} standings=${standings}`);
     }
   } catch (error) {
     fail(check, String(error));
@@ -586,39 +593,15 @@ async function assertCompetitionDetail() {
   const url = `${BASE_URL}/xi/competitions/${id}`;
   const note = "First to finish all 10 wellness tasks";
 
-  const hiddenCheck =
-    "GET /xi/competitions/[id] shows the description and hides Points Entries while standings are hidden";
+  const shownCheck =
+    "GET /xi/competitions/[id] shows the Competition and lists its Points Entries (target, points, note)";
   try {
     const res = await signedInFetch(url);
     const body = await res.text();
     const checks = {
       name: body.includes("Winning the Day Challenge"),
-      hidden: body.includes("Points hidden"),
-      noEntry: !body.includes(note) && !body.includes("Dani Milliken"),
-    };
-    if (res.status === 200 && Object.values(checks).every(Boolean)) {
-      ok(hiddenCheck);
-    } else {
-      fail(hiddenCheck, `status=${res.status} ${JSON.stringify(checks)}`);
-    }
-  } catch (error) {
-    fail(hiddenCheck, String(error));
-  }
-
-  // Briefly reveal XI to see the ledger, then hide it again. The smoke
-  // resets every seed on its next run, so an interrupted run heals itself.
-  const shownCheck =
-    "GET /xi/competitions/[id] lists Points Entries (target, points, note) once standings are revealed";
-  try {
-    await runQuery(
-      "update war_week set standings_hidden = false where edition = 'xi'",
-    );
-    const res = await signedInFetch(url);
-    const body = await res.text();
-    const checks = {
       target: body.includes("Dani Milliken"),
       note: body.includes(note),
-      notHidden: !body.includes("Points hidden"),
     };
     if (res.status === 200 && Object.values(checks).every(Boolean)) {
       ok(shownCheck);
@@ -627,10 +610,6 @@ async function assertCompetitionDetail() {
     }
   } catch (error) {
     fail(shownCheck, String(error));
-  } finally {
-    await runQuery(
-      "update war_week set standings_hidden = true where edition = 'xi'",
-    ).catch((error) => fail("hide XI standings again", String(error)));
   }
 
   for (const bad of ["00000000-0000-4000-8000-000000000000", "not-a-uuid"]) {
@@ -710,19 +689,12 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
      where w.edition = 'xi' and p.display_name = $1`,
     [YOU_PARTICIPANT],
   );
-  const [{ standings_hidden: wasHidden }] = await runQuery<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
   const setEmail = (email: string | null) =>
     runQuery(
       `update participant p set email = $1 from war_week w
        where w.id = p.war_week_id and w.edition = 'xi' and p.display_name = $2`,
       [email, YOU_PARTICIPANT],
     );
-  const setHidden = (hidden: boolean) =>
-    runQuery(`update war_week set standings_hidden = $1 where edition = 'xi'`, [
-      hidden,
-    ]);
 
   const get = async (target: string, session: SmokeSession) => {
     const res = await fetch(`${BASE_URL}${target}`, {
@@ -743,7 +715,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
     await setEmail(SMOKE_YOU_EMAIL);
     const you = await createSmokeSession(SMOKE_YOU_EMAIL);
 
-    await setHidden(false);
     const teams = await get("/xi/teams", you);
     report(
       "a signed-in user linked by email sees one 'You' on /xi/teams and no picker",
@@ -774,18 +745,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
       },
     );
 
-    await setHidden(true);
-    const hidden = await get("/xi/leaderboard", you);
-    report(
-      "hidden Standings show no 'You' and no names on /xi/leaderboard",
-      hidden.status,
-      {
-        noTag: !hidden.body.includes(YOU_TAG),
-        noParticipant: !hidden.body.includes(YOU_PARTICIPANT),
-        locked: hidden.body.includes("Standings hidden"),
-      },
-    );
-
     const unlinked = await get("/xi/teams", sessions.notOrganizer);
     report(
       "a signed-in user with no email match gets the 'Which one is you?' picker and no 'You'",
@@ -801,9 +760,6 @@ async function assertYouHighlight(sessions: { notOrganizer: SmokeSession }) {
   } finally {
     await setEmail(originalEmail).catch((error) =>
       fail(`restore ${YOU_PARTICIPANT}'s email`, String(error)),
-    );
-    await setHidden(wasHidden).catch((error) =>
-      fail("restore XI standings_hidden", String(error)),
     );
   }
 }
@@ -859,13 +815,13 @@ async function setSmokeOrganizer(on: boolean) {
 
 async function assertAboutPage() {
   const check =
-    "anonymous GET /about is 200 with the Reveal video, six feature cards, the XI link and no sign-in redirect";
+    "anonymous GET /about is 200 with the Finale video, six feature cards, the XI link and no sign-in redirect";
   try {
     const res = await fetch(`${BASE_URL}/about`, { redirect: "manual" });
     const body = await res.text();
     const checks = {
-      video: body.includes('src="/about/reveal.mp4"'),
-      poster: body.includes('poster="/about/reveal-poster.png"'),
+      video: body.includes('src="/about/finale.mp4"'),
+      poster: body.includes('poster="/about/finale-poster.png"'),
       cards: (body.match(/data-feature="/g) ?? []).length === 6,
       xi: body.includes('href="/xi"'),
       noTooling: !/claude code|atlas/i.test(body),
@@ -1145,7 +1101,11 @@ function escapeHtml(text: string) {
 /** A Team's total on the public leaderboard page, or null when not shown. */
 async function leaderboardTeamTotal(teamName: string): Promise<number | null> {
   const res = await signedInFetch(`${BASE_URL}/xi/leaderboard`);
-  const body = await res.text();
+  return teamTotalIn(await res.text(), teamName);
+}
+
+/** A Team's total in a page's Team Standings list, or null when not shown. */
+function teamTotalIn(body: string, teamName: string): number | null {
   const match = body.match(
     new RegExp(
       `font-semibold">${escapeHtml(teamName)}</span><span class="[^"]*">([-\\d.,]+)</span>`,
@@ -1198,7 +1158,7 @@ async function assertAdminPointsPage(sessions: {
   notOrganizer: SmokeSession;
 }) {
   const check =
-    "GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and standings while hidden";
+    "GET /admin/points as an Organizer shows the form with every Competition, the ledger with entered-by, and the current standings";
   try {
     const competitions = await runQuery<{ name: string }>(
       `select c.name from competition c join war_week w on w.id = c.war_week_id where w.edition = 'xi'`,
@@ -1228,7 +1188,7 @@ async function assertAdminPointsPage(sessions: {
       unscheduled: Number(unscheduled.count),
       ledger: Boolean(enteredBy) && body.includes(escapeHtml(enteredBy.email)),
       standings:
-        body.includes("Hidden from Participants") &&
+        body.includes("Current standings") &&
         body.includes("Individual leaderboard") &&
         /tabular-nums">[\d.,]+<\/span>/.test(body),
     };
@@ -1299,10 +1259,6 @@ async function assertPointsEntryActions(sessions: {
      from team t join war_week w on w.id = t.war_week_id
      join participant p on p.team_id = t.id where w.edition = 'xi' order by t.name limit 1`,
   );
-  const [{ standings_hidden: wasHidden }] = await runQuery<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
-
   const overMax = Number(teamCompetition.max) + 7;
   const teamInput = {
     competitionId: teamCompetition.id,
@@ -1323,10 +1279,6 @@ async function assertPointsEntryActions(sessions: {
 
   try {
     await deleteSmokeEntries();
-    // The public-leaderboard check needs standings visible.
-    await runQuery(
-      `update war_week set standings_hidden = false where edition = 'xi'`,
-    );
     const before = await leaderboardTeamTotal(target.team_name);
 
     await run(
@@ -1392,7 +1344,7 @@ async function assertPointsEntryActions(sessions: {
     );
 
     await run(
-      "an entry saved in admin shows up on /xi/leaderboard (un-hidden) on the next refresh",
+      "an entry saved in admin shows up on /xi/leaderboard on the next refresh",
       async () => {
         const after = await leaderboardTeamTotal(target.team_name);
         return before !== null &&
@@ -1459,10 +1411,6 @@ async function assertPointsEntryActions(sessions: {
     await deleteSmokeEntries().catch((error) =>
       fail("delete smoke Points Entries", String(error)),
     );
-    await runQuery(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    ).catch((error) => fail("restore XI standings_hidden", String(error)));
   }
 }
 
@@ -1495,36 +1443,12 @@ async function mcpLeaderboard(kind: "team" | "individual") {
   return { text, parsed: text ? JSON.parse(text) : undefined };
 }
 
-async function xiStandingsHidden(): Promise<boolean> {
-  const [row] = await runQuery<{ standings_hidden: boolean }>(
-    `select standings_hidden from war_week where edition = 'xi'`,
-  );
-  return row.standings_hidden;
-}
-
 /**
- * Whether `/xi` and `/xi/leaderboard` both show the hidden state. When
- * hidden, their RSC payloads (what the client components receive) must
- * carry no totals either.
+ * The Finale (brackets ticket 1): `/xi/finale` opens on Start for any
+ * signed-in user, `/admin/standings` is the Organizer's way in, and MCP
+ * `get_leaderboard` always returns Standings.
  */
-async function publicPagesHidden(): Promise<{
-  hidden: boolean;
-  leak: boolean;
-}> {
-  let hidden = true;
-  let leak = false;
-  for (const target of ["/xi", "/xi/leaderboard"]) {
-    const html = await (await signedInFetch(`${BASE_URL}${target}`)).text();
-    const rsc = await (
-      await signedInFetch(`${BASE_URL}${target}`, { headers: { RSC: "1" } })
-    ).text();
-    hidden &&= html.includes("Standings hidden");
-    leak ||= html.includes('"total":') || rsc.includes('"total":');
-  }
-  return { hidden, leak };
-}
-
-async function assertHideAndReveal(sessions: {
+async function assertFinale(sessions: {
   organizer: SmokeSession;
   notOrganizer: SmokeSession;
 }) {
@@ -1537,33 +1461,22 @@ async function assertHideAndReveal(sessions: {
       fail(check, String(error));
     }
   };
+  const page = async (target: string, session: SmokeSession) => {
+    const res = await fetch(`${BASE_URL}${target}`, {
+      headers: { cookie: session.cookie },
+    });
+    return { status: res.status, body: await res.text() };
+  };
 
   await run(
-    "while hidden, /xi and /xi/leaderboard HTML and RSC payloads carry no totals",
+    "GET /xi/finale as a signed-in user shows the Start button",
     async () => {
-      const pages = await publicPagesHidden();
-      return pages.hidden && !pages.leak ? null : JSON.stringify(pages);
-    },
-  );
-
-  await run(
-    "GET /admin/standings shows the Reveal control to an Organizer and the refusal to a non-Organizer",
-    async () => {
-      const page = async (session: SmokeSession) =>
-        (
-          await fetch(`${BASE_URL}/admin/standings`, {
-            headers: { cookie: session.cookie },
-          })
-        ).text();
-      const organizer = await page(sessions.organizer);
-      const notOrganizer = await page(sessions.notOrganizer);
+      const { status, body } = await page("/xi/finale", sessions.notOrganizer);
       const checks = {
-        heading: organizer.includes("Standings visibility"),
-        state: organizer.includes("Standings are hidden"),
-        reveal: organizer.includes(">Reveal<"),
-        refused:
-          notOrganizer.includes("Organizers only") &&
-          !notOrganizer.includes(">Reveal<"),
+        status: status === 200,
+        start: /<button[^>]*>Start<\/button>/.test(body),
+        ready: body.includes('data-finale="ready"'),
+        heading: body.includes("Finale"),
       };
       return Object.values(checks).every(Boolean)
         ? null
@@ -1571,118 +1484,48 @@ async function assertHideAndReveal(sessions: {
     },
   );
 
-  const ids = serverActionIds();
-  const missing = ["hideStandings", "revealStandings"].filter(
-    (name) => !ids[name],
+  await run(
+    "GET /admin/standings shows the Finale page with Open Finale to an Organizer and the refusal to a non-Organizer",
+    async () => {
+      const organizer = await page("/admin/standings", sessions.organizer);
+      const notOrganizer = await page(
+        "/admin/standings",
+        sessions.notOrganizer,
+      );
+      const checks = {
+        heading: /<h1[^>]*>Finale<\/h1>/.test(organizer.body),
+        open:
+          organizer.body.includes("Open Finale") &&
+          organizer.body.includes('href="/xi/finale"'),
+        refused:
+          notOrganizer.body.includes("Organizers only") &&
+          !notOrganizer.body.includes("Open Finale"),
+      };
+      return Object.values(checks).every(Boolean)
+        ? null
+        : JSON.stringify(checks);
+    },
   );
-  if (missing.length > 0) {
-    fail("server action ids in the build manifest", missing.join(", "));
-    return;
-  }
 
-  const wasHidden = await xiStandingsHidden();
-  try {
-    await runQuery(
-      `update war_week set standings_hidden = true where edition = 'xi'`,
-    );
-
-    await run(
-      "revealStandings rejects a signed-in JG user off the allowlist",
-      async () => {
-        const result = await callAction(
-          ids.revealStandings,
-          [],
-          sessions.notOrganizer,
-        );
-        const hidden = await xiStandingsHidden();
-        return !result.ok && /not an Organizer/.test(result.error) && hidden
-          ? null
-          : `result=${JSON.stringify(result)} hidden=${hidden}`;
-      },
-    );
-
-    await run(
-      "revealStandings as an Organizer shows Standings on /xi, /xi/leaderboard and MCP get_leaderboard",
-      async () => {
-        const result = await callAction(
-          ids.revealStandings,
-          [],
-          sessions.organizer,
-        );
-        const hidden = await xiStandingsHidden();
-        const pages = await publicPagesHidden();
-        const [{ name: teamName }] = await runQuery<{ name: string }>(
-          `select t.name from team t join war_week w on w.id = t.war_week_id where w.edition = 'xi' order by t.name limit 1`,
-        );
-        const total = await leaderboardTeamTotal(teamName);
-        const mcp = await mcpLeaderboard("team");
-        const checks = {
-          ok: result.ok,
-          flag: !hidden,
-          pages: !pages.hidden,
-          // Proves the no-totals check above can see totals when they exist.
-          totalsInPayload: pages.leak,
-          total: total !== null,
-          mcp:
-            mcp.parsed?.hidden === false &&
-            mcp.parsed.standings.length > 0 &&
-            mcp.parsed.standings.every(
-              (row: { total: unknown }) => typeof row.total === "number",
-            ),
-        };
-        return Object.values(checks).every(Boolean)
-          ? null
-          : `${JSON.stringify(checks)} result=${JSON.stringify(result)}`;
-      },
-    );
-
-    await run(
-      "hideStandings rejects a signed-in JG user off the allowlist",
-      async () => {
-        const result = await callAction(
-          ids.hideStandings,
-          [],
-          sessions.notOrganizer,
-        );
-        const hidden = await xiStandingsHidden();
-        return !result.ok && /not an Organizer/.test(result.error) && !hidden
-          ? null
-          : `result=${JSON.stringify(result)} hidden=${hidden}`;
-      },
-    );
-
-    await run(
-      "hideStandings as an Organizer returns /xi, /xi/leaderboard and MCP get_leaderboard to hidden",
-      async () => {
-        const result = await callAction(
-          ids.hideStandings,
-          [],
-          sessions.organizer,
-        );
-        const hidden = await xiStandingsHidden();
-        const pages = await publicPagesHidden();
-        const mcp = await Promise.all(
-          (["team", "individual"] as const).map(mcpLeaderboard),
-        );
-        const checks = {
-          ok: result.ok,
-          flag: hidden,
-          pages: pages.hidden && !pages.leak,
-          mcp: mcp.every(
-            ({ text, parsed }) => parsed?.hidden === true && !/\d/.test(text),
-          ),
-        };
-        return Object.values(checks).every(Boolean)
-          ? null
-          : `${JSON.stringify(checks)} result=${JSON.stringify(result)}`;
-      },
-    );
-  } finally {
-    await runQuery(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    ).catch((error) => fail("restore XI standings_hidden", String(error)));
-  }
+  await run(
+    "MCP get_leaderboard(team) returns the same Team totals as /xi/leaderboard",
+    async () => {
+      const mcp = await mcpLeaderboard("team");
+      const rows: { name: string; total: number }[] =
+        mcp.parsed?.standings ?? [];
+      const shown = await Promise.all(
+        rows.map((row) => leaderboardTeamTotal(row.name)),
+      );
+      const checks = {
+        rows: rows.length > 0,
+        noHiddenKey: mcp.parsed !== undefined && !("hidden" in mcp.parsed),
+        same: rows.every((row, i) => shown[i] === row.total),
+      };
+      return Object.values(checks).every(Boolean)
+        ? null
+        : `${JSON.stringify(checks)} text=${mcp.text}`;
+    },
+  );
 }
 
 /** AC1: pinned first, then newest first; AC2: an allow-listed embed. */
@@ -3500,7 +3343,7 @@ async function assertMcp() {
       [4, "team"],
       [5, "individual"],
     ] as const) {
-      const check = `MCP get_leaderboard(${kind}) returns the hidden result with no numbers`;
+      const check = `MCP get_leaderboard(${kind}) returns Standings with numeric totals`;
       const leaderboard = await mcpRequest(
         {
           jsonrpc: "2.0",
@@ -3516,9 +3359,13 @@ async function assertMcp() {
       )?.content?.[0]?.text;
       const parsed = text ? JSON.parse(text) : undefined;
       if (
-        parsed?.hidden === true &&
-        String(parsed.message).includes("hidden until closing ceremonies") &&
-        !/\d/.test(text!)
+        parsed?.kind === kind &&
+        !("hidden" in parsed) &&
+        Array.isArray(parsed.standings) &&
+        parsed.standings.length > 0 &&
+        parsed.standings.every(
+          (row: { total: unknown }) => typeof row.total === "number",
+        )
       ) {
         ok(check);
       } else {
@@ -3854,7 +3701,7 @@ async function main() {
       await assertAdminGuidePage(sessions);
       await assertAdminPointsPage(sessions);
       await assertPointsEntryActions(sessions);
-      await assertHideAndReveal(sessions);
+      await assertFinale(sessions);
       await assertAnnouncementFeed();
       await assertAnnouncementHomePinned();
       await assertAnnouncementActions(sessions);

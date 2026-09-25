@@ -11,43 +11,13 @@ import {
 import { Standings, computeStandings } from "@/lib/standings";
 
 /**
- * Loads a War Week's Standings. While standings are hidden it skips the
- * queries and lets `computeStandings` return its hidden result.
+ * Loads a War Week's Standings, the same rows for Participants, Organizers,
+ * MCP and the Finale.
  */
 export async function getStandings(
-  warWeek: Pick<WarWeek, "id" | "mode" | "standingsHidden">,
+  warWeek: Pick<WarWeek, "id" | "mode">,
   dbOrTx: DBOrTx = db,
 ): Promise<Standings> {
-  if (warWeek.standingsHidden) {
-    return computeStandings({
-      mode: warWeek.mode,
-      standingsHidden: true,
-      teams: [],
-      participants: [],
-      competitions: [],
-      pointsEntries: [],
-    });
-  }
-  return loadStandings(warWeek, dbOrTx);
-}
-
-/**
- * The real Standings for Organizers in admin, even while they're hidden
- * from Participants.
- */
-export async function getOrganizerStandings(
-  warWeek: Pick<WarWeek, "id" | "mode">,
-  dbOrTx: DBOrTx = db,
-) {
-  return loadStandings(warWeek, dbOrTx);
-}
-
-type VisibleStandings = Extract<Standings, { hidden: false }>;
-
-async function loadStandings(
-  warWeek: Pick<WarWeek, "id" | "mode">,
-  dbOrTx: DBOrTx,
-): Promise<VisibleStandings> {
   const [teams, participants, competitions, pointsEntries] = await Promise.all([
     dbOrTx
       .select({ id: team.id, name: team.name, color: team.color })
@@ -81,13 +51,11 @@ async function loadStandings(
       .where(eq(competition.warWeekId, warWeek.id)),
   ]);
 
-  // Not hidden, so `computeStandings` returns the visible shape.
   return computeStandings({
     mode: warWeek.mode,
-    standingsHidden: false,
     teams,
     participants,
     competitions,
     pointsEntries,
-  }) as VisibleStandings;
+  });
 }
