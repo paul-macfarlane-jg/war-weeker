@@ -27,7 +27,7 @@ export default async function AdminStandingsPage() {
         <p className="text-lg font-semibold">
           {hidden
             ? "Standings are hidden 🔒"
-            : "Standings are visible on the public site"}
+            : "Standings are visible to Participants"}
         </p>
         <p className="text-foreground/70">
           {hidden ? (
