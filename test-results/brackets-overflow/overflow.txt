@@ -1,0 +1,21 @@
+route	width	overflow_px
+-----	-----	-----------
+/admin/brackets/67be642e-7857-46b6-9af8-1e3485f672f3 (Sheet open)	375	0
+/admin/setup/competitions/67be642e-7857-46b6-9af8-1e3485f672f3/bracket	375	0
+/admin/setup/competitions/67be642e-7857-46b6-9af8-1e3485f672f3/bracket	768	0
+/admin/setup/competitions/67be642e-7857-46b6-9af8-1e3485f672f3/bracket	1280	0
+/admin/brackets/67be642e-7857-46b6-9af8-1e3485f672f3	375	0
+/admin/brackets/67be642e-7857-46b6-9af8-1e3485f672f3	768	0
+/admin/brackets/67be642e-7857-46b6-9af8-1e3485f672f3	1280	0
+/xi/competitions/67be642e-7857-46b6-9af8-1e3485f672f3	375	0
+/xi/competitions/67be642e-7857-46b6-9af8-1e3485f672f3	768	0
+/xi/competitions/67be642e-7857-46b6-9af8-1e3485f672f3	1280	0
+/admin/setup	375	0
+/admin/setup	768	0
+/admin/setup	1280	0
+/admin/setup/next	375	0
+/admin/setup/next	768	0
+/admin/setup/next	1280	0
+/xi/finale	375	0
+/xi/finale	768	0
+/xi/finale	1280	0
