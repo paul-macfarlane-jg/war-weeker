@@ -3321,9 +3321,6 @@ async function assertBracketLoop(sessions: { organizer: SmokeSession }) {
     fail("bracket action ids", missing.join(", "));
     return;
   }
-  const [{ standings_hidden: wasHidden }] = await runQuery<{
-    standings_hidden: boolean;
-  }>(`select standings_hidden from war_week where edition = 'xi'`);
   const organizer = sessions.organizer;
   const get = (route: string) =>
     fetch(`${BASE_URL}${route}`, { headers: { cookie: organizer.cookie } });
@@ -3340,9 +3337,6 @@ async function assertBracketLoop(sessions: { organizer: SmokeSession }) {
         [name, color],
       );
     }
-    await runQuery(
-      `update war_week set standings_hidden = false where edition = 'xi'`,
-    );
     const problems: string[] = [];
     const expectOk = (
       step: string,
@@ -3489,10 +3483,6 @@ async function assertBracketLoop(sessions: { organizer: SmokeSession }) {
     await deleteSmokeBracket().catch((error) =>
       fail("delete the smoke bracket", String(error)),
     );
-    await runQuery(
-      `update war_week set standings_hidden = $1 where edition = 'xi'`,
-      [wasHidden],
-    ).catch((error) => fail("restore XI standings_hidden", String(error)));
   }
 }
 

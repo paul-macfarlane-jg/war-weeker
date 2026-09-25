@@ -41,8 +41,10 @@ type ForceableAction = {
   title: string;
 };
 
-function sameList(a: string[], b: string[]) {
-  return a.length === b.length && a.every((id, i) => id === b[i]);
+/** Same Entrants, in any order (Generate reorders them by Seed Position). */
+function sameSet(a: string[], b: string[]) {
+  const set = new Set(b);
+  return a.length === b.length && a.every((id) => set.has(id));
 }
 
 /**
@@ -78,7 +80,7 @@ export function BracketBuilder({
   const [selected, setSelected] = useState<string[]>(saved);
   const [confirm, setConfirm] = useState<ForceableAction | null>(null);
   const isTeam = competition.scoring === "team";
-  const dirty = !sameList(selected, saved);
+  const dirty = !sameSet(selected, saved);
   const locked = competition.finalized;
   const generated = bracket.heats.length > 0;
 

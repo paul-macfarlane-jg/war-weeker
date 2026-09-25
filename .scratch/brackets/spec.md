@@ -1,6 +1,6 @@
 ---
 title: War Weeker — Brackets, War Week lifecycle, and hiding replaced by the Finale
-status: ready-for-agent
+status: in-progress
 labels: [ready-for-agent]
 created: 2026-09-24
 deadline: none. Only a complete, gate-passing vertical slice may merge before the 2026-09-25 08:00 ET staging freeze (ticket 1 is the likely candidate); the rest merges after submission.
@@ -300,6 +300,23 @@ Each ticket is a vertical slice that passes `pnpm gate` alone.
 - [ ] Screenshots at 375px and 1280px of each Format's participant view, the builder and the results screen, in XI and one dark past edition; zero horizontal overflow at 375/768/1280.
 - [ ] CONTEXT.md glossary updated with the vocabulary above, and the banned-term scan still passes.
 - [ ] `pnpm gate` passes on every ticket's PR.
+
+## Decisions
+
+Recorded overnight 2026-09-25 by the orchestrator (Paul asleep); each is Paul's to overrule.
+
+- **Red-team adjudication** (`/atlas-red-team`, 2 blocking, 6 warnings, 10 minors):
+  - B1 (Squads have no Points Entry target) and B2 (the Slack champion post needs the unbuilt webhook): Squads and the Slack post are deferred, so neither blocks this delivery. B1 needs a product decision before ticket 11.
+  - W1: `status`, `winner` and `highlights` are seed-initialized-only (set on insert, never overwritten on reload).
+  - W2: manual drag seeding is deferred; seeding is random with a one-tap re-roll.
+  - W3: the "banned-term scan" is the ticket 1 grep over `src scripts seeds docs CONTEXT.md README.md`.
+  - W4: `requireOrganizer` applies `canAdministerWarWeek`; row-scoped actions derive the War Week from the row; create actions use the admin edition selection and re-check it.
+  - W5: `points_entry.generated_by_bracket boolean`; `heat.status` is `pending | ready | played | forfeit`; single-stage schema (no stage/round tables) for single elimination.
+  - W6: the Points Entry mutations refuse generated rows.
+  - M1–M10 applied where the delivered slice touches them.
+- **Phone bracket layout (ticket 3):** option (b), a vertical list of Heats grouped by Round with "Winner → Semifinal 1" chips, a pinned champion card and "Your next Heat". No horizontal page scroll, one-thumb friendly. The prototype ticket was skipped.
+- **Reopen and Create next War Week** need an Organizer of the current War Week; Reopen is only for the most recently ended edition. Closes the review finding that a past-edition Organizer could take over the current War Week.
+- **Delivered overnight:** ticket 1 (Finale), ticket 2 (lifecycle), and the single-elimination core loop (tickets 4–6 cut down). **Deferred:** double elimination, round robin, heats, groups-knockout, Squads, self-report, heat times and Now/Next, MCP `get_bracket`, the Archive bracket view, seeds with Brackets, the Slack champion post, the Finale for a Bracket, drag and by-Standings seeding, and per-heat / both points.
 
 ## Out of Scope
 

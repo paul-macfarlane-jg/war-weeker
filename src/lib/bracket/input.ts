@@ -24,7 +24,8 @@ const formatSchema = z.object({
     error: "Choose a Format.",
   }),
   bracketPoints: z
-    .enum(["placings", "per-heat", "both"], {
+    // Only placings is built; per-heat and both are deferred.
+    .enum(["placings"], {
       error: "Choose how the Bracket awards points.",
     })
     .optional(),
