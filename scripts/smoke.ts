@@ -998,6 +998,31 @@ async function assertAdminGate(sessions: {
   }
 }
 
+async function assertAdminWording(sessions: { organizer: SmokeSession }) {
+  for (const route of ["/admin", "/admin/standings", "/admin/points"]) {
+    const check = `GET ${route} as an Organizer says 'Back to War Week XI' and never 'public site'`;
+    try {
+      const res = await fetch(`${BASE_URL}${route}`, {
+        headers: { cookie: sessions.organizer.cookie },
+      });
+      const body = await res.text();
+      const checks = {
+        // React SSR can split "Back to War Week " and "XI" with a hydration
+        // comment marker, so tolerate one between them.
+        backLink: /Back to War Week\s*(?:<!--\s*-->)?\s*XI/.test(body),
+        noPublicSite: !body.includes("public site"),
+      };
+      if (res.status === 200 && Object.values(checks).every(Boolean)) {
+        ok(check);
+      } else {
+        fail(check, `status=${res.status} ${JSON.stringify(checks)}`);
+      }
+    } catch (error) {
+      fail(check, String(error));
+    }
+  }
+}
+
 // Points Entries the smoke creates carry this note prefix so cleanup can
 // find them (and never touch an Organizer's own entries).
 const SMOKE_NOTE_PREFIX = "smoke-points-";
@@ -1148,7 +1173,7 @@ async function assertAdminPointsPage(sessions: {
       unscheduled: Number(unscheduled.count),
       ledger: Boolean(enteredBy) && body.includes(escapeHtml(enteredBy.email)),
       standings:
-        body.includes("Hidden on the public site") &&
+        body.includes("Hidden from Participants") &&
         body.includes("Individual leaderboard") &&
         /tabular-nums">[\d.,]+<\/span>/.test(body),
     };
@@ -2561,7 +2586,8 @@ async function assertAwardAdminPages(sessions: {
 
 /**
  * /admin/setup: the landing, settings and Days pages, and one settings save
- * and one Day Theme edit that the public site reflects. Restores XI after.
+ * and one Day Theme edit that the War Week's own pages reflect. Restores XI
+ * after.
  */
 async function assertSetup(sessions: {
   organizer: SmokeSession;
@@ -2924,7 +2950,7 @@ async function assertSetupTeamsAndCompetitions(sessions: {
 /**
  * /admin/setup/schedule and /admin/setup/faq: the pages, the Schedule Item
  * validation refusals, and one new Schedule Item and one new FAQ Item that
- * the public site shows. Deletes both after.
+ * the War Week's own pages show. Deletes both after.
  */
 async function assertSetupScheduleFaq(sessions: {
   organizer: SmokeSession;
@@ -3724,6 +3750,7 @@ async function main() {
       await assertAboutPage();
       await assertSignInPage();
       await assertAdminGate(sessions);
+      await assertAdminWording(sessions);
       await assertSignInRequired();
       await assertAdminLink(sessions);
       await assertAdminPointsPage(sessions);

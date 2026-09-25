@@ -20,7 +20,7 @@ export default async function AdminPage() {
         <p className="text-foreground/70">
           You&apos;re signed in as an Organizer for War Week{" "}
           {warWeek.edition.toUpperCase()} ({warWeek.status}). Standings are{" "}
-          {warWeek.standingsHidden ? "hidden" : "visible"} on the public site.
+          {warWeek.standingsHidden ? "hidden from" : "visible to"} Participants.
         </p>
         <p className="text-foreground/70">
           <Link

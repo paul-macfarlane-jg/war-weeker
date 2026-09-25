@@ -5,7 +5,7 @@ import { warWeek } from "@/db/schema";
 import type { MutationContext, MutationResult } from "@/mutations/types";
 
 /**
- * Hides the War Week's Standings on the public site and MCP, or reveals
+ * Hides the War Week's Standings from Participants and MCP, or reveals
  * them. Revealing is what open pages turn into the Reveal animation.
  */
 export async function setStandingsHidden(

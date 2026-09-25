@@ -48,7 +48,7 @@ export default async function AdminPointsPage() {
             <h2 className="text-lg font-semibold">Current standings</h2>
             {warWeek.standingsHidden && (
               <p className="text-foreground/70 text-sm">
-                Hidden on the public site 🔒 Only Organizers see these.
+                Hidden from Participants 🔒 Only Organizers see these.
               </p>
             )}
           </div>

@@ -45,7 +45,7 @@ export function StandingsVisibilityControls({ hidden }: { hidden: boolean }) {
           onClick={() =>
             run(
               hideStandings,
-              "Hide the Standings on the public site and in Claude?",
+              "Hide the Standings from Participants and from Claude?",
             )
           }
         >

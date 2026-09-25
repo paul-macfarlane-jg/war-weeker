@@ -32,8 +32,8 @@ export async function getStandings(
 }
 
 /**
- * The real Standings for Organizers in admin, even while they're hidden on
- * the public site.
+ * The real Standings for Organizers in admin, even while they're hidden
+ * from Participants.
  */
 export async function getOrganizerStandings(
   warWeek: Pick<WarWeek, "id" | "mode">,
