@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import type { WarWeek } from "@/db/schema";
+import { normalizeHex } from "@/lib/color";
 
 const FONT_PRESET_VAR: Record<WarWeek["fontPreset"], string> = {
   sans: "var(--font-preset-sans)",
@@ -101,5 +102,26 @@ export function themeContrastWarnings(theme: ThemeColors): string[] {
           `${text} on ${surface} is ${ratio.toFixed(1)}:1, below ${MIN_TEXT_CONTRAST}:1 and may be hard to read.`,
         ]
       : [];
+  });
+}
+
+const SWATCH_FIELDS = [
+  ["primaryColor", "Primary"],
+  ["primaryForegroundColor", "Primary text"],
+  ["accentColor", "Accent"],
+  ["backgroundColor", "Background"],
+  ["foregroundColor", "Text"],
+] as const;
+
+/**
+ * The Appearance Theme's colors as color-field swatches (`#rrggbb`),
+ * skipping any that aren't hex yet.
+ */
+export function themeSwatches(
+  theme: Omit<ThemeColors, "fontPreset">,
+): { color: string; label: string }[] {
+  return SWATCH_FIELDS.flatMap(([field, label]) => {
+    const color = normalizeHex(theme[field]);
+    return color ? [{ color, label }] : [];
   });
 }

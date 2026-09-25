@@ -243,7 +243,7 @@ function ComboboxChip({
   ...props
 }: ComboboxPrimitive.Chip.Props & {
   showRemove?: boolean;
-  /** War Weeker edit: the remove button's accessible name. */
+  /** JG War Week edit: the remove button's accessible name. */
   removeLabel?: string;
 }) {
   return (
@@ -260,7 +260,7 @@ function ComboboxChip({
         <ComboboxPrimitive.ChipRemove
           render={<Button variant="ghost" size="icon-xs" />}
           aria-label={removeLabel}
-          // War Weeker edit: a 44px hit area on phones around the small icon.
+          // JG War Week edit: a 44px hit area on phones around the small icon.
           className="relative -ml-1 opacity-50 after:absolute after:-inset-2.5 hover:opacity-100 sm:after:hidden"
           data-slot="combobox-chip-remove"
         >

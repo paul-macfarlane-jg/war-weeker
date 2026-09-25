@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import { RosterEditor, TeamsEditor } from "@/components/teams-editor";
+import { themeSwatches } from "@/lib/theme";
 import {
   getCompanyTagSuggestions,
   getSetupParticipants,
@@ -50,7 +51,11 @@ export default async function SetupTeamsPage() {
         {isTeams ? (
           <section className="flex flex-col gap-1">
             <h2 className="text-lg font-semibold">{teamLabel}s</h2>
-            <TeamsEditor teams={teams} teamLabel={teamLabel} />
+            <TeamsEditor
+              teams={teams}
+              teamLabel={teamLabel}
+              themeSwatches={themeSwatches(warWeek)}
+            />
           </section>
         ) : (
           <p className="text-foreground/70 text-sm">

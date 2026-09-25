@@ -4,23 +4,28 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { type SetupActionResult, updateWarWeekSettings } from "@/actions/setup";
+import { ColorField, type ColorSwatch } from "@/components/color-field";
+import { DateRangePicker } from "@/components/date-range-picker";
+import { OptionSelect, type SelectOption } from "@/components/option-select";
 import { OrganizerEmailChips } from "@/components/organizer-email-chips";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { WarWeek } from "@/db/schema";
 import type { WarWeekSettingsInput } from "@/lib/setup";
-import { themeContrastWarnings, warWeekThemeStyle } from "@/lib/theme";
+import {
+  themeContrastWarnings,
+  themeSwatches,
+  warWeekThemeStyle,
+} from "@/lib/theme";
 
-const fieldClass =
-  "border-border bg-background h-9 rounded-md border px-2 text-sm focus-visible:ring-ring/50 outline-none focus-visible:ring-3";
-
-type ColorField =
+type ThemeColorField =
   | "primaryColor"
   | "primaryForegroundColor"
   | "accentColor"
   | "backgroundColor"
   | "foregroundColor";
 
-const COLOR_FIELDS: { field: ColorField; label: string }[] = [
+const COLOR_FIELDS: { field: ThemeColorField; label: string }[] = [
   { field: "primaryColor", label: "Primary" },
   { field: "primaryForegroundColor", label: "Primary text" },
   { field: "accentColor", label: "Accent" },
@@ -28,15 +33,22 @@ const COLOR_FIELDS: { field: ColorField; label: string }[] = [
   { field: "foregroundColor", label: "Text" },
 ];
 
-/** The color picker needs #rrggbb; expand #rgb and fall back to black. */
-function pickerValue(hex: string): string {
-  const value = hex.trim();
-  if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
-  if (/^#[0-9a-f]{3}$/i.test(value)) {
-    return `#${[...value.slice(1)].map((d) => d + d).join("")}`.toLowerCase();
-  }
-  return "#000000";
-}
+const STATUS_OPTIONS: SelectOption[] = [
+  { value: "upcoming", label: "Upcoming" },
+  { value: "live", label: "Live" },
+  { value: "complete", label: "Complete" },
+];
+
+const MODE_OPTIONS: SelectOption[] = [
+  { value: "teams", label: "Teams" },
+  { value: "free-for-all", label: "Free-for-all" },
+];
+
+const FONT_OPTIONS: SelectOption[] = [
+  { value: "sans", label: "Sans" },
+  { value: "serif", label: "Serif" },
+  { value: "mono", label: "Mono" },
+];
 
 /**
  * Edit the current War Week's settings and Appearance Theme. The theme
@@ -46,32 +58,37 @@ function pickerValue(hex: string): string {
 export function WarWeekSettingsForm({
   initial,
   actorEmail,
+  dayDates,
+  teamSwatches,
 }: {
   initial: WarWeekSettingsInput;
   /** The signed-in Organizer, whose own chip can't be removed. */
   actorEmail: string;
+  /** The War Week's existing Day dates, `YYYY-MM-DD`. */
+  dayDates: string[];
+  /** The War Week's Team colors, offered as color swatches. */
+  teamSwatches: ColorSwatch[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [values, setValues] = useState(initial);
   const [result, setResult] = useState<SetupActionResult | null>(null);
 
+  function setValue(field: keyof WarWeekSettingsInput, value: string) {
+    setValues((v) => ({ ...v, [field]: value }));
+    setResult(null);
+  }
   const set =
     (field: keyof WarWeekSettingsInput) =>
-    (
-      event: React.ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >,
-    ) => {
-      setValues((v) => ({ ...v, [field]: event.target.value }));
-      setResult(null);
-    };
+    (event: React.ChangeEvent<HTMLInputElement>) =>
+      setValue(field, event.target.value);
 
   const preview = {
     ...values,
     fontPreset: values.fontPreset as WarWeek["fontPreset"],
   };
   const warnings = themeContrastWarnings(preview);
+  const swatches = [...themeSwatches(values), ...teamSwatches];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -89,9 +106,9 @@ export function WarWeekSettingsForm({
   ) => (
     <label className="flex flex-col gap-1 text-sm font-medium">
       {label}
-      <input
+      <Input
         name={field}
-        className={fieldClass}
+        className="h-11 sm:h-9"
         value={values[field]}
         onChange={set(field)}
         {...props}
@@ -113,32 +130,37 @@ export function WarWeekSettingsForm({
             maxLength: 120,
           })}
         </div>
-        {text("startDate", "Start date", { type: "date", required: true })}
-        {text("endDate", "End date", { type: "date", required: true })}
+        <div className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
+          <label htmlFor="warWeekDates">Dates</label>
+          <DateRangePicker
+            id="warWeekDates"
+            startName="startDate"
+            endName="endDate"
+            value={{ start: values.startDate, end: values.endDate }}
+            days={dayDates}
+            onValueChange={({ start, end }) => {
+              setValues((v) => ({ ...v, startDate: start, endDate: end }));
+              setResult(null);
+            }}
+          />
+        </div>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Status
-          <select
+          <OptionSelect
             name="status"
-            className={fieldClass}
+            options={STATUS_OPTIONS}
             value={values.status}
-            onChange={set("status")}
-          >
-            <option value="upcoming">Upcoming</option>
-            <option value="live">Live</option>
-            <option value="complete">Complete</option>
-          </select>
+            onValueChange={(status) => setValue("status", status)}
+          />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Mode
-          <select
+          <OptionSelect
             name="mode"
-            className={fieldClass}
+            options={MODE_OPTIONS}
             value={values.mode}
-            onChange={set("mode")}
-          >
-            <option value="teams">Teams</option>
-            <option value="free-for-all">Free-for-all</option>
-          </select>
+            onValueChange={(mode) => setValue("mode", mode)}
+          />
         </label>
         {text("teamLabel", "Team Label", { required: true, maxLength: 40 })}
         {text("leaderTitle", "Leader Title", { required: true, maxLength: 40 })}
@@ -172,38 +194,23 @@ export function WarWeekSettingsForm({
               <label htmlFor={field} className="font-medium">
                 {label} color
               </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="color"
-                  aria-label={`${label} color picker`}
-                  className="border-border h-9 w-10 shrink-0 rounded-md border"
-                  value={pickerValue(values[field])}
-                  onChange={set(field)}
-                />
-                <input
-                  id={field}
-                  name={field}
-                  required
-                  maxLength={32}
-                  className={`${fieldClass} min-w-0 flex-1 font-mono`}
-                  value={values[field]}
-                  onChange={set(field)}
-                />
-              </div>
+              <ColorField
+                id={field}
+                name={field}
+                value={values[field]}
+                swatches={swatches}
+                onValueChange={(hex) => setValue(field, hex)}
+              />
             </div>
           ))}
           <label className="flex flex-col gap-1 text-sm font-medium">
             Font
-            <select
+            <OptionSelect
               name="fontPreset"
-              className={fieldClass}
+              options={FONT_OPTIONS}
               value={values.fontPreset}
-              onChange={set("fontPreset")}
-            >
-              <option value="sans">Sans</option>
-              <option value="serif">Serif</option>
-              <option value="mono">Mono</option>
-            </select>
+              onValueChange={(font) => setValue("fontPreset", font)}
+            />
           </label>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

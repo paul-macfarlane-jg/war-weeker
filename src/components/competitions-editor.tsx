@@ -7,15 +7,19 @@ import {
   deleteCompetition,
   updateCompetition,
 } from "@/actions/setup";
+import { OptionSelect } from "@/components/option-select";
 import { PlacementPointsRows } from "@/components/placement-points-rows";
 import {
   SetupRowButtons,
   SetupRowError,
-  setupFieldClass as fieldClass,
   usageSummary,
   useSetupRow,
 } from "@/components/setup-row";
 import { SuggestionCombobox } from "@/components/suggestion-combobox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import type { WarWeek } from "@/db/schema";
 import type { CompetitionInput } from "@/lib/setup";
 import type { SetupCompetition } from "@/queries/setup";
@@ -64,12 +68,12 @@ function CompetitionRow({
   );
   const set =
     (field: Exclude<keyof CompetitionInput, "countsTowardTeam">) =>
-    (
-      event: React.ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >,
-    ) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setValues((v) => ({ ...v, [field]: event.target.value }));
+  const scoringOptions = [
+    ...(mode === "teams" ? [{ value: "team", label: teamLabel }] : []),
+    { value: "individual", label: "Individual" },
+  ];
 
   function submit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,11 +99,11 @@ function CompetitionRow({
       >
         <label className="flex flex-col gap-1 text-sm font-medium">
           Name
-          <input
+          <Input
             name="name"
             required
             maxLength={120}
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.name}
             onChange={set("name")}
           />
@@ -117,54 +121,46 @@ function CompetitionRow({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium sm:col-span-2">
           Description
-          <textarea
+          <Textarea
             name="description"
             maxLength={2000}
             rows={2}
             placeholder="Optional"
-            className={`${fieldClass} h-auto py-1.5`}
             value={values.description}
             onChange={set("description")}
           />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Scoring
-          <select
+          <OptionSelect
             name="scoring"
-            className={fieldClass}
+            options={scoringOptions}
             value={values.scoring}
-            onChange={set("scoring")}
-          >
-            {mode === "teams" && <option value="team">{teamLabel}</option>}
-            <option value="individual">Individual</option>
-          </select>
+            onValueChange={(scoring) => setValues((v) => ({ ...v, scoring }))}
+          />
         </label>
         {mode === "teams" && (
-          <label className="flex items-center gap-2 text-sm font-medium sm:self-end sm:pb-2">
-            <input
-              type="checkbox"
+          <Label className="min-h-11 sm:min-h-9 sm:self-end">
+            <Switch
               name="countsTowardTeam"
               disabled={values.scoring !== "individual"}
               checked={
                 values.scoring === "individual" && values.countsTowardTeam
               }
-              onChange={(event) =>
-                setValues((v) => ({
-                  ...v,
-                  countsTowardTeam: event.target.checked,
-                }))
+              onCheckedChange={(countsTowardTeam) =>
+                setValues((v) => ({ ...v, countsTowardTeam }))
               }
             />
             Counts toward the {teamLabel}
-          </label>
+          </Label>
         )}
         <label className="flex flex-col gap-1 text-sm font-medium sm:col-start-1">
           Max points
-          <input
+          <Input
             name="maxPoints"
             inputMode="decimal"
             placeholder="Optional"
-            className={fieldClass}
+            className="h-11 sm:h-9"
             value={values.maxPoints}
             onChange={set("maxPoints")}
           />

@@ -4,7 +4,9 @@ import Link from "next/link";
 import { AdminRefused, AdminShell } from "@/components/admin-shell";
 import { SeedOverwriteWarning } from "@/components/seed-overwrite-warning";
 import { WarWeekSettingsForm } from "@/components/war-week-settings-form";
+import { normalizeHex } from "@/lib/color";
 import { settingsInputFrom } from "@/lib/setup";
+import { getSetupDays, getSetupTeams } from "@/queries/setup";
 
 import { loadAdminPage } from "../../gate";
 
@@ -17,6 +19,11 @@ export default async function WarWeekSettingsPage() {
     "/admin/setup/war-week",
   );
   if (!isOrganizer) return <AdminRefused warWeek={warWeek} email={email} />;
+
+  const [days, teams] = await Promise.all([
+    getSetupDays(warWeek),
+    getSetupTeams(warWeek),
+  ]);
 
   return (
     <AdminShell warWeek={warWeek} email={email} current="Setup">
@@ -33,6 +40,11 @@ export default async function WarWeekSettingsPage() {
           key={warWeek.updatedAt.toISOString()}
           initial={settingsInputFrom(warWeek)}
           actorEmail={email}
+          dayDates={days.map((day) => day.date)}
+          teamSwatches={teams.flatMap((team) => {
+            const color = normalizeHex(team.color);
+            return color ? [{ color, label: team.name }] : [];
+          })}
         />
       </section>
     </AdminShell>
