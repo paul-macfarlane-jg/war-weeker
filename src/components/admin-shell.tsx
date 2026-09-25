@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   EyeOff,
   LayoutDashboard,
   Medal,
@@ -15,6 +16,7 @@ import { warWeekThemeStyle } from "@/lib/theme";
 
 const SECTIONS = [
   { label: "Overview", icon: LayoutDashboard, href: "/admin" },
+  { label: "Guide", icon: BookOpen, href: "/admin/guide" },
   { label: "Points Entries", icon: PlusCircle, href: "/admin/points" },
   { label: "Standings visibility", icon: EyeOff, href: "/admin/standings" },
   { label: "Announcements", icon: Megaphone, href: "/admin/announcements" },
