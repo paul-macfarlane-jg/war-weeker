@@ -14,6 +14,9 @@ export default defineConfig({
     env: {
       DATABASE_URL: process.env.DATABASE_URL ?? LOCAL_DATABASE_URL,
     },
+    // DB tests load seeds in a rolled-back transaction; allow for a busy
+    // local Postgres (parallel worktrees).
+    testTimeout: 20_000,
     watch: false,
   },
 });
